@@ -1,5 +1,5 @@
 /* ============================================================================
-   FIREBASE CLOUD SYNC — GUEST + GOOGLE LOGIN + FIRESTORE SAVE & LEADERBOARD
+   FIREBASE CLOUD SYNC — GUEST + GOOGLE LOGIN (SINGLE POPUP) + LEADERBOARD
    ============================================================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-analytics.js";
@@ -8,10 +8,8 @@ import {
   signInAnonymously,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithCredential,
   signInWithRedirect,
   getRedirectResult,
-  linkWithPopup,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
@@ -41,6 +39,8 @@ let auth = null;
 let db = null;
 let currentUser = null;
 let cloudReady = false;
+let authInProgress = false;
+let loadedUid = null;
 let leaderboardEntries = [];
 let leaderboardStatus = 'local'; // 'local' | 'live' | 'error'
 let unsubLeaderboard = null;
@@ -92,10 +92,7 @@ function clearAuthError() {
 }
 
 function subscribeLeaderboard() {
-  if (!db) return;
-  if (unsubLeaderboard) {
-    try { unsubLeaderboard(); } catch (_) {}
-  }
+  if (!db || unsubLeaderboard) return;
   try {
     const q = query(
       collection(db, 'leaderboard'),
@@ -122,7 +119,7 @@ function subscribeLeaderboard() {
 }
 
 async function saveToCloud(showFeedback = false) {
-  if (!db || !currentUser || !window.getGameState) {
+  if (!db || !currentUser || !cloudReady || !window.getGameState) {
     if (showFeedback && window.showToast) window.showToast('💾 Saved locally on this device.', 'emerald');
     return;
   }
@@ -132,7 +129,6 @@ async function saveToCloud(showFeedback = false) {
     const now = Date.now();
     await setDoc(doc(db, 'users', currentUser.uid), { ...s, updatedAt: now }, { merge: true });
 
-    // Also update public leaderboard document
     const score = (s.prestige || 0) * 1000000 + (s.level || 1);
     const lbPayload = {
       uid: currentUser.uid,
@@ -158,31 +154,49 @@ async function saveToCloud(showFeedback = false) {
     console.error('Cloud save error:', err);
     setSyncStatus('Local Save Mode', 'bg-amber-400');
     if (showFeedback && window.showToast) {
-      window.showToast('Cloud unavailable — saved locally.', 'amber');
+      window.showToast(`Cloud save failed (${err.code || 'error'}) — saved locally.`, 'amber');
     }
   }
 }
 
-async function loadFromCloud(user) {
+async function loadFromCloud(user, force = false) {
   if (!db || !user) return;
+  if (!force && loadedUid === user.uid && cloudReady) {
+    updateAccountModalUI();
+    return;
+  }
+
+  // Pause cloud writes until this account's save is fully loaded
+  cloudReady = false;
+  loadedUid = user.uid;
+
   try {
-    setSyncStatus('Syncing...', 'bg-cyan-400');
+    setSyncStatus('Loading save...', 'bg-cyan-400');
     const snap = await getDoc(doc(db, 'users', user.uid));
     if (snap.exists()) {
       const cloudData = snap.data();
       if (window.applyCloudState) window.applyCloudState(cloudData);
+      cloudReady = true;
+      setSyncStatus('Cloud Synced', 'bg-emerald-400');
+    } else {
+      // Brand-new account with no cloud save yet: migrate current local progress up to cloud
+      const s = window.getGameState ? window.getGameState() : null;
+      if (s && user.displayName && (!s.displayName || s.displayName === 'Cosmic Angler')) {
+        s.displayName = user.displayName.slice(0, 22);
+      }
+      cloudReady = true;
+      await saveToCloud(false);
     }
-    await saveToCloud(false);
-    setSyncStatus('Cloud Synced', 'bg-emerald-400');
   } catch (err) {
     console.error('Cloud load error:', err);
+    cloudReady = false;
     setSyncStatus('Local Save Mode', 'bg-amber-400');
+    showAuthError(`Could not load cloud save (${err.code || err.message || 'unknown error'}).`);
   }
+
   updateAccountModalUI();
   subscribeLeaderboard();
 }
-
-let authInProgress = false;
 
 async function handleGoogleSignIn() {
   if (authInProgress) return;
@@ -191,61 +205,42 @@ async function handleGoogleSignIn() {
     showAuthError('Firebase Auth could not initialize (check internet connection).');
     return;
   }
+
   authInProgress = true;
+  cloudReady = false; // Prevent 15s auto-save from writing Guest state during sign-in
+
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
+
   try {
-    if (currentUser && currentUser.isAnonymous) {
-      try {
-        const res = await linkWithPopup(currentUser, provider);
-        currentUser = res.user;
-        const s = window.getGameState();
-        if (currentUser.displayName && (!s.displayName || s.displayName === 'Cosmic Angler')) {
-          s.displayName = currentUser.displayName.slice(0, 22);
-        }
-        await saveToCloud(false);
-        if (window.showToast) window.showToast('🔗 Guest save linked to Google!', 'emerald');
-      } catch (linkErr) {
-        if (linkErr.code === 'auth/credential-already-in-use') {
-          // Reuse the Google credential from the FIRST popup — no second popup!
-          const cred = GoogleAuthProvider.credentialFromError(linkErr);
-          if (cred) {
-            const res = await signInWithCredential(auth, cred);
-            currentUser = res.user;
-          } else {
-            const res = await signInWithPopup(auth, provider);
-            currentUser = res.user;
-          }
-          await loadFromCloud(currentUser);
-          if (window.showToast) window.showToast('✅ Signed into existing Google save!', 'emerald');
-        } else {
-          throw linkErr;
-        }
-      }
-    } else {
-      const res = await signInWithPopup(auth, provider);
-      currentUser = res.user;
-      await loadFromCloud(currentUser);
-      if (window.showToast) window.showToast('✅ Signed in with Google!', 'emerald');
+    // Use signInWithPopup directly (always 1 popup; loads existing save OR creates one if new)
+    const res = await signInWithPopup(auth, provider);
+    currentUser = res.user;
+    await loadFromCloud(currentUser, true);
+    if (window.showToast) {
+      window.showToast(`✅ Signed in as ${currentUser.email || 'Google Angler'}!`, 'emerald');
     }
-    updateAccountModalUI();
   } catch (err) {
-    if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+    if (err.code === 'auth/popup-blocked') {
       try {
-        if (window.showToast) window.showToast('Redirecting to Google Sign-In...', 'cyan');
+        if (window.showToast) window.showToast('Popup blocked — redirecting to Google Sign-In...', 'cyan');
         await signInWithRedirect(auth, provider);
         return;
       } catch (_) {}
     }
-    let msg = 'Google Sign-In was closed or blocked. Your local/guest save is still safe.';
+    let msg = `Google Sign-In failed (${err.code || 'cancelled'}). Your local save is still safe.`;
     if (err.code === 'auth/unauthorized-domain') {
       msg = 'Add "bigmango-dev.github.io" under Firebase Console → Authentication → Settings → Authorized domains.';
     } else if (err.code === 'auth/operation-not-allowed') {
       msg = 'Enable Google Sign-In under Firebase Console → Authentication → Sign-in method.';
+    } else if (err.code === 'auth/popup-closed-by-user') {
+      msg = 'Sign-in window was closed before completing login.';
     }
     showAuthError(msg);
+    if (currentUser) cloudReady = true;
   } finally {
     authInProgress = false;
+    updateAccountModalUI();
   }
 }
 
@@ -253,14 +248,16 @@ async function handleSignOutToGuest() {
   clearAuthError();
   if (!auth) return;
   try {
+    cloudReady = false;
+    loadedUid = null;
     await signOut(auth);
     const res = await signInAnonymously(auth);
     currentUser = res.user;
     if (window.showToast) window.showToast('👤 Signed out — now playing as Guest.', 'cyan');
-    updateAccountModalUI();
+    await loadFromCloud(currentUser, true);
   } catch (err) {
     console.error('Sign out error:', err);
-    showAuthError('Could not sign out cleanly. Try refreshing the page.');
+    showAuthError(`Could not sign out cleanly (${err.code || 'error'}). Try refreshing.`);
   }
 }
 
@@ -294,9 +291,12 @@ async function initFirebaseCloud() {
     onAuthStateChanged(auth, async (user) => {
       currentUser = user;
       if (user) {
-        cloudReady = true;
-        await loadFromCloud(user);
+        if (!authInProgress) {
+          await loadFromCloud(user, false);
+        }
       } else {
+        cloudReady = false;
+        loadedUid = null;
         updateAccountModalUI();
       }
     });
