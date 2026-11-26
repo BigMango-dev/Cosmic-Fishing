@@ -318,7 +318,7 @@ function doPrestige() {
   const req = getPrestigeRequirement();
   if (state.level < req) return;
   const gain = getPrestigeTokensOnReset();
-  if (!confirm(`Ascend to Prestige ${state.prestige + 1} for +${gain} Prestige Tokens?\n\nResets Level, Gold, Rods, Boats & Gold Upgrades.\nKeeps Emeralds, Emerald Upgrades, Pets, Charms, Exotics & Fishdex.\nGrants permanent 1.55x XP & 1.75x Gold + unlocks higher Biomes!`)) {
+  if (!confirm(`Ascend to Prestige ${state.prestige + 1} for +${gain} Prestige Tokens?\n\nResets Level, Gold, Rods, Boats, Baits, Crates & Gold Upgrades.\nKeeps Emeralds, Emerald Upgrades, Pets, Charms, Exotics & Fishdex.\nGrants permanent 1.55x XP & 1.75x Gold + unlocks higher Biomes!`)) {
     return;
   }
 
@@ -329,6 +329,9 @@ function doPrestige() {
   state.biome = 'river';
   state.livewellCount = 0;
   state.livewellValue = 0;
+  state.activeBait = null;
+  state.baits = { worms: 0, leeches: 0, magnet: 0, wise: 0, fishbait: 0, magic: 0, support: 0, celestial: 0 };
+  state.crates = { wooden: 0, coral: 0, magma: 0, sunken: 0, cloud: 0, star: 0, xenotech: 0, abyssal: 0, nebula: 0, multiverse: 0 };
   state.goldUpgrades = { cooldown: 0, salesman: 0, betterFish: 0, moreChests: 0, experienced: 0, baitEff: 0, workers: 0, duplicator: 0 };
 
   const hs = state.prestigeUpgrades.p_headstart;
