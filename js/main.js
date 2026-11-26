@@ -145,8 +145,9 @@ DOM.autoSellBtn.onclick = () => {
   flushHUD();
 };
 
+// Prevent Spacebar from scrolling the page even when a button is focused
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space' && !['INPUT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement.tagName)) {
+  if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
     e.preventDefault();
     attemptManualCast();
   }
@@ -205,5 +206,5 @@ setInterval(refreshAffordability, 750);
 loadGame();
 flushHUD();
 renderActiveTab();
-addFeed('🎣 Welcome to <span class="feed-strong">Virtual Fisher — Cosmic &amp; Multiverse Horizons</span>! Modular multi-file build loaded.', 'levelup');
+addFeed('🎣 Welcome to <span class="feed-strong">Virtual Fisher — Cosmic &amp; Multiverse Horizons</span>! Scroll jump fixed &amp; Catch Feed moved below Shop.', 'levelup');
 requestAnimationFrame(gameLoop);
