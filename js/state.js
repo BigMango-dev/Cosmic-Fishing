@@ -1,5 +1,5 @@
 /* ============================================================================
-   STATE MANAGEMENT, SAVE/LOAD & PROGRESSION FORMULAS
+   STATE MANAGEMENT, SAVE/LOAD (WITH NaN SANITIZER) & PROGRESSION FORMULAS
    ============================================================================ */
 function defaultState() {
   return {
@@ -34,6 +34,7 @@ function defaultState() {
     autoSell: false,
     lastDaily: 0,
     dailyStreak: 0,
+    lastActiveAt: Date.now(),
     quests: []
   };
 }
@@ -50,21 +51,75 @@ let lastCdReadyState = null;
 let bobberTimeout = null;
 let lastBuffKey = '';
 
+function safeNum(v, fallback = 0, min = 0) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, n);
+}
+
+function sanitizeNumberMap(obj, defaults) {
+  const out = {};
+  for (const k of Object.keys(defaults)) {
+    out[k] = safeNum(obj && obj[k], defaults[k], 0);
+  }
+  return out;
+}
+
 function mergeState(parsed) {
   const def = defaultState();
+  const p = parsed && typeof parsed === 'object' ? parsed : {};
   state = {
     ...def,
-    ...parsed,
-    baits: { ...def.baits, ...(parsed.baits || {}) },
-    goldUpgrades: { ...def.goldUpgrades, ...(parsed.goldUpgrades || {}) },
-    emeraldUpgrades: { ...def.emeraldUpgrades, ...(parsed.emeraldUpgrades || {}) },
-    prestigeUpgrades: { ...def.prestigeUpgrades, ...(parsed.prestigeUpgrades || {}) },
-    exotics: { ...def.exotics, ...(parsed.exotics || {}) },
-    boostTimers: { ...def.boostTimers, ...(parsed.boostTimers || {}) },
-    crates: { ...def.crates, ...(parsed.crates || {}) },
-    charms: { ...def.charms, ...(parsed.charms || {}) }
+    ...p,
+    gold: safeNum(p.gold, 0, 0),
+    emeralds: safeNum(p.emeralds, 0, 0),
+    ptokens: safeNum(p.ptokens, 0, 0),
+    prestige: Math.floor(safeNum(p.prestige, 0, 0)),
+    level: Math.floor(safeNum(p.level, 1, 1)),
+    xp: safeNum(p.xp, 0, 0),
+    totalCasts: Math.floor(safeNum(p.totalCasts, 0, 0)),
+    livewellCount: Math.floor(safeNum(p.livewellCount, 0, 0)),
+    livewellValue: safeNum(p.livewellValue, 0, 0),
+    lastDaily: safeNum(p.lastDaily, 0, 0),
+    dailyStreak: Math.floor(safeNum(p.dailyStreak, 0, 0)),
+    lastActiveAt: safeNum(p.lastActiveAt, Date.now(), 0),
+    baits: sanitizeNumberMap(p.baits, { worms: 15, leeches: 0, magnet: 0, wise: 0, fishbait: 0, magic: 0, support: 0, celestial: 0 }),
+    goldUpgrades: sanitizeNumberMap(p.goldUpgrades, def.goldUpgrades),
+    emeraldUpgrades: sanitizeNumberMap(p.emeraldUpgrades, def.emeraldUpgrades),
+    prestigeUpgrades: sanitizeNumberMap(p.prestigeUpgrades, def.prestigeUpgrades),
+    exotics: sanitizeNumberMap(p.exotics, def.exotics),
+    boostTimers: sanitizeNumberMap(p.boostTimers, def.boostTimers),
+    crates: sanitizeNumberMap(p.crates, def.crates),
+    charms: sanitizeNumberMap(p.charms, def.charms)
   };
-  if (!state.quests || state.quests.length < 3) generateQuests();
+
+  // Sanitize pets
+  const cleanPets = {};
+  if (p.pets && typeof p.pets === 'object') {
+    for (const [pid, pval] of Object.entries(p.pets)) {
+      if (pval && typeof pval === 'object') {
+        cleanPets[pid] = {
+          lv: Math.min(100, Math.floor(safeNum(pval.lv, 1, 1))),
+          xp: safeNum(pval.xp, 0, 0)
+        };
+      }
+    }
+  }
+  state.pets = cleanPets;
+
+  // Sanitize quests so missing emReward/target can never cause NaN
+  const validQuests = Array.isArray(p.quests)
+    ? p.quests.filter(q => q && typeof q.type === 'string' && typeof q.text === 'string').map(q => ({
+        id: q.id || ('q_' + Math.random().toString(36).slice(2, 8)),
+        type: q.type,
+        text: q.text,
+        progress: safeNum(q.progress, 0, 0),
+        target: Math.max(1, Math.floor(safeNum(q.target, 10, 1))),
+        emReward: Math.max(1, Math.floor(safeNum(q.emReward, 2, 1)))
+      }))
+    : [];
+  state.quests = validQuests;
+  if (state.quests.length < 3 && typeof generateQuests === 'function') generateQuests();
 }
 
 function saveGame(notify = false) {
@@ -83,7 +138,8 @@ function loadGame() {
 }
 
 function fmt(n) {
-  if (!isFinite(n)) return '∞';
+  if (typeof n !== 'number' || Number.isNaN(n)) return '0';
+  if (!Number.isFinite(n)) return '∞';
   if (n < 1000) return Math.floor(n).toLocaleString();
   const units = ['K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
   let idx = -1;
