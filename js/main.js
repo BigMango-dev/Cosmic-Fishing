@@ -1,5 +1,5 @@
 /* ============================================================================
-   MAIN ENTRYPOINT — GAME LOOP, CONTROLS, CLOUD HOOKS, BACKUP & BOOT
+   MAIN ENTRYPOINT — FOREGROUND + BACKGROUND WORKER + OFFLINE CATCH-UP + CLOUD
    ============================================================================ */
 // Expose safe state bridge for ES module js/firebase.js
 window.getGameState = () => state;
@@ -11,9 +11,10 @@ window.applyCloudState = (parsed) => {
   renderActiveTab();
 };
 
-// Wrap saveGame so every local save (auto-save, Prestige, Save Now, Import) also syncs to Cloud
+// Wrap saveGame so every save stamps lastActiveAt & syncs to Cloud
 const _localOnlySave = window.saveGame;
 window.saveGame = function(notify = false) {
+  state.lastActiveAt = Date.now();
   _localOnlySave(false);
   if (window.CloudSync && window.CloudSync.isReady()) {
     window.CloudSync.save(notify);
@@ -22,9 +23,193 @@ window.saveGame = function(notify = false) {
   }
 };
 
+let lastRealTime = Date.now();
+let hiddenSince = null;
+let hiddenSnapshot = null;
+let bgWorker = null;
+
+function sumCrates() {
+  return Object.values(state.crates || {}).reduce((a, b) => a + b, 0);
+}
+
+function captureSnapshot() {
+  return {
+    gold: state.gold,
+    livewellValue: state.livewellValue,
+    level: state.level,
+    totalCasts: state.totalCasts,
+    crates: sumCrates(),
+    emeralds: state.emeralds
+  };
+}
+
+function formatDuration(sec) {
+  const s = Math.floor(sec);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ${s % 60}s`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}m`;
+}
+
+// Simulates real elapsed time (works smoothly in background tabs AND after browser sleep/offline up to 12h)
+function advanceSimulation(dtSec, silent = false) {
+  if (dtSec <= 0) return;
+  const clampedSec = Math.min(43200, dtSec); // Cap single catch-up at 12 hours
+
+  // 1. Tick Boost Timers
+  for (const key of Object.keys(state.boostTimers)) {
+    if (state.boostTimers[key] > 0) {
+      state.boostTimers[key] = Math.max(0, state.boostTimers[key] - clampedSec);
+      hudDirty = true;
+    }
+  }
+
+  // 2. Auto-Cast simulation
+  const totalCd = getCooldownSeconds();
+  if (state.autoCast) {
+    let timeLeft = clampedSec;
+    if (cooldownRemaining > 0) {
+      if (timeLeft >= cooldownRemaining) {
+        timeLeft -= cooldownRemaining;
+        cooldownRemaining = 0;
+      } else {
+        cooldownRemaining -= timeLeft;
+        timeLeft = 0;
+      }
+    }
+
+    if (cooldownRemaining <= 0) {
+      const totalAutoCasts = 1 + Math.floor(timeLeft / totalCd);
+      const remainder = timeLeft - Math.floor(timeLeft / totalCd) * totalCd;
+      cooldownRemaining = Math.max(0, totalCd - remainder);
+
+      const useSilent = silent || totalAutoCasts > 3;
+      const MAX_LOOPS = 300;
+      if (totalAutoCasts <= MAX_LOOPS) {
+        for (let i = 0; i < totalAutoCasts; i++) {
+          performCast(false, useSilent, 1);
+        }
+      } else {
+        const batchScale = totalAutoCasts / MAX_LOOPS;
+        for (let i = 0; i < MAX_LOOPS; i++) {
+          performCast(false, true, batchScale);
+        }
+      }
+    }
+  } else if (cooldownRemaining > 0) {
+    cooldownRemaining = Math.max(0, cooldownRemaining - clampedSec);
+  }
+
+  // 3. Auto-Fish Crew simulation (every 3.0s)
+  if (state.goldUpgrades.workers > 0) {
+    workerAccumulator += clampedSec;
+    const workerTicks = Math.floor(workerAccumulator / 3.0);
+    if (workerTicks > 0) {
+      workerAccumulator -= workerTicks * 3.0;
+      const useSilent = silent || workerTicks > 3;
+      const MAX_LOOPS = 250;
+      if (workerTicks <= MAX_LOOPS) {
+        for (let i = 0; i < workerTicks; i++) {
+          performCast(true, useSilent, 1);
+        }
+      } else {
+        const batchScale = workerTicks / MAX_LOOPS;
+        for (let i = 0; i < MAX_LOOPS; i++) {
+          performCast(true, true, batchScale);
+        }
+      }
+    }
+  }
+
+  state.lastActiveAt = Date.now();
+}
+
+function postBackgroundSummary(elapsedSec, beforeSnap, label = 'Background Fishing') {
+  if (elapsedSec < 5 || !beforeSnap) return;
+  const gainedGold = (state.gold + state.livewellValue) - (beforeSnap.gold + beforeSnap.livewellValue);
+  const gainedCasts = state.totalCasts - beforeSnap.totalCasts;
+  const gainedLv = state.level - beforeSnap.level;
+  const gainedCrates = sumCrates() - beforeSnap.crates;
+  const gainedEm = state.emeralds - beforeSnap.emeralds;
+
+  if (gainedGold <= 0 && gainedCasts <= 0 && gainedLv <= 0) return;
+
+  const parts = [];
+  if (gainedCasts > 0) parts.push(`<span class="feed-strong">+${fmt(gainedCasts)} casts</span>`);
+  if (gainedGold > 0) parts.push(`<span class="feed-amber">+$${fmt(gainedGold)}</span>`);
+  if (gainedLv > 0) parts.push(`<span class="feed-strong">+${gainedLv} Lv</span>`);
+  if (gainedCrates > 0) parts.push(`<span class="feed-amber">+${gainedCrates} Crates</span>`);
+  if (gainedEm > 0) parts.push(`<span class="feed-emerald">+${fmt(gainedEm)} 💎</span>`);
+
+  addFeed(`🌙 <span class="feed-strong">${label} (${formatDuration(elapsedSec)}):</span> ${parts.join(' • ')}`, 'levelup');
+  showToast(`🌙 ${label}: ${formatDuration(elapsedSec)} synced!`, 'cyan');
+}
+
+// Inline Web Worker timer so background tabs keep fishing without rAF suspension
+function initBackgroundWorker() {
+  if (typeof Worker === 'undefined') return;
+  try {
+    const workerCode = `
+      let timer = setInterval(() => { postMessage('tick'); }, 500);
+      onmessage = (e) => {
+        if (e.data === 'stop') clearInterval(timer);
+      };
+    `;
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    bgWorker = new Worker(url);
+    bgWorker.onmessage = () => {
+      if (document.hidden) {
+        const now = Date.now();
+        const dtSec = (now - lastRealTime) / 1000;
+        lastRealTime = now;
+        if (dtSec > 0) {
+          advanceSimulation(dtSec, true);
+        }
+      }
+    };
+    window.addEventListener('beforeunload', () => {
+      state.lastActiveAt = Date.now();
+      try { localStorage.setItem(LOCAL_SAVE_KEY, JSON.stringify(state)); } catch (_) {}
+      try { bgWorker.terminate(); } catch (_) {}
+    });
+  } catch (err) {
+    console.warn('Web Worker unavailable, using visibility catch-up fallback:', err);
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  const now = Date.now();
+  if (document.hidden) {
+    hiddenSince = now;
+    hiddenSnapshot = captureSnapshot();
+    saveGame(false);
+  } else {
+    const dtSec = (now - lastRealTime) / 1000;
+    lastRealTime = now;
+    if (dtSec > 0.2) {
+      advanceSimulation(dtSec, true);
+    }
+    if (hiddenSince && hiddenSnapshot) {
+      const totalAwaySec = (now - hiddenSince) / 1000;
+      postBackgroundSummary(totalAwaySec, hiddenSnapshot, 'Background Fishing');
+    }
+    hiddenSince = null;
+    hiddenSnapshot = null;
+    lastFrameTime = performance.now();
+    hudDirty = true;
+    flushHUD();
+    refreshAffordability();
+    if (activeTab === 'crates' || activeTab === 'biomes' || activeTab === 'prestige' || activeTab === 'pets' || activeTab === 'fishdex') {
+      renderActiveTab();
+    }
+  }
+});
+
 function attemptManualCast() {
   if (cooldownRemaining <= 0) {
-    performCast(false);
+    performCast(false, false, 1);
     flushHUD();
   }
 }
@@ -39,14 +224,15 @@ function cycleOwnedBait() {
 }
 
 function gameLoop(now) {
-  const dt = Math.min(0.25, (now - lastFrameTime) / 1000);
+  const realNow = Date.now();
+  const realDt = Math.max(0, (realNow - lastRealTime) / 1000);
+  lastRealTime = realNow;
   lastFrameTime = now;
 
-  const totalCd = getCooldownSeconds();
-  if (cooldownRemaining > 0) {
-    cooldownRemaining = Math.max(0, cooldownRemaining - dt);
-  }
+  // Advance simulation using real wall-clock delta (no 0.25s cap that loses background time)
+  advanceSimulation(realDt, false);
 
+  const totalCd = getCooldownSeconds();
   if (cooldownRemaining <= 0) {
     if (lastCdReadyState !== true) {
       lastCdReadyState = true;
@@ -57,9 +243,6 @@ function gameLoop(now) {
       setText('cdTimer', DOM.cdTimer, `Ready (${totalCd.toFixed(2)}s)`);
       setText('dockCd', DOM.dockCdTimer, 'Ready');
       setText('stageStatus', DOM.stageStatus, 'Ready to cast! Press Space or tap Cast');
-    }
-    if (state.autoCast) {
-      performCast(false);
     }
   } else {
     if (lastCdReadyState !== false) {
@@ -76,22 +259,7 @@ function gameLoop(now) {
     setText('dockCd', DOM.dockCdTimer, secStr);
   }
 
-  if (state.goldUpgrades.workers > 0) {
-    workerAccumulator += dt;
-    if (workerAccumulator >= 3.0) {
-      workerAccumulator -= 3.0;
-      performCast(true);
-    }
-  }
-
-  for (const key of Object.keys(state.boostTimers)) {
-    if (state.boostTimers[key] > 0) {
-      state.boostTimers[key] = Math.max(0, state.boostTimers[key] - dt);
-      hudDirty = true;
-    }
-  }
-
-  hudFlushAccum += dt;
+  hudFlushAccum += Math.min(0.25, realDt);
   if (hudDirty && hudFlushAccum >= 0.1) {
     hudFlushAccum = 0;
     flushHUD();
@@ -226,9 +394,19 @@ document.getElementById('btn-hard-reset').onclick = () => {
 setInterval(() => saveGame(false), 15000);
 setInterval(refreshAffordability, 750);
 
-// Boot
+// Boot + Offline Progress Catch-Up (up to 12 hours if Auto-Cast or Crew was active)
 loadGame();
+if (state.lastActiveAt && (state.autoCast || state.goldUpgrades.workers > 0)) {
+  const offlineSec = (Date.now() - state.lastActiveAt) / 1000;
+  if (offlineSec >= 10) {
+    const snap = captureSnapshot();
+    advanceSimulation(offlineSec, true);
+    postBackgroundSummary(Math.min(43200, offlineSec), snap, 'Offline Progress');
+  }
+}
+lastRealTime = Date.now();
+initBackgroundWorker();
 flushHUD();
 renderActiveTab();
-addFeed('🎣 Welcome to <span class="feed-strong">Virtual Fisher — Cosmic &amp; Multiverse Horizons</span>! Guest &amp; Google Cloud Sync enabled.', 'levelup');
+addFeed('🎣 Welcome to <span class="feed-strong">Virtual Fisher — Cosmic &amp; Multiverse Horizons</span>! Background &amp; Offline fishing enabled.', 'levelup');
 requestAnimationFrame(gameLoop);
