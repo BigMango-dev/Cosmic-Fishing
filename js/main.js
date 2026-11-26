@@ -1,6 +1,27 @@
 /* ============================================================================
-   MAIN ENTRYPOINT — GAME LOOP, CONTROLS, BACKUP & BOOT
+   MAIN ENTRYPOINT — GAME LOOP, CONTROLS, CLOUD HOOKS, BACKUP & BOOT
    ============================================================================ */
+// Expose safe state bridge for ES module js/firebase.js
+window.getGameState = () => state;
+window.applyCloudState = (parsed) => {
+  mergeState(parsed);
+  try { localStorage.setItem(LOCAL_SAVE_KEY, JSON.stringify(state)); } catch (_) {}
+  hudDirty = true;
+  flushHUD();
+  renderActiveTab();
+};
+
+// Wrap saveGame so every local save (auto-save, Prestige, Save Now, Import) also syncs to Cloud
+const _localOnlySave = window.saveGame;
+window.saveGame = function(notify = false) {
+  _localOnlySave(false);
+  if (window.CloudSync && window.CloudSync.isReady()) {
+    window.CloudSync.save(notify);
+  } else if (notify) {
+    showToast('💾 Progress saved locally!', 'emerald');
+  }
+};
+
 function attemptManualCast() {
   if (cooldownRemaining <= 0) {
     performCast(false);
@@ -101,7 +122,7 @@ function applyImportedJson(rawText) {
     const parsed = JSON.parse(rawText.trim());
     if (!parsed || typeof parsed !== 'object') throw new Error('Invalid');
     mergeState(parsed);
-    saveGame(false);
+    saveGame(true);
     hudDirty = true;
     flushHUD();
     renderActiveTab();
@@ -153,9 +174,10 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// Profile / Backup Modal
+// Profile / Cloud Account Modal
 document.getElementById('btn-open-account').onclick = () => {
   document.getElementById('input-display-name').value = state.displayName || 'Cosmic Angler';
+  if (window.CloudSync) window.CloudSync.updateUI();
   document.getElementById('account-modal').classList.remove('hidden');
 };
 document.getElementById('btn-close-account').onclick = () => {
@@ -164,6 +186,7 @@ document.getElementById('btn-close-account').onclick = () => {
 document.getElementById('btn-save-name').onclick = () => {
   const v = document.getElementById('input-display-name').value.trim();
   if (v) state.displayName = v.slice(0, 22);
+  if (window.CloudSync) window.CloudSync.updateUI();
   saveGame(true);
 };
 document.getElementById('btn-save-now').onclick = () => saveGame(true);
@@ -190,6 +213,7 @@ document.getElementById('btn-hard-reset').onclick = () => {
     localStorage.removeItem(LOCAL_SAVE_KEY);
     state = defaultState();
     generateQuests();
+    saveGame(false);
     hudDirty = true;
     flushHUD();
     renderActiveTab();
@@ -206,5 +230,5 @@ setInterval(refreshAffordability, 750);
 loadGame();
 flushHUD();
 renderActiveTab();
-addFeed('🎣 Welcome to <span class="feed-strong">Virtual Fisher — Cosmic &amp; Multiverse Horizons</span>! Scroll jump fixed &amp; Catch Feed moved below Shop.', 'levelup');
+addFeed('🎣 Welcome to <span class="feed-strong">Virtual Fisher — Cosmic &amp; Multiverse Horizons</span>! Guest &amp; Google Cloud Sync enabled.', 'levelup');
 requestAnimationFrame(gameLoop);
