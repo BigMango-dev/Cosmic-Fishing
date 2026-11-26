@@ -1,3 +1,7 @@
+html, body {
+  overflow-anchor: none;
+}
+
 body {
   background:
     radial-gradient(circle at 12% 10%, rgba(56, 189, 248, 0.11), transparent 36%),
@@ -32,9 +36,11 @@ button, a, input, select, [role="button"] {
   will-change: transform;
 }
 
-/* Static CSS for high-frequency Catch Feed & Buff Pills */
+/* Fixed-height Catch Feed with scroll anchoring disabled */
 #catch-feed-list {
   contain: layout style;
+  height: 240px;
+  overflow-anchor: none;
 }
 .feed-row {
   border-left: 4px solid #6366f1;
@@ -116,6 +122,6 @@ button, a, input, select, [role="button"] {
   #bobber-sprite { font-size: 2.25rem !important; }
   #right-command-col { height: 100%; min-height: 0 !important; }
   #tab-content-area { max-height: none !important; height: 100%; padding: 0.65rem !important; }
-  #catch-feed-list { max-height: 150px !important; }
+  #catch-feed-section { display: none !important; }
   #toast-container { bottom: 0.75rem; }
 }
