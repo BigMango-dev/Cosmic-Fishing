@@ -1,989 +1,704 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Virtual Fisher: Deep Horizons</title>
-<style>
-  :root {
-    --bg-dark: #1e1f22;
-    --bg-panel: #2b2d31;
-    --bg-card: #313338;
-    --bg-hover: #383a40;
-    --border: #3f4147;
-    --text-main: #f2f3f5;
-    --text-muted: #b5bac1;
-    --text-dim: #80848e;
-    --accent: #5865f2;
-    --accent-hover: #4752c4;
-    --green: #23a55a;
-    --green-hover: #1a8245;
-    --gold: #f0b232;
-    --emerald: #2dc770;
-    --cyan: #00a8fc;
-    --purple: #a855f7;
-    --red: #da373c;
-    --orange: #f97316;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Virtual Fisher — Cosmic Deep Horizons</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            discord: {
+              950: '#0b0e17',
+              900: '#121624',
+              850: '#181d2f',
+              800: '#1f253b',
+              700: '#2a324d'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background:
+        radial-gradient(circle at 12% 10%, rgba(56, 189, 248, 0.12), transparent 36%),
+        radial-gradient(circle at 88% 15%, rgba(168, 85, 247, 0.14), transparent 40%),
+        radial-gradient(circle at 50% 95%, rgba(99, 102, 241, 0.12), transparent 45%),
+        #0b0e17;
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-    background: var(--bg-dark);
-    color: var(--text-main);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-  }
+    .discord-embed {
+      border-left-width: 4px;
+      transition: border-color 0.35s ease;
+    }
 
-  /* Top Resource Bar */
-  header {
-    background: #111214;
-    border-bottom: 1px solid var(--border);
-    padding: 10px 18px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+    button, a, input, select, [role="button"] {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .brand-badge {
-    background: linear-gradient(135deg, #5865f2, #00a8fc);
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-weight: 800;
-    font-size: 15px;
-    letter-spacing: 0.4px;
-  }
-  .prestige-pill {
-    background: rgba(168, 85, 247, 0.2);
-    border: 1px solid var(--purple);
-    color: #d8b4fe;
-    padding: 3px 9px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-  }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  .stats-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-  }
-  .stat-chip {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 5px 11px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 600;
-  }
-  .stat-chip span.val { font-weight: 700; }
-  .gold-text { color: var(--gold); }
-  .emerald-text { color: var(--emerald); }
-  .cyan-text { color: var(--cyan); }
-  .purple-text { color: #c084fc; }
+    /* Horizontal scroll fade cue for mobile tabs */
+    .scroll-fade-wrap {
+      position: relative;
+    }
+    .scroll-fade-wrap::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 28px;
+      pointer-events: none;
+      background: linear-gradient(to left, rgba(24, 29, 47, 0.96), transparent);
+    }
 
-  /* XP Bar */
-  .xp-container {
-    background: var(--bg-panel);
-    padding: 8px 18px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .level-badge {
-    background: var(--accent);
-    color: #fff;
-    font-weight: 800;
-    font-size: 13px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    white-space: nowrap;
-  }
-  .xp-track {
-    flex: 1;
-    height: 12px;
-    background: #18191c;
-    border-radius: 999px;
-    overflow: hidden;
-    position: relative;
-    border: 1px solid var(--border);
-  }
-  .xp-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #5865f2, #00a8fc);
-    width: 0%;
-    transition: width 0.2s ease;
-  }
-  .xp-label {
-    font-size: 12px;
-    color: var(--text-muted);
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-  }
+    @keyframes bobFloat {
+      0%, 100% { transform: translateY(0px) rotate(-2deg); }
+      50% { transform: translateY(-7px) rotate(3deg); }
+    }
+    .bobber-idle {
+      animation: bobFloat 2.6s ease-in-out infinite;
+    }
+    @keyframes splashPop {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.28) translateY(-8px); }
+      100% { transform: scale(1); }
+    }
+    .bobber-splash {
+      animation: splashPop 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    }
 
-  /* Main Layout */
-  .main-grid {
-    display: grid;
-    grid-template-columns: 370px 1fr;
-    gap: 16px;
-    padding: 16px;
-    max-width: 1440px;
-    width: 100%;
-    margin: 0 auto;
-    flex: 1;
-  }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .feed-animate {
+      animation: fadeSlideIn 0.2s ease;
+    }
 
-  @media (max-width: 960px) {
-    .main-grid { grid-template-columns: 1fr; }
-  }
+    /* Mobile Portrait Optimizations (<= 768px) */
+    @media (max-width: 768px) {
+      body {
+        padding-bottom: calc(118px + env(safe-area-inset-bottom));
+      }
+      .tab-btn, .shop-sub-btn {
+        min-height: 42px;
+      }
+      #toast-container {
+        bottom: calc(122px + env(safe-area-inset-bottom));
+      }
+    }
 
-  .panel {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
+    /* Mobile Cast Dock safe-area padding */
+    #mobile-cast-dock {
+      padding-bottom: calc(0.6rem + env(safe-area-inset-bottom));
+    }
 
-  /* Left Fishing Deck */
-  .biome-banner {
-    border-radius: 10px;
-    padding: 14px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: linear-gradient(135deg, #1d4ed8 0%, #0f172a 100%);
-    transition: background 0.4s ease;
-  }
-  .biome-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-  }
-  .biome-title {
-    font-size: 18px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .biome-mult {
-    background: rgba(0,0,0,0.4);
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--gold);
-  }
-  .biome-desc {
-    font-size: 12.5px;
-    color: #dbeafe;
-    opacity: 0.9;
-    line-height: 1.4;
-  }
-
-  .biome-selector {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .biome-btn {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    padding: 6px 10px;
-    border-radius: 7px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .biome-btn:hover:not(:disabled) {
-    background: var(--bg-hover);
-    color: #fff;
-  }
-  .biome-btn.active {
-    background: var(--accent);
-    border-color: #7983f5;
-    color: #fff;
-  }
-  .biome-btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  /* Cast Button & Cooldown */
-  .cast-box {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .cast-btn {
-    width: 100%;
-    padding: 15px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, #23a55a, #16a34a);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 800;
-    cursor: pointer;
-    letter-spacing: 0.3px;
-    box-shadow: 0 4px 14px rgba(35, 165, 90, 0.3);
-    transition: transform 0.08s, filter 0.15s;
-    position: relative;
-    overflow: hidden;
-  }
-  .cast-btn:hover:not(:disabled) { filter: brightness(1.08); }
-  .cast-btn:active:not(:disabled) { transform: scale(0.985); }
-  .cast-btn:disabled {
-    background: #3f4147;
-    box-shadow: none;
-    cursor: not-allowed;
-    color: var(--text-muted);
-  }
-
-  .cd-track {
-    height: 8px;
-    background: #18191c;
-    border-radius: 999px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  .cd-fill {
-    height: 100%;
-    width: 100%;
-    background: linear-gradient(90deg, #23a55a, #38bdf8);
-    transition: width 0.04s linear;
-  }
-  .cast-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  .toggle-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .toggle-pill {
-    flex: 1;
-    min-width: 120px;
-    background: var(--bg-dark);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    padding: 7px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-  .toggle-pill.on {
-    border-color: var(--green);
-    color: #86efac;
-    background: rgba(35, 165, 90, 0.14);
-  }
-
-  /* Livewell & Sell */
-  .livewell-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .livewell-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .sell-btn {
-    background: var(--gold);
-    color: #111214;
-    border: none;
-    padding: 7px 12px;
-    border-radius: 7px;
-    font-weight: 800;
-    font-size: 12.5px;
-    cursor: pointer;
-    transition: filter 0.15s;
-  }
-  .sell-btn:hover:not(:disabled) { filter: brightness(1.08); }
-  .sell-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-
-  /* Discord-style Catch Log */
-  .log-box {
-    background: #18191c;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px;
-    height: 250px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    font-size: 12.5px;
-  }
-  .log-entry {
-    border-left: 3px solid var(--accent);
-    background: var(--bg-card);
-    padding: 7px 10px;
-    border-radius: 0 6px 6px 0;
-    line-height: 1.4;
-    animation: fadeIn 0.18s ease;
-  }
-  .log-entry.crate { border-left-color: var(--gold); background: rgba(240, 178, 50, 0.1); }
-  .log-entry.exotic { border-left-color: var(--emerald); background: rgba(45, 199, 112, 0.1); }
-  .log-entry.pet { border-left-color: var(--purple); background: rgba(168, 85, 247, 0.15); }
-  .log-entry.levelup { border-left-color: var(--cyan); background: rgba(0, 168, 252, 0.14); }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Right Tabs */
-  .tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 10px;
-  }
-  .tab-btn {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    padding: 8px 13px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .tab-btn:hover { background: var(--bg-hover); color: #fff; }
-  .tab-btn.active {
-    background: var(--accent);
-    border-color: #7983f5;
-    color: #fff;
-  }
-  .badge-count {
-    background: var(--red);
-    color: #fff;
-    font-size: 11px;
-    padding: 1px 6px;
-    border-radius: 999px;
-    font-weight: 800;
-  }
-
-  .tab-content {
-    display: none;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .tab-content.active { display: flex; }
-
-  .section-title {
-    font-size: 14px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--text-muted);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 10px;
-  }
-
-  .item-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .item-card.owned { border-color: rgba(35, 165, 90, 0.5); }
-  .item-card.equipped { border-color: var(--cyan); background: rgba(0, 168, 252, 0.08); }
-
-  .item-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .item-name { font-weight: 700; font-size: 14px; }
-  .item-tag {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 5px;
-    background: var(--bg-dark);
-    color: var(--text-muted);
-    white-space: nowrap;
-  }
-  .item-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
-
-  .buy-btn {
-    width: 100%;
-    padding: 8px 10px;
-    border-radius: 7px;
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    font-weight: 700;
-    font-size: 12.5px;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .buy-btn:hover:not(:disabled) { background: var(--accent-hover); }
-  .buy-btn:disabled {
-    background: #232428;
-    color: var(--text-dim);
-    cursor: not-allowed;
-  }
-  .buy-btn.green { background: var(--green); }
-  .buy-btn.green:hover:not(:disabled) { background: var(--green-hover); }
-  .buy-btn.purple { background: var(--purple); }
-  .buy-btn.purple:hover:not(:disabled) { filter: brightness(1.1); }
-
-  .btn-row { display: flex; gap: 6px; }
-  .btn-row .buy-btn { flex: 1; }
-
-  /* Active Buffs Strip */
-  .buffs-strip {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .buff-pill {
-    background: rgba(240, 178, 50, 0.15);
-    border: 1px solid var(--gold);
-    color: #fde68a;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  /* Bestiary Rarity Badges */
-  .rarity-Common { color: #cbd5e1; }
-  .rarity-Uncommon { color: #4ade80; }
-  .rarity-Rare { color: #38bdf8; }
-  .rarity-Epic { color: #c084fc; }
-  .rarity-Mythic { color: #fb923c; }
-  .rarity-Exotic { color: #f43f5e; font-weight: 800; }
-
-  /* Prestige Box */
-  .prestige-hero {
-    background: linear-gradient(135deg, rgba(88, 101, 242, 0.2), rgba(168, 85, 247, 0.22));
-    border: 1px solid var(--purple);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .footer-tools {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    padding: 10px 18px;
-    border-top: 1px solid var(--border);
-    background: #111214;
-  }
-  .mini-btn {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    cursor: pointer;
-  }
-  .mini-btn:hover { color: #fff; background: var(--bg-hover); }
-</style>
+    /* Mobile Landscape Split-Screen Mode */
+    @media (max-height: 540px) and (orientation: landscape) {
+      body {
+        padding-bottom: 0 !important;
+        overflow: hidden;
+      }
+      #mobile-cast-dock {
+        display: none !important;
+      }
+      #top-header-bar {
+        padding-top: 0.3rem;
+        padding-bottom: 0.3rem;
+      }
+      #mobile-xp-subbar {
+        display: none !important;
+      }
+      #main-workspace {
+        display: grid !important;
+        grid-template-columns: 42% 58% !important;
+        gap: 0.65rem !important;
+        padding-top: 0.45rem !important;
+        padding-bottom: 0.45rem !important;
+        height: calc(100vh - 54px);
+        overflow: hidden;
+        align-items: stretch !important;
+      }
+      #left-console-col {
+        height: 100%;
+        overflow-y: auto;
+        gap: 0.5rem !important;
+      }
+      #biome-stage {
+        height: 5.5rem !important;
+      }
+      #bobber-sprite {
+        font-size: 2.25rem !important;
+      }
+      #right-command-col {
+        height: 100%;
+        min-height: 0 !important;
+      }
+      #tab-content-area {
+        max-height: none !important;
+        height: 100%;
+        padding: 0.65rem !important;
+      }
+      #catch-feed-list {
+        max-height: 150px !important;
+      }
+      #toast-container {
+        bottom: 0.75rem;
+      }
+    }
+  </style>
 </head>
-<body>
+<body class="text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
 
-<header>
-  <div class="brand">
-    <div class="brand-badge">🎣 VIRTUAL FISHER: DEEP HORIZONS</div>
-    <span class="prestige-pill" id="ui-prestige-badge">Prestige 0</span>
-  </div>
-  <div class="stats-bar">
-    <div class="stat-chip">🪙 Gold: <span class="val gold-text" id="ui-gold">$0</span></div>
-    <div class="stat-chip">💎 Emeralds: <span class="val emerald-text" id="ui-emeralds">0</span></div>
-    <div class="stat-chip">🔮 Prestige Tokens: <span class="val purple-text" id="ui-ptokens">0</span></div>
-    <div class="stat-chip">⚡ Cooldown: <span class="val cyan-text" id="ui-cd-stat">1.60s</span></div>
-    <div class="stat-chip">🐟 Catch Power: <span class="val" id="ui-power-stat">1.0x</span></div>
-  </div>
-</header>
-
-<div class="xp-container">
-  <div class="level-badge" id="ui-level">Lv. 1</div>
-  <div class="xp-track"><div class="xp-fill" id="ui-xp-fill"></div></div>
-  <div class="xp-label" id="ui-xp-text">0 / 120 XP</div>
-</div>
-
-<div class="main-grid">
-  <!-- LEFT: FISHING DECK -->
-  <div class="panel">
-    <div class="biome-banner" id="ui-biome-banner">
-      <div class="biome-header">
-        <div class="biome-title" id="ui-biome-name">🏞️ River</div>
-        <div class="biome-mult" id="ui-biome-mult">1x Value & XP</div>
-      </div>
-      <div class="biome-desc" id="ui-biome-desc">Calm freshwater currents. Great for learning the ropes and finding early crates.</div>
-    </div>
-
-    <div>
-      <div class="section-title" style="margin-bottom:6px;">
-        <span>Select Biome</span>
-        <span id="ui-biome-req-hint" style="font-size:11px; color:var(--cyan);">Next: Volcanic (Lv 50)</span>
-      </div>
-      <div class="biome-selector" id="ui-biome-list"></div>
-    </div>
-
-    <div class="cast-box">
-      <button class="cast-btn" id="btn-cast">🎣 CAST LINE (Space)</button>
-      <div class="cd-track"><div class="cd-fill" id="ui-cd-fill"></div></div>
-      <div class="cast-meta">
-        <span id="ui-cd-timer">Ready!</span>
-        <span id="ui-active-bait">Bait: None</span>
-      </div>
-      <div class="toggle-row">
-        <button class="toggle-pill" id="btn-autocast">🤖 Auto-Cast: OFF</button>
-        <button class="toggle-pill" id="btn-autosell">💰 Auto-Sell: OFF</button>
-      </div>
-    </div>
-
-    <div class="livewell-card">
-      <div class="livewell-top">
-        <div>
-          <div style="font-size:12px; color:var(--text-muted);">Livewell Storage</div>
-          <div style="font-weight:800; font-size:15px;"><span id="ui-livewell-count">0</span> fish (<span class="gold-text" id="ui-livewell-val">$0</span>)</div>
+  <!-- ==================== TOP STATUS BAR ==================== -->
+  <header class="sticky top-0 z-30 bg-discord-900/90 backdrop-blur-xl border-b border-slate-800/80 shadow-xl">
+    <div id="top-header-bar" class="max-w-[1440px] mx-auto px-3 sm:px-5 py-2 sm:py-2.5 flex flex-wrap items-center justify-between gap-2">
+      <!-- Brand + Prestige -->
+      <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
+        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-cyan-400 via-indigo-500 to-fuchsia-500 flex items-center justify-center text-lg shadow-lg shadow-indigo-500/30 shrink-0">
+          🎣
         </div>
-        <button class="sell-btn" id="btn-sell">Sell All</button>
-      </div>
-      <div style="font-size:11.5px; color:var(--text-muted); display:flex; justify-content:space-between;">
-        <span>Worker Crew: <strong id="ui-worker-rate">0 fish / 2s</strong></span>
-        <span>Milestone Bonus: <strong class="gold-text" id="ui-milestone-bonus">+0%</strong></span>
-      </div>
-    </div>
-
-    <div id="ui-active-buffs" class="buffs-strip"></div>
-
-    <div>
-      <div class="section-title" style="margin-bottom:6px;">
-        <span>Catch Feed</span>
-        <span style="font-size:11px;">Total Casts: <strong id="ui-total-casts">0</strong></span>
-      </div>
-      <div class="log-box" id="ui-log"></div>
-    </div>
-  </div>
-
-  <!-- RIGHT: PROGRESSION & REWARDS -->
-  <div class="panel">
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="upgrades">⬆️ Upgrades</button>
-      <button class="tab-btn" data-tab="gear">🎣 Rods & Boats</button>
-      <button class="tab-btn" data-tab="bait">🪱 Bait & Boosts</button>
-      <button class="tab-btn" data-tab="crates">📦 Crates & Quests <span class="badge-count" id="badge-crates" style="display:none;">0</span></button>
-      <button class="tab-btn" data-tab="pets">🐾 Pets & Charms</button>
-      <button class="tab-btn" data-tab="bestiary">📖 Bestiary</button>
-      <button class="tab-btn" data-tab="prestige">🔮 Prestige</button>
-    </div>
-
-    <!-- TAB 1: UPGRADES -->
-    <div class="tab-content active" id="tab-upgrades">
-      <div class="section-title"><span>Gold Upgrades (Reset on Prestige)</span></div>
-      <div class="cards-grid" id="grid-gold-upgrades"></div>
-
-      <div class="section-title" style="margin-top:6px;"><span>Emerald Upgrades (Permanent Forever)</span></div>
-      <div class="cards-grid" id="grid-emerald-upgrades"></div>
-    </div>
-
-    <!-- TAB 2: RODS & BOATS -->
-    <div class="tab-content" id="tab-gear">
-      <div class="section-title"><span>Fishing Rods (Multiply Fish Yield & Rarity)</span></div>
-      <div class="cards-grid" id="grid-rods"></div>
-
-      <div class="section-title" style="margin-top:6px;"><span>Boats (Boost Catch Power, Cooldown & Crew Speed)</span></div>
-      <div class="cards-grid" id="grid-boats"></div>
-    </div>
-
-    <!-- TAB 3: BAIT & BOOSTS -->
-    <div class="tab-content" id="tab-bait">
-      <div class="section-title"><span>Consumable Baits (Click to Equip Owned Bait)</span></div>
-      <div class="cards-grid" id="grid-baits"></div>
-
-      <div class="section-title" style="margin-top:6px;">
-        <span>Exotic Fish Boost Shop (3-Minute Power Surges)</span>
-        <span id="ui-exotic-wallet" style="font-size:12px; color:var(--emerald);"></span>
-      </div>
-      <div class="cards-grid" id="grid-boosts"></div>
-    </div>
-
-    <!-- TAB 4: CRATES & QUESTS -->
-    <div class="tab-content" id="tab-crates">
-      <div class="section-title">
-        <span>Treasure Crates & Daily Reward</span>
-        <div style="display:flex; gap:8px;">
-          <button class="sell-btn" id="btn-daily" style="background:var(--cyan); color:#111;">🎁 Claim Daily Reward</button>
-          <button class="sell-btn" id="btn-open-all-crates">📦 Open All Crates</button>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-black text-sm sm:text-base tracking-tight bg-gradient-to-r from-cyan-300 via-indigo-200 to-fuchsia-300 bg-clip-text text-transparent truncate">
+              Virtual Fisher
+            </h1>
+            <span id="ui-prestige-badge" class="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold bg-fuchsia-500/20 border border-fuchsia-400/40 text-fuchsia-200 shrink-0">
+              P0
+            </span>
+          </div>
+          <!-- Desktop XP Mini Bar -->
+          <div class="hidden lg:flex items-center gap-2 mt-0.5">
+            <span class="text-[11px] font-extrabold text-cyan-300">Lv. <span id="stat-level-desktop">1</span></span>
+            <div class="w-36 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/60">
+              <div id="stat-xp-bar-desktop" class="h-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 transition-all duration-300" style="width: 0%;"></div>
+            </div>
+            <span id="stat-xp-text-desktop" class="text-[10px] text-slate-400 font-mono">0 / 120 XP</span>
+          </div>
         </div>
       </div>
-      <div class="cards-grid" id="grid-crates"></div>
 
-      <div class="section-title" style="margin-top:6px;"><span>Active Quests (Earn Emeralds & Exotic Fish)</span></div>
-      <div class="cards-grid" id="grid-quests"></div>
-    </div>
+      <!-- Resource Chips -->
+      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-discord-850 border border-amber-500/30 text-xs sm:text-sm font-extrabold">
+          <span>🪙</span>
+          <span id="ui-gold" class="text-amber-300 font-mono">$0</span>
+        </div>
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-discord-850 border border-emerald-500/30 text-xs sm:text-sm font-extrabold">
+          <span>💎</span>
+          <span id="ui-emeralds" class="text-emerald-300 font-mono">0</span>
+        </div>
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-discord-850 border border-fuchsia-500/30 text-xs sm:text-sm font-extrabold" title="Prestige Tokens">
+          <span>🔮</span>
+          <span id="ui-ptokens" class="text-fuchsia-300 font-mono">0</span>
+        </div>
+        <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-discord-850 border border-cyan-500/30 text-xs font-bold" title="Cast Cooldown">
+          <span>⚡</span>
+          <span id="ui-cd-stat" class="text-cyan-300 font-mono">1.60s</span>
+        </div>
+        <div class="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-discord-850 border border-indigo-500/30 text-xs font-bold" title="Fish Yield Multiplier">
+          <span>🐟</span>
+          <span id="ui-power-stat" class="text-indigo-200 font-mono">1.0x</span>
+        </div>
 
-    <!-- TAB 5: PETS & CHARMS -->
-    <div class="tab-content" id="tab-pets">
-      <div class="section-title"><span>Companions (1 Active Pet — Levels up to Lv. 100 as you fish)</span></div>
-      <div class="cards-grid" id="grid-pets"></div>
-
-      <div class="section-title" style="margin-top:6px;"><span>Permanent Charms (Found inside Treasure Crates)</span></div>
-      <div class="cards-grid" id="grid-charms"></div>
-    </div>
-
-    <!-- TAB 6: BESTIARY -->
-    <div class="tab-content" id="tab-bestiary">
-      <div class="section-title">
-        <span>Biome Bestiary (Complete a Biome for +25% Permanent Mastery Bonus)</span>
-        <span id="ui-bestiary-summary" style="color:var(--gold);">0 / 42 Discovered</span>
+        <!-- Sync Status & Account/Backup Modal Trigger -->
+        <button id="btn-open-account" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold bg-discord-850 hover:bg-discord-800 border border-slate-700 text-slate-200 transition active:scale-95" title="Save &amp; Backup Settings">
+          <span id="sync-dot" class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+          <span id="sync-text" class="hidden sm:inline">Local Save</span>
+          <span class="text-slate-400">⚙️</span>
+        </button>
       </div>
-      <div id="grid-bestiary" style="display:flex; flex-direction:column; gap:12px;"></div>
     </div>
 
-    <!-- TAB 7: PRESTIGE -->
-    <div class="tab-content" id="tab-prestige">
-      <div class="prestige-hero">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-          <div>
-            <div style="font-size:18px; font-weight:800; color:#e9d5ff;">Ascend to Next Prestige Rank</div>
-            <div style="font-size:13px; color:var(--text-muted); margin-top:4px;" id="ui-prestige-req-text">
-              Requires Level 100 to Prestige.
+    <!-- Mobile Level Bar -->
+    <div id="mobile-xp-subbar" class="lg:hidden px-3 pb-2 flex items-center gap-2 text-[11px]">
+      <span class="font-bold text-cyan-300 shrink-0">Lv. <span id="stat-level-mobile">1</span></span>
+      <div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+        <div id="stat-xp-bar-mobile" class="h-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 rounded-full transition-all duration-300" style="width: 0%;"></div>
+      </div>
+      <span id="stat-xp-text-mobile" class="text-slate-400 tabular-nums font-mono shrink-0">0/120</span>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <main id="main-workspace" class="flex-1 max-w-[1440px] w-full mx-auto px-3 sm:px-5 py-3.5 sm:py-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
+
+    <!-- LEFT COLUMN: FISHING CONSOLE & LIVE CATCH FEED -->
+    <section id="left-console-col" class="lg:col-span-5 xl:col-span-5 flex flex-col gap-4">
+
+      <!-- Cosmic Biome Stage Card -->
+      <div class="bg-discord-900/95 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
+        <div id="biome-stage" class="relative h-36 sm:h-40 p-4 flex flex-col justify-between transition-all duration-500" style="background: linear-gradient(135deg, #0284c7, #0f172a);">
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_55%)] pointer-events-none"></div>
+          <div class="relative z-10 flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="ui-biome-icon" class="text-xl sm:text-2xl">🏞️</span>
+                <h2 id="ui-biome-name" class="text-lg sm:text-xl font-black tracking-tight text-white drop-shadow">River</h2>
+              </div>
+              <p id="ui-biome-desc" class="text-[11px] sm:text-xs text-slate-200/90 mt-0.5 line-clamp-2 max-w-xs">
+                Calm freshwater currents. Great for learning the ropes and finding early Wooden Crates.
+              </p>
+            </div>
+            <span id="ui-biome-mult" class="px-2.5 py-1 rounded-lg bg-black/40 backdrop-blur border border-white/15 text-[11px] font-extrabold text-amber-300 shrink-0">
+              1x Value &amp; XP
+            </span>
+          </div>
+
+          <div class="relative z-10 flex items-end justify-between">
+            <span id="stage-status-text" class="text-[11px] sm:text-xs font-semibold text-cyan-200 bg-black/35 px-2.5 py-1 rounded-full border border-white/10">
+              Ready to cast! Press Space or tap Cast
+            </span>
+            <div id="bobber-sprite" class="text-4xl sm:text-5xl select-none bobber-idle drop-shadow-[0_6px_12px_rgba(0,0,0,0.45)]">
+              🎣
             </div>
           </div>
-          <button class="buy-btn purple" id="btn-prestige" style="width:auto; padding:12px 20px; font-size:14px;">
-            🔮 PRESTIGE NOW (+0 Tokens)
-          </button>
         </div>
-        <div style="font-size:12.5px; color:#ddd6fe; line-height:1.5;">
-          <strong>Keeps Forever:</strong> Prestige Rank, Prestige Tokens, Emeralds, Emerald Upgrades, Pets, Charms, Exotic Fish & Bestiary.<br/>
-          <strong>Permanent Rank Perks:</strong> +30% Gold, +25% XP, +5% Pet Find Odds, and -2% Biome Level Requirements per Prestige rank!
+
+        <!-- Cast Controls Body -->
+        <div class="p-3.5 sm:p-4 space-y-3">
+          <!-- Cooldown Bar -->
+          <div>
+            <div class="flex items-center justify-between text-[11px] sm:text-xs mb-1">
+              <span class="font-bold text-slate-400">Cast Cooldown</span>
+              <span id="cooldown-timer-text" class="font-mono font-bold text-cyan-300">Ready (1.60s)</span>
+            </div>
+            <div class="w-full h-2 bg-discord-950 rounded-full overflow-hidden border border-slate-800">
+              <div id="cooldown-bar-fill" class="h-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 transition-all duration-75" style="width: 100%;"></div>
+            </div>
+          </div>
+
+          <!-- Primary Cast Button (Desktop / Tablet) -->
+          <button id="btn-cast-line" class="w-full py-3.5 px-5 rounded-2xl font-black text-base tracking-wide text-white bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 hover:brightness-110 active:scale-[0.98] transition shadow-lg shadow-indigo-500/30 border border-white/20 disabled:opacity-55 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            <span>🎣</span>
+            <span>CAST LINE</span>
+            <span class="hidden sm:inline text-[11px] font-semibold bg-black/25 px-2 py-0.5 rounded-md">Space</span>
+          </button>
+
+          <!-- Bait Cycler + Auto Toggles -->
+          <div class="grid grid-cols-3 gap-2">
+            <button id="btn-cycle-bait" class="py-2 px-2 rounded-xl bg-discord-850 hover:bg-discord-800 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold truncate transition active:scale-95" title="Click to cycle owned bait">
+              🪱 <span id="ui-active-bait-short">None</span>
+            </button>
+            <button id="btn-autocast" class="py-2 px-2 rounded-xl bg-discord-850 hover:bg-discord-800 border border-slate-700 text-slate-300 text-[11px] font-bold transition active:scale-95">
+              🤖 Auto: OFF
+            </button>
+            <button id="btn-autosell" class="py-2 px-2 rounded-xl bg-discord-850 hover:bg-discord-800 border border-slate-700 text-slate-300 text-[11px] font-bold transition active:scale-95">
+              💰 Sell: OFF
+            </button>
+          </div>
+
+          <!-- Quick Livewell + Crates Action Bar -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button id="btn-sell-all" class="p-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-left transition active:scale-[0.98] disabled:opacity-45">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-amber-200">💰 Sell Livewell</span>
+                <span id="ui-livewell-count" class="text-[10px] font-mono text-slate-300 bg-black/30 px-1.5 py-0.5 rounded">0 fish</span>
+              </div>
+              <div id="quick-sell-value" class="text-sm sm:text-base font-black text-amber-300 font-mono mt-0.5">$0</div>
+            </button>
+
+            <button id="btn-quick-crates" class="p-2.5 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-400/35 text-left transition active:scale-[0.98]">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-indigo-200">📦 Open Crates</span>
+                <span id="ui-milestone-bonus" class="text-[10px] font-mono text-cyan-300">+0% Lv</span>
+              </div>
+              <div class="flex items-baseline gap-1.5 mt-0.5">
+                <span id="quick-chest-count" class="text-sm sm:text-base font-black text-indigo-200 font-mono">0</span>
+                <span class="text-[11px] text-slate-400">ready</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Crew Rate + Active Boost Pills -->
+          <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400 px-1">
+            <span>Crew: <strong id="ui-worker-rate" class="text-slate-200">0 fish / 2s</strong></span>
+            <span>Next Biome: <strong id="ui-next-biome-hint" class="text-cyan-300">Volcanic (Lv 50)</strong></span>
+          </div>
+          <div id="ui-active-buffs" class="flex flex-wrap gap-1.5 empty:hidden"></div>
         </div>
       </div>
 
-      <div class="section-title"><span>Prestige Token Meta-Shop</span></div>
-      <div class="cards-grid" id="grid-prestige-shop"></div>
+      <!-- Discord-Style Live Catch Feed -->
+      <div class="bg-discord-900/95 rounded-2xl border border-slate-800 shadow-xl p-3.5 sm:p-4 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Live Catch Feed</h3>
+          </div>
+          <span class="text-[11px] text-slate-400 font-mono">Casts: <strong id="ui-total-casts" class="text-slate-200">0</strong></span>
+        </div>
+        <div id="catch-feed-list" class="space-y-2 max-h-[250px] overflow-y-auto pr-1 text-xs"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: TABBED COMMAND CENTER -->
+    <section id="right-command-col" class="lg:col-span-7 xl:col-span-7 bg-discord-900/95 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col min-h-[600px] lg:min-h-[660px]">
+      <!-- Main Navigation Tabs -->
+      <div class="scroll-fade-wrap bg-discord-850/90 border-b border-slate-800">
+        <nav id="main-tabs" class="flex items-center gap-1 p-2 overflow-x-auto no-scrollbar pr-8">
+          <button data-tab="shop" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition">
+            🛒 Mega Shop
+          </button>
+          <button data-tab="biomes" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition">
+            🌌 Biomes (7)
+          </button>
+          <button data-tab="crates" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition relative">
+            📦 Crates &amp; Quests
+            <span id="crate-ready-dot" class="hidden w-2 h-2 rounded-full bg-emerald-400"></span>
+          </button>
+          <button data-tab="pets" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition">
+            🐾 Pets &amp; Charms
+          </button>
+          <button data-tab="fishdex" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition">
+            📖 Fishdex
+          </button>
+          <button data-tab="prestige" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition">
+            🔮 Prestige &amp; Stats
+          </button>
+        </nav>
+      </div>
+
+      <!-- Dynamic Tab Content -->
+      <div id="tab-content-area" class="p-3.5 sm:p-5 flex-1 overflow-y-auto max-h-[820px]"></div>
+    </section>
+  </main>
+
+  <!-- ==================== STICKY MOBILE PORTRAIT CAST DOCK ==================== -->
+  <div id="mobile-cast-dock" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-discord-900/95 backdrop-blur-xl border-t border-slate-700/80 px-3 pt-2 shadow-[0_-10px_30px_rgba(0,0,0,0.65)]">
+    <div class="flex items-center justify-between gap-2 mb-1.5 text-[11px]">
+      <div class="flex items-center gap-1.5 min-w-0">
+        <span id="dock-biome-label" class="font-bold text-slate-200 truncate">🏞️ River</span>
+        <span class="text-slate-600">•</span>
+        <button id="dock-cycle-bait" class="font-bold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full truncate active:scale-95 transition">
+          Bait: <span id="dock-bait-label">None</span>
+        </button>
+      </div>
+      <span id="dock-cooldown-text" class="font-mono font-bold text-cyan-300 shrink-0">Ready</span>
+    </div>
+    <div class="w-full h-1.5 bg-discord-950 rounded-full overflow-hidden border border-slate-800 mb-2">
+      <div id="dock-cooldown-bar" class="h-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 rounded-full transition-all duration-75" style="width: 100%;"></div>
+    </div>
+    <div class="grid grid-cols-12 gap-2">
+      <button id="dock-cast-btn" class="col-span-8 min-h-[48px] py-2.5 px-4 rounded-2xl font-black text-base tracking-wide text-white bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 active:scale-[0.97] transition shadow-lg shadow-indigo-500/30 border border-white/20 disabled:opacity-60 flex items-center justify-center gap-2">
+        <span>🎣</span>
+        <span>CAST LINE</span>
+      </button>
+      <button id="dock-sell-btn" class="col-span-4 min-h-[48px] py-2 px-2 rounded-2xl bg-amber-500/20 active:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-extrabold text-xs flex flex-col items-center justify-center leading-tight active:scale-95 transition">
+        <span>💰 Sell All</span>
+        <span id="dock-sell-val" class="text-[11px] font-mono text-amber-200">$0</span>
+      </button>
     </div>
   </div>
-</div>
 
-<div class="footer-tools">
-  <button class="mini-btn" id="btn-save">💾 Save Now</button>
-  <button class="mini-btn" id="btn-export">📤 Export Save</button>
-  <button class="mini-btn" id="btn-import">📥 Import Save</button>
-  <button class="mini-btn" id="btn-reset" style="color:#fca5a5;">⚠️ Hard Reset</button>
-</div>
+  <!-- ==================== TOAST NOTIFICATION STACK ==================== -->
+  <div id="toast-container" class="fixed right-3 sm:right-5 bottom-4 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
-<script>
-/* ============================================================================
-   GAME DATA DEFINITIONS (VIRTUAL FISHER PACING + FAST CUSTOM COOLDOWN)
-   ============================================================================ */
-const BIOMES = [
-  {
-    id: 'river', name: 'River', icon: '🏞️', baseReq: 1, mult: 1, cdPenalty: 0,
-    crate: 'wooden', gradient: 'linear-gradient(135deg, #0284c7, #0f172a)',
-    desc: 'Calm freshwater currents. Great for learning the ropes and finding early Wooden Crates.',
-    fish: [
-      { id: 'f_raw', name: 'Raw Fish', rarity: 'Common', val: 12, xp: 10, weight: 45 },
-      { id: 'f_salmon', name: 'Raw Salmon', rarity: 'Common', val: 20, xp: 16, weight: 30 },
-      { id: 'f_cod', name: 'River Cod', rarity: 'Uncommon', val: 38, xp: 28, weight: 15 },
-      { id: 'f_trop', name: 'Tropical Fish', rarity: 'Rare', val: 85, xp: 60, weight: 7 },
-      { id: 'f_puff', name: 'Pufferfish', rarity: 'Epic', val: 210, xp: 140, weight: 2.5 },
-      { id: 'f_rlev', name: 'River Leviathan', rarity: 'Mythic', val: 750, xp: 450, weight: 0.5 }
-    ]
-  },
-  {
-    id: 'volcanic', name: 'Volcanic', icon: '🌋', baseReq: 50, mult: 8, cdPenalty: 0.08,
-    crate: 'magma', gradient: 'linear-gradient(135deg, #dc2626, #1c1917)',
-    desc: 'Boiling magma vents rich in gold-scaled fish and Lava Fish exotics.',
-    fish: [
-      { id: 'f_hcod', name: 'Hot Cod', rarity: 'Common', val: 16, xp: 13, weight: 44 },
-      { id: 'f_fpuff', name: 'Fiery Pufferfish', rarity: 'Common', val: 26, xp: 20, weight: 30 },
-      { id: 'f_meel', name: 'Magma Eel', rarity: 'Uncommon', val: 50, xp: 36, weight: 15 },
-      { id: 'f_osnap', name: 'Obsidian Snapper', rarity: 'Rare', val: 115, xp: 80, weight: 7.5 },
-      { id: 'f_cind', name: 'Cinder Ray', rarity: 'Epic', val: 290, xp: 190, weight: 2.8 },
-      { id: 'f_ignis', name: 'Ignis Wyrm', rarity: 'Mythic', val: 1100, xp: 650, weight: 0.7 }
-    ]
-  },
-  {
-    id: 'ocean', name: 'Ocean', icon: '🌊', baseReq: 100, mult: 45, cdPenalty: 0.14,
-    crate: 'sunken', gradient: 'linear-gradient(135deg, #1d4ed8, #090d16)',
-    desc: 'Deep pelagic waters teeming with big-game sharks, whales, and Diamond Fish.',
-    fish: [
-      { id: 'f_squid', name: 'Deep Squid', rarity: 'Common', val: 18, xp: 15, weight: 43 },
-      { id: 'f_turtle', name: 'Sea Turtle', rarity: 'Common', val: 30, xp: 24, weight: 30 },
-      { id: 'f_dolphin', name: 'Bottlenose Dolphin', rarity: 'Uncommon', val: 62, xp: 45, weight: 16 },
-      { id: 'f_shark', name: 'Great White Shark', rarity: 'Rare', val: 145, xp: 100, weight: 7.5 },
-      { id: 'f_orca', name: 'Abyssal Orca', rarity: 'Epic', val: 360, xp: 240, weight: 2.8 },
-      { id: 'f_kraken', name: 'Tidal Kraken', rarity: 'Mythic', val: 1400, xp: 850, weight: 0.7 }
-    ]
-  },
-  {
-    id: 'sky', name: 'Sky', icon: '☁️', baseReq: 250, mult: 260, cdPenalty: 0.20,
-    crate: 'cloud', gradient: 'linear-gradient(135deg, #0ea5e9, #312e81)',
-    desc: 'Floating cloud seas above the stratosphere offering massive XP yields.',
-    fish: [
-      { id: 'f_guard', name: 'Sky Guardian', rarity: 'Common', val: 20, xp: 22, weight: 43 },
-      { id: 'f_esquid', name: 'Emerald Squid', rarity: 'Common', val: 34, xp: 34, weight: 30 },
-      { id: 'f_rain', name: 'Rainbow Fish', rarity: 'Uncommon', val: 70, xp: 65, weight: 16 },
-      { id: 'f_cray', name: 'Cloud Manta', rarity: 'Rare', val: 165, xp: 145, weight: 7.5 },
-      { id: 'f_seraph', name: 'Seraph Koi', rarity: 'Epic', val: 420, xp: 340, weight: 2.8 },
-      { id: 'f_tdrag', name: 'Tempest Dragon', rarity: 'Mythic', val: 1650, xp: 1200, weight: 0.7 }
-    ]
-  },
-  {
-    id: 'space', name: 'Space', icon: '🪐', baseReq: 500, mult: 1600, cdPenalty: 0.26,
-    crate: 'star', gradient: 'linear-gradient(135deg, #4f46e5, #09090b)',
-    desc: 'Zero-gravity nebula currents filled with starlight whales and cosmic crabs.',
-    fish: [
-      { id: 'f_space', name: 'Space Fish', rarity: 'Common', val: 22, xp: 26, weight: 43 },
-      { id: 'f_gcrab', name: 'Galactic Crab', rarity: 'Common', val: 38, xp: 40, weight: 30 },
-      { id: 'f_njel', name: 'Nebula Jellyfish', rarity: 'Uncommon', val: 78, xp: 75, weight: 16 },
-      { id: 'f_swhale', name: 'Starlight Whale', rarity: 'Rare', val: 190, xp: 170, weight: 7.5 },
-      { id: 'f_pulsar', name: 'Pulsar Marlin', rarity: 'Epic', val: 490, xp: 400, weight: 2.8 },
-      { id: 'f_vserp', name: 'Void Serpent', rarity: 'Mythic', val: 1950, xp: 1450, weight: 0.7 }
-    ]
-  },
-  {
-    id: 'alien', name: 'Alien', icon: '🛸', baseReq: 1000, mult: 10000, cdPenalty: 0.32,
-    crate: 'xenotech', gradient: 'linear-gradient(135deg, #059669, #1e1b4b)',
-    desc: 'Bioluminescent extraterrestrial oceans on a distant exoplanet.',
-    fish: [
-      { id: 'f_alien', name: 'Alien Fish', rarity: 'Common', val: 25, xp: 30, weight: 43 },
-      { id: 'f_psting', name: 'Plasma Stingray', rarity: 'Common', val: 42, xp: 48, weight: 30 },
-      { id: 'f_cshark', name: 'Cyber Shark', rarity: 'Uncommon', val: 88, xp: 90, weight: 16 },
-      { id: 'f_qkoi', name: 'Quantum Koi', rarity: 'Rare', val: 215, xp: 205, weight: 7.5 },
-      { id: 'f_xeno', name: 'Xenomorph Eel', rarity: 'Epic', val: 550, xp: 490, weight: 2.8 },
-      { id: 'f_eld', name: 'Eldritch Nautilus', rarity: 'Mythic', val: 2250, xp: 1750, weight: 0.7 }
-    ]
-  },
-  {
-    id: 'abyss', name: 'Abyss', icon: '🕳️', baseReq: 2500, mult: 75000, cdPenalty: 0.38,
-    crate: 'abyssal', gradient: 'linear-gradient(135deg, #7e22ce, #09090b)',
-    desc: 'The crushing bottom of reality. Home to Dark Tuna and Primordial Titans.',
-    fish: [
-      { id: 'f_art', name: 'Artifact Fish', rarity: 'Common', val: 28, xp: 35, weight: 43 },
-      { id: 'f_dpuff', name: 'Dark Puffer', rarity: 'Common', val: 48, xp: 56, weight: 30 },
-      { id: 'f_dtuna', name: 'Dark Tuna', rarity: 'Uncommon', val: 100, xp: 105, weight: 16 },
-      { id: 'f_tcol', name: 'Trench Colossus', rarity: 'Rare', val: 250, xp: 240, weight: 7.5 },
-      { id: 'f_shad', name: 'Shadow Leviathan', rarity: 'Epic', val: 640, xp: 580, weight: 2.8 },
-      { id: 'f_prim', name: 'Primordial Titan', rarity: 'Mythic', val: 2600, xp: 2100, weight: 0.7 }
-    ]
-  }
-];
+  <!-- ==================== SAVE / BACKUP MODAL ==================== -->
+  <div id="account-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-discord-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-black text-white">⚙️ Angler Profile &amp; Save Backup</h3>
+        <button id="btn-close-account" class="w-8 h-8 rounded-lg bg-discord-850 hover:bg-discord-700 text-slate-300 font-bold">✕</button>
+      </div>
 
-const RODS = [
-  { id: 'r_plastic', name: 'Plastic Rod', cost: 0, mult: 1.0, rareBonus: 0, reqLv: 1 },
-  { id: 'r_improved', name: 'Improved Rod', cost: 450, mult: 1.5, rareBonus: 0.05, reqLv: 1 },
-  { id: 'r_steel', name: 'Steel Rod', cost: 4500, mult: 2.4, rareBonus: 0.10, reqLv: 5 },
-  { id: 'r_fiber', name: 'Fiberglass Rod', cost: 32000, mult: 3.8, rareBonus: 0.16, reqLv: 15 },
-  { id: 'r_heavy', name: 'Heavy Alloy Rod', cost: 180000, mult: 6.0, rareBonus: 0.22, reqLv: 30 },
-  { id: 'r_lava', name: 'Lava Rod', cost: 1200000, mult: 10.0, rareBonus: 0.30, reqLv: 50 },
-  { id: 'r_magma', name: 'Magma Rod', cost: 9500000, mult: 16.5, rareBonus: 0.38, reqLv: 75 },
-  { id: 'r_ocean', name: 'Oceanium Rod', cost: 75000000, mult: 28.0, rareBonus: 0.48, reqLv: 100 },
-  { id: 'r_golden', name: 'Golden Rod', cost: 650000000, mult: 48.0, rareBonus: 0.60, reqLv: 160 },
-  { id: 'r_sky', name: 'Sky Rod', cost: 8500000000, mult: 85.0, rareBonus: 0.75, reqLv: 250 },
-  { id: 'r_meteor', name: 'Meteor Rod', cost: 1.2e11, mult: 150.0, rareBonus: 0.90, reqLv: 400 },
-  { id: 'r_space', name: 'Space Rod', cost: 2.5e12, mult: 275.0, rareBonus: 1.10, reqLv: 500 },
-  { id: 'r_alien', name: 'Xenotech Rod', cost: 8.0e13, mult: 520.0, rareBonus: 1.35, reqLv: 1000 },
-  { id: 'r_abyss', name: 'Abyssal Dark Rod', cost: 5.0e15, mult: 1050.0, rareBonus: 1.65, reqLv: 2500 }
-];
+      <div class="space-y-2">
+        <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Angler Display Name</label>
+        <div class="flex gap-2">
+          <input id="input-display-name" type="text" maxlength="22" placeholder="Cosmic Angler" class="flex-1 bg-discord-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400" />
+          <button id="btn-save-name" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs transition">Save</button>
+        </div>
+      </div>
 
-const BOATS = [
-  { id: 'b_none', name: 'Shoreline Pier', cost: 0, fishMult: 1.0, cdCut: 0, workerMult: 1.0, reqLv: 1 },
-  { id: 'b_row', name: 'Rowboat', cost: 2500, fishMult: 1.2, cdCut: 0.04, workerMult: 1.25, reqLv: 5 },
-  { id: 'b_fish', name: 'Fishing Boat', cost: 22000, fishMult: 1.45, cdCut: 0.08, workerMult: 1.6, reqLv: 15 },
-  { id: 'b_speed', name: 'Speedboat', cost: 160000, fishMult: 1.8, cdCut: 0.12, workerMult: 2.1, reqLv: 35 },
-  { id: 'b_sail', name: 'Sailboat', cost: 1800000, fishMult: 2.3, cdCut: 0.16, workerMult: 2.8, reqLv: 55 },
-  { id: 'b_yacht', name: 'Luxury Yacht', cost: 25000000, fishMult: 3.0, cdCut: 0.22, workerMult: 3.8, reqLv: 100 },
-  { id: 'b_cruise', name: 'Cruise Ship', cost: 450000000, fishMult: 4.0, cdCut: 0.28, workerMult: 5.2, reqLv: 180 },
-  { id: 'b_sky', name: 'Sky Cruiser', cost: 1.2e10, fishMult: 5.5, cdCut: 0.34, workerMult: 7.5, reqLv: 260 },
-  { id: 'b_shuttle', name: 'Space Shuttle', cost: 6.0e11, fishMult: 7.8, cdCut: 0.40, workerMult: 11.0, reqLv: 520 },
-  { id: 'b_dark', name: 'Dark Explorer', cost: 4.0e14, fishMult: 12.0, cdCut: 0.48, workerMult: 18.0, reqLv: 1500 }
-];
+      <div class="pt-3 border-t border-slate-800 space-y-2">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Manual Save Backup (JSON)</div>
+        <div class="grid grid-cols-3 gap-2">
+          <button id="btn-save-now" class="py-2.5 px-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition">💾 Save Now</button>
+          <button id="btn-export-save" class="py-2.5 px-2 rounded-xl bg-discord-850 hover:bg-discord-700 border border-slate-700 text-slate-200 font-bold text-xs transition">📤 Export</button>
+          <button id="btn-import-save-toggle" class="py-2.5 px-2 rounded-xl bg-discord-850 hover:bg-discord-700 border border-slate-700 text-slate-200 font-bold text-xs transition">📥 Import</button>
+        </div>
+        <input id="input-import-file" type="file" accept=".json,application/json" class="hidden" />
+        <div id="import-json-panel" class="hidden space-y-2 bg-discord-950 p-3 rounded-xl border border-slate-800">
+          <textarea id="input-import-json" rows="3" placeholder="Paste exported save JSON here, or choose a .json file..." class="w-full bg-discord-900 border border-slate-700 rounded-lg p-2 text-[11px] font-mono text-slate-200 focus:outline-none focus:border-cyan-400"></textarea>
+          <div class="flex gap-2">
+            <button id="btn-import-file-pick" class="flex-1 py-2 rounded-lg bg-discord-800 hover:bg-discord-700 text-slate-200 font-bold text-xs transition">Choose .json File</button>
+            <button id="btn-import-json-apply" class="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">Load JSON</button>
+          </div>
+        </div>
+      </div>
 
-const BAITS = [
-  { id: 'worms', name: 'Worms', cost: 15, reqLv: 1, fishMult: 1.5, xpMult: 1.0, chestMult: 1.0, desc: '1.5x fish caught per cast.' },
-  { id: 'leeches', name: 'Leeches', cost: 65, reqLv: 10, fishMult: 2.0, xpMult: 1.15, chestMult: 1.0, desc: '2.0x fish & +15% XP per cast.' },
-  { id: 'magnet', name: 'Magnet Bait', cost: 180, reqLv: 20, fishMult: 1.4, xpMult: 1.1, chestMult: 2.4, desc: '2.4x Treasure Crate find chance!' },
-  { id: 'wise', name: 'Wise Bait', cost: 450, reqLv: 30, fishMult: 1.5, xpMult: 2.1, chestMult: 1.2, desc: '2.1x XP gained per cast.' },
-  { id: 'fishbait', name: 'Super Fish Bait', cost: 1600, reqLv: 45, fishMult: 3.0, xpMult: 1.3, chestMult: 1.3, desc: '3.0x fish caught per cast.' },
-  { id: 'magic', name: 'Magic Bait', cost: 9500, reqLv: 85, fishMult: 3.8, xpMult: 2.4, chestMult: 1.8, desc: '3.8x fish, 2.4x XP & 1.8x Crates.' },
-  { id: 'support', name: 'Support Bait', cost: 65000, reqLv: 160, fishMult: 5.0, xpMult: 2.8, chestMult: 2.6, desc: 'Massive all-around multiplier.' },
-  { id: 'celestial', name: 'Celestial Bait', cost: 850000, reqLv: 400, fishMult: 8.0, xpMult: 4.0, chestMult: 3.5, desc: 'Endgame cosmic lure.' }
-];
+      <div class="pt-3 border-t border-slate-800">
+        <button id="btn-hard-reset" class="w-full py-2.5 px-4 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold text-xs transition">
+          ⚠️ Hard Reset All Progress
+        </button>
+      </div>
+    </div>
+  </div>
 
-const GOLD_UPGRADES = [
-  { id: 'cooldown', name: 'Quick Reel (Cooldown)', baseCost: 120, costScale: 1.48, maxLv: 20, desc: '-0.06s base fishing cooldown per level (1.60s → 0.40s).' },
-  { id: 'salesman', name: 'Salesman', baseCost: 180, costScale: 1.34, maxLv: 150, desc: '+6% fish sell value per level.' },
-  { id: 'betterFish', name: 'Net Capacity', baseCost: 220, costScale: 1.38, maxLv: 100, desc: '+1 base fish per cast per level.' },
-  { id: 'moreChests', name: 'Treasure Hunter', baseCost: 350, costScale: 1.42, maxLv: 60, desc: '+0.45% Treasure Crate drop rate per level.' },
-  { id: 'experienced', name: 'Experienced Angler', baseCost: 260, costScale: 1.36, maxLv: 120, desc: '+8% XP gained per level.' },
-  { id: 'baitEff', name: 'Bait Efficiency', baseCost: 500, costScale: 1.55, maxLv: 25, desc: '+2% chance not to consume bait (max 50%).' },
-  { id: 'workers', name: 'Auto-Fish Crew', baseCost: 400, costScale: 1.40, maxLv: 100, desc: 'Hires crew members who catch fish every 2 seconds.' },
-  { id: 'duplicator', name: 'Twin-Hook Rig', baseCost: 1200, costScale: 1.62, maxLv: 40, desc: '+2.5% chance to double an entire catch!' }
-];
+  <script>
+    /* ============================================================================
+       1. GAME DATA & CALCULATIONS (EXACTLY FROM INDEX.HTML)
+       ============================================================================ */
+    const LOCAL_SAVE_KEY = 'vf_deep_horizons_v1';
 
-const EMERALD_UPGRADES = [
-  { id: 'emScholar', name: 'Emerald Scholar', baseCost: 5, costScale: 1.45, maxLv: 40, desc: 'Permanent +12% XP multiplier per level.' },
-  { id: 'emMidas', name: 'Emerald Midas', baseCost: 5, costScale: 1.45, maxLv: 40, desc: 'Permanent +12% Gold multiplier per level.' },
-  { id: 'emCrate', name: 'Artifact Specialist', baseCost: 8, costScale: 1.55, maxLv: 25, desc: 'Permanent +15% Gold & Emerald payouts from Crates.' },
-  { id: 'emPetXp', name: 'Pet Trainer', baseCost: 10, costScale: 1.60, maxLv: 20, desc: 'Permanent +20% Pet XP gained per cast.' }
-];
+    const BIOMES = [
+      {
+        id: 'river', name: 'River', icon: '🏞️', baseReq: 1, mult: 1, cdPenalty: 0,
+        crate: 'wooden', gradient: 'linear-gradient(135deg, #0284c7, #0f172a)',
+        desc: 'Calm freshwater currents. Great for learning the ropes and finding early Wooden Crates.',
+        fish: [
+          { id: 'f_raw', name: 'Raw Fish', rarity: 'Common', val: 12, xp: 10, weight: 45 },
+          { id: 'f_salmon', name: 'Raw Salmon', rarity: 'Common', val: 20, xp: 16, weight: 30 },
+          { id: 'f_cod', name: 'River Cod', rarity: 'Uncommon', val: 38, xp: 28, weight: 15 },
+          { id: 'f_trop', name: 'Tropical Fish', rarity: 'Rare', val: 85, xp: 60, weight: 7 },
+          { id: 'f_puff', name: 'Pufferfish', rarity: 'Epic', val: 210, xp: 140, weight: 2.5 },
+          { id: 'f_rlev', name: 'River Leviathan', rarity: 'Mythic', val: 750, xp: 450, weight: 0.5 }
+        ]
+      },
+      {
+        id: 'volcanic', name: 'Volcanic', icon: '🌋', baseReq: 50, mult: 8, cdPenalty: 0.08,
+        crate: 'magma', gradient: 'linear-gradient(135deg, #dc2626, #1c1917)',
+        desc: 'Boiling magma vents rich in gold-scaled fish and Lava Fish exotics.',
+        fish: [
+          { id: 'f_hcod', name: 'Hot Cod', rarity: 'Common', val: 16, xp: 13, weight: 44 },
+          { id: 'f_fpuff', name: 'Fiery Pufferfish', rarity: 'Common', val: 26, xp: 20, weight: 30 },
+          { id: 'f_meel', name: 'Magma Eel', rarity: 'Uncommon', val: 50, xp: 36, weight: 15 },
+          { id: 'f_osnap', name: 'Obsidian Snapper', rarity: 'Rare', val: 115, xp: 80, weight: 7.5 },
+          { id: 'f_cind', name: 'Cinder Ray', rarity: 'Epic', val: 290, xp: 190, weight: 2.8 },
+          { id: 'f_ignis', name: 'Ignis Wyrm', rarity: 'Mythic', val: 1100, xp: 650, weight: 0.7 }
+        ]
+      },
+      {
+        id: 'ocean', name: 'Ocean', icon: '🌊', baseReq: 100, mult: 45, cdPenalty: 0.14,
+        crate: 'sunken', gradient: 'linear-gradient(135deg, #1d4ed8, #090d16)',
+        desc: 'Deep pelagic waters teeming with big-game sharks, whales, and Diamond Fish.',
+        fish: [
+          { id: 'f_squid', name: 'Deep Squid', rarity: 'Common', val: 18, xp: 15, weight: 43 },
+          { id: 'f_turtle', name: 'Sea Turtle', rarity: 'Common', val: 30, xp: 24, weight: 30 },
+          { id: 'f_dolphin', name: 'Bottlenose Dolphin', rarity: 'Uncommon', val: 62, xp: 45, weight: 16 },
+          { id: 'f_shark', name: 'Great White Shark', rarity: 'Rare', val: 145, xp: 100, weight: 7.5 },
+          { id: 'f_orca', name: 'Abyssal Orca', rarity: 'Epic', val: 360, xp: 240, weight: 2.8 },
+          { id: 'f_kraken', name: 'Tidal Kraken', rarity: 'Mythic', val: 1400, xp: 850, weight: 0.7 }
+        ]
+      },
+      {
+        id: 'sky', name: 'Sky', icon: '☁️', baseReq: 250, mult: 260, cdPenalty: 0.20,
+        crate: 'cloud', gradient: 'linear-gradient(135deg, #0ea5e9, #312e81)',
+        desc: 'Floating cloud seas above the stratosphere offering massive XP yields.',
+        fish: [
+          { id: 'f_guard', name: 'Sky Guardian', rarity: 'Common', val: 20, xp: 22, weight: 43 },
+          { id: 'f_esquid', name: 'Emerald Squid', rarity: 'Common', val: 34, xp: 34, weight: 30 },
+          { id: 'f_rain', name: 'Rainbow Fish', rarity: 'Uncommon', val: 70, xp: 65, weight: 16 },
+          { id: 'f_cray', name: 'Cloud Manta', rarity: 'Rare', val: 165, xp: 145, weight: 7.5 },
+          { id: 'f_seraph', name: 'Seraph Koi', rarity: 'Epic', val: 420, xp: 340, weight: 2.8 },
+          { id: 'f_tdrag', name: 'Tempest Dragon', rarity: 'Mythic', val: 1650, xp: 1200, weight: 0.7 }
+        ]
+      },
+      {
+        id: 'space', name: 'Space', icon: '🪐', baseReq: 500, mult: 1600, cdPenalty: 0.26,
+        crate: 'star', gradient: 'linear-gradient(135deg, #4f46e5, #09090b)',
+        desc: 'Zero-gravity nebula currents filled with starlight whales and cosmic crabs.',
+        fish: [
+          { id: 'f_space', name: 'Space Fish', rarity: 'Common', val: 22, xp: 26, weight: 43 },
+          { id: 'f_gcrab', name: 'Galactic Crab', rarity: 'Common', val: 38, xp: 40, weight: 30 },
+          { id: 'f_njel', name: 'Nebula Jellyfish', rarity: 'Uncommon', val: 78, xp: 75, weight: 16 },
+          { id: 'f_swhale', name: 'Starlight Whale', rarity: 'Rare', val: 190, xp: 170, weight: 7.5 },
+          { id: 'f_pulsar', name: 'Pulsar Marlin', rarity: 'Epic', val: 490, xp: 400, weight: 2.8 },
+          { id: 'f_vserp', name: 'Void Serpent', rarity: 'Mythic', val: 1950, xp: 1450, weight: 0.7 }
+        ]
+      },
+      {
+        id: 'alien', name: 'Alien', icon: '🛸', baseReq: 1000, mult: 10000, cdPenalty: 0.32,
+        crate: 'xenotech', gradient: 'linear-gradient(135deg, #059669, #1e1b4b)',
+        desc: 'Bioluminescent extraterrestrial oceans on a distant exoplanet.',
+        fish: [
+          { id: 'f_alien', name: 'Alien Fish', rarity: 'Common', val: 25, xp: 30, weight: 43 },
+          { id: 'f_psting', name: 'Plasma Stingray', rarity: 'Common', val: 42, xp: 48, weight: 30 },
+          { id: 'f_cshark', name: 'Cyber Shark', rarity: 'Uncommon', val: 88, xp: 90, weight: 16 },
+          { id: 'f_qkoi', name: 'Quantum Koi', rarity: 'Rare', val: 215, xp: 205, weight: 7.5 },
+          { id: 'f_xeno', name: 'Xenomorph Eel', rarity: 'Epic', val: 550, xp: 490, weight: 2.8 },
+          { id: 'f_eld', name: 'Eldritch Nautilus', rarity: 'Mythic', val: 2250, xp: 1750, weight: 0.7 }
+        ]
+      },
+      {
+        id: 'abyss', name: 'Abyss', icon: '🕳️', baseReq: 2500, mult: 75000, cdPenalty: 0.38,
+        crate: 'abyssal', gradient: 'linear-gradient(135deg, #7e22ce, #09090b)',
+        desc: 'The crushing bottom of reality. Home to Dark Tuna and Primordial Titans.',
+        fish: [
+          { id: 'f_art', name: 'Artifact Fish', rarity: 'Common', val: 28, xp: 35, weight: 43 },
+          { id: 'f_dpuff', name: 'Dark Puffer', rarity: 'Common', val: 48, xp: 56, weight: 30 },
+          { id: 'f_dtuna', name: 'Dark Tuna', rarity: 'Uncommon', val: 100, xp: 105, weight: 16 },
+          { id: 'f_tcol', name: 'Trench Colossus', rarity: 'Rare', val: 250, xp: 240, weight: 7.5 },
+          { id: 'f_shad', name: 'Shadow Leviathan', rarity: 'Epic', val: 640, xp: 580, weight: 2.8 },
+          { id: 'f_prim', name: 'Primordial Titan', rarity: 'Mythic', val: 2600, xp: 2100, weight: 0.7 }
+        ]
+      }
+    ];
 
-const CRATE_TYPES = {
-  wooden: { name: 'Wooden Crate', icon: '📦', goldMult: 25, emMin: 1, emMax: 3 },
-  magma: { name: 'Magma Crate', icon: '🔥', goldMult: 140, emMin: 2, emMax: 5 },
-  sunken: { name: 'Sunken Chest', icon: '⚓', goldMult: 750, emMin: 4, emMax: 9 },
-  cloud: { name: 'Cloud Chest', icon: '🌤️', goldMult: 4200, emMin: 7, emMax: 15 },
-  star: { name: 'Star Crate', icon: '✨', goldMult: 26000, emMin: 12, emMax: 25 },
-  xenotech: { name: 'Xenotech Vault', icon: '🛸', goldMult: 160000, emMin: 20, emMax: 42 },
-  abyssal: { name: 'Abyssal Reliquary', icon: '👑', goldMult: 1200000, emMin: 35, emMax: 75 }
-};
+    const RODS = [
+      { id: 'r_plastic', name: 'Plastic Rod', cost: 0, mult: 1.0, rareBonus: 0, reqLv: 1 },
+      { id: 'r_improved', name: 'Improved Rod', cost: 450, mult: 1.5, rareBonus: 0.05, reqLv: 1 },
+      { id: 'r_steel', name: 'Steel Rod', cost: 4500, mult: 2.4, rareBonus: 0.10, reqLv: 5 },
+      { id: 'r_fiber', name: 'Fiberglass Rod', cost: 32000, mult: 3.8, rareBonus: 0.16, reqLv: 15 },
+      { id: 'r_heavy', name: 'Heavy Alloy Rod', cost: 180000, mult: 6.0, rareBonus: 0.22, reqLv: 30 },
+      { id: 'r_lava', name: 'Lava Rod', cost: 1200000, mult: 10.0, rareBonus: 0.30, reqLv: 50 },
+      { id: 'r_magma', name: 'Magma Rod', cost: 9500000, mult: 16.5, rareBonus: 0.38, reqLv: 75 },
+      { id: 'r_ocean', name: 'Oceanium Rod', cost: 75000000, mult: 28.0, rareBonus: 0.48, reqLv: 100 },
+      { id: 'r_golden', name: 'Golden Rod', cost: 650000000, mult: 48.0, rareBonus: 0.60, reqLv: 160 },
+      { id: 'r_sky', name: 'Sky Rod', cost: 8500000000, mult: 85.0, rareBonus: 0.75, reqLv: 250 },
+      { id: 'r_meteor', name: 'Meteor Rod', cost: 1.2e11, mult: 150.0, rareBonus: 0.90, reqLv: 400 },
+      { id: 'r_space', name: 'Space Rod', cost: 2.5e12, mult: 275.0, rareBonus: 1.10, reqLv: 500 },
+      { id: 'r_alien', name: 'Xenotech Rod', cost: 8.0e13, mult: 520.0, rareBonus: 1.35, reqLv: 1000 },
+      { id: 'r_abyss', name: 'Abyssal Dark Rod', cost: 5.0e15, mult: 1050.0, rareBonus: 1.65, reqLv: 2500 }
+    ];
 
-const PETS = [
-  { id: 'tuna', name: 'Golden Tuna', icon: '🐟', role: 'Fish Yield', desc: '+1.5% fish quantity per pet level (up to +150%).' },
-  { id: 'dolphin', name: 'Swift Dolphin', icon: '🐬', role: 'Speed & Gold', desc: '-0.002s cooldown & +1% Gold per pet level.' },
-  { id: 'zebrafish', name: 'Wise Zebrafish', icon: '🐠', role: 'XP Surge', desc: '+1.5% XP gained per pet level (up to +150%).' },
-  { id: 'axolotl', name: 'Lucky Axolotl', icon: '🦎', role: 'Crate Luck', desc: '+1.2% Crate chance & +1% Crate rewards per level.' },
-  { id: 'puffer', name: 'Mystic Puffer', icon: '🐡', role: 'Exotic & Pet XP', desc: '+1.5% Exotic fish odds & +1% Pet XP per level.' }
-];
+    const BOATS = [
+      { id: 'b_none', name: 'Shoreline Pier', cost: 0, fishMult: 1.0, cdCut: 0, workerMult: 1.0, reqLv: 1 },
+      { id: 'b_row', name: 'Rowboat', cost: 2500, fishMult: 1.2, cdCut: 0.04, workerMult: 1.25, reqLv: 5 },
+      { id: 'b_fish', name: 'Fishing Boat', cost: 22000, fishMult: 1.45, cdCut: 0.08, workerMult: 1.6, reqLv: 15 },
+      { id: 'b_speed', name: 'Speedboat', cost: 160000, fishMult: 1.8, cdCut: 0.12, workerMult: 2.1, reqLv: 35 },
+      { id: 'b_sail', name: 'Sailboat', cost: 1800000, fishMult: 2.3, cdCut: 0.16, workerMult: 2.8, reqLv: 55 },
+      { id: 'b_yacht', name: 'Luxury Yacht', cost: 25000000, fishMult: 3.0, cdCut: 0.22, workerMult: 3.8, reqLv: 100 },
+      { id: 'b_cruise', name: 'Cruise Ship', cost: 450000000, fishMult: 4.0, cdCut: 0.28, workerMult: 5.2, reqLv: 180 },
+      { id: 'b_sky', name: 'Sky Cruiser', cost: 1.2e10, fishMult: 5.5, cdCut: 0.34, workerMult: 7.5, reqLv: 260 },
+      { id: 'b_shuttle', name: 'Space Shuttle', cost: 6.0e11, fishMult: 7.8, cdCut: 0.40, workerMult: 11.0, reqLv: 520 },
+      { id: 'b_dark', name: 'Dark Explorer', cost: 4.0e14, fishMult: 12.0, cdCut: 0.48, workerMult: 18.0, reqLv: 1500 }
+    ];
 
-const CHARMS = [
-  { id: 'c_hook', name: 'Lucky Hook Charm', icon: '🪝', desc: '+5% Critical Double-Catch chance per rank.' },
-  { id: 'c_scale', name: 'Midas Scale Charm', icon: '🪙', desc: '+10% Global Fish Sell Value per rank.' },
-  { id: 'c_pearl', name: 'Scholar Pearl Charm', icon: '🔮', desc: '+10% Global XP Gain per rank.' },
-  { id: 'c_magnet', name: 'Abyssal Magnet Charm', icon: '🧲', desc: '+8% Treasure Crate Find Rate per rank.' }
-];
+    const BAITS = [
+      { id: 'worms', name: 'Worms', cost: 15, reqLv: 1, fishMult: 1.5, xpMult: 1.0, chestMult: 1.0, desc: '1.5x fish caught per cast.' },
+      { id: 'leeches', name: 'Leeches', cost: 65, reqLv: 10, fishMult: 2.0, xpMult: 1.15, chestMult: 1.0, desc: '2.0x fish & +15% XP per cast.' },
+      { id: 'magnet', name: 'Magnet Bait', cost: 180, reqLv: 20, fishMult: 1.4, xpMult: 1.1, chestMult: 2.4, desc: '2.4x Treasure Crate find chance!' },
+      { id: 'wise', name: 'Wise Bait', cost: 450, reqLv: 30, fishMult: 1.5, xpMult: 2.1, chestMult: 1.2, desc: '2.1x XP gained per cast.' },
+      { id: 'fishbait', name: 'Super Fish Bait', cost: 1600, reqLv: 45, fishMult: 3.0, xpMult: 1.3, chestMult: 1.3, desc: '3.0x fish caught per cast.' },
+      { id: 'magic', name: 'Magic Bait', cost: 9500, reqLv: 85, fishMult: 3.8, xpMult: 2.4, chestMult: 1.8, desc: '3.8x fish, 2.4x XP & 1.8x Crates.' },
+      { id: 'support', name: 'Support Bait', cost: 65000, reqLv: 160, fishMult: 5.0, xpMult: 2.8, chestMult: 2.6, desc: 'Massive all-around multiplier.' },
+      { id: 'celestial', name: 'Celestial Bait', cost: 850000, reqLv: 400, fishMult: 8.0, xpMult: 4.0, chestMult: 3.5, desc: 'Endgame cosmic lure.' }
+    ];
 
-const BOOST_DEFS = [
-  { id: 'b_fish', name: '2x Fish Frenzy (3m)', exoticType: 'goldfish', cost: 3, desc: 'Doubles all fish caught for 3 minutes.' },
-  { id: 'b_xp', name: '2x XP Surge (3m)', exoticType: 'emeraldfish', cost: 3, desc: 'Doubles all XP earned for 3 minutes.' },
-  { id: 'b_luck', name: '3x Treasure Radar (3m)', exoticType: 'lavafish', cost: 2, desc: 'Triples Treasure Crate drop rate for 3 minutes.' },
-  { id: 'b_overdrive', name: 'Hyper-Cast Overdrive (3m)', exoticType: 'diamondfish', cost: 2, desc: 'Cuts fishing cooldown by 35% for 3 minutes!' }
-];
+    const GOLD_UPGRADES = [
+      { id: 'cooldown', name: 'Quick Reel (Cooldown)', icon: '⚡', baseCost: 120, costScale: 1.48, maxLv: 20, desc: '-0.06s base fishing cooldown per level (1.60s → 0.40s).' },
+      { id: 'salesman', name: 'Salesman', icon: '💰', baseCost: 180, costScale: 1.34, maxLv: 150, desc: '+6% fish sell value per level.' },
+      { id: 'betterFish', name: 'Net Capacity', icon: '🥅', baseCost: 220, costScale: 1.38, maxLv: 100, desc: '+1 base fish per cast per level.' },
+      { id: 'moreChests', name: 'Treasure Hunter', icon: '🗝️', baseCost: 350, costScale: 1.42, maxLv: 60, desc: '+0.45% Treasure Crate drop rate per level.' },
+      { id: 'experienced', name: 'Experienced Angler', icon: '📘', baseCost: 260, costScale: 1.36, maxLv: 120, desc: '+8% XP gained per level.' },
+      { id: 'baitEff', name: 'Bait Efficiency', icon: '🪱', baseCost: 500, costScale: 1.55, maxLv: 25, desc: '+2% chance not to consume bait (max 50%).' },
+      { id: 'workers', name: 'Auto-Fish Crew', icon: '🤖', baseCost: 400, costScale: 1.40, maxLv: 100, desc: 'Hires crew members who catch fish every 2 seconds.' },
+      { id: 'duplicator', name: 'Twin-Hook Rig', icon: '🪝', baseCost: 1200, costScale: 1.62, maxLv: 40, desc: '+2.5% chance to double an entire catch!' }
+    ];
 
-const PRESTIGE_UPGRADES = [
-  { id: 'p_overclock', name: 'Overclocked Reel', baseCost: 1, costScale: 2, maxLv: 5, desc: 'Lowers hard cooldown cap by -0.05s per rank (0.40s → 0.15s).' },
-  { id: 'p_headstart', name: 'Angler Headstart', baseCost: 2, costScale: 2.5, maxLv: 3, desc: 'Start every Prestige with Steel/Lava Rod, Speedboat & starting Gold.' },
-  { id: 'p_angler', name: 'Ascended Harvest', baseCost: 1, costScale: 1.8, maxLv: 20, desc: 'Multiplicative +40% fish yield per rank.' },
-  { id: 'p_exotic', name: 'Exotic Resonance', baseCost: 2, costScale: 2.0, maxLv: 10, desc: 'Multiplicative +35% Exotic Fish & Pet find odds per rank.' }
-];
+    const EMERALD_UPGRADES = [
+      { id: 'emScholar', name: 'Emerald Scholar', icon: '🎓', baseCost: 5, costScale: 1.45, maxLv: 40, desc: 'Permanent +12% XP multiplier per level.' },
+      { id: 'emMidas', name: 'Emerald Midas', icon: '👑', baseCost: 5, costScale: 1.45, maxLv: 40, desc: 'Permanent +12% Gold multiplier per level.' },
+      { id: 'emCrate', name: 'Artifact Specialist', icon: '📦', baseCost: 8, costScale: 1.55, maxLv: 25, desc: 'Permanent +15% Gold & Emerald payouts from Crates.' },
+      { id: 'emPetXp', name: 'Pet Trainer', icon: '🐾', baseCost: 10, costScale: 1.60, maxLv: 20, desc: 'Permanent +20% Pet XP gained per cast.' }
+    ];
 
-/* ============================================================================
-   GAME STATE & SAVE/LOAD
-   ============================================================================ */
-function defaultState() {
-  return {
-    gold: 0,
-    emeralds: 0,
-    ptokens: 0,
-    prestige: 0,
-    level: 1,
-    xp: 0,
-    totalCasts: 0,
-    biome: 'river',
-    rod: 'r_plastic',
-    ownedRods: ['r_plastic'],
-    boat: 'b_none',
-    ownedBoats: ['b_none'],
-    activeBait: null,
-    baits: { worms: 15 },
-    goldUpgrades: { cooldown: 0, salesman: 0, betterFish: 0, moreChests: 0, experienced: 0, baitEff: 0, workers: 0, duplicator: 0 },
-    emeraldUpgrades: { emScholar: 0, emMidas: 0, emCrate: 0, emPetXp: 0 },
-    prestigeUpgrades: { p_overclock: 0, p_headstart: 0, p_angler: 0, p_exotic: 0 },
-    exotics: { goldfish: 0, emeraldfish: 0, lavafish: 0, diamondfish: 0 },
-    boostTimers: { b_fish: 0, b_xp: 0, b_luck: 0, b_overdrive: 0 },
-    crates: { wooden: 1, magma: 0, sunken: 0, cloud: 0, star: 0, xenotech: 0, abyssal: 0 },
-    pets: {}, // { tuna: { lv: 1, xp: 0 } }
-    activePet: null,
-    charms: { c_hook: 0, c_scale: 0, c_pearl: 0, c_magnet: 0 },
-    livewellCount: 0,
-    livewellValue: 0,
-    bestiary: {}, // { f_raw: count }
-    autoCast: false,
-    autoSell: false,
-    lastDaily: 0,
-    dailyStreak: 0,
-    quests: []
-  };
-}
+    const CRATE_TYPES = {
+      wooden: { name: 'Wooden Crate', icon: '📦', goldMult: 25, emMin: 1, emMax: 3 },
+      magma: { name: 'Magma Crate', icon: '🔥', goldMult: 140, emMin: 2, emMax: 5 },
+      sunken: { name: 'Sunken Chest', icon: '⚓', goldMult: 750, emMin: 4, emMax: 9 },
+      cloud: { name: 'Cloud Chest', icon: '🌤️', goldMult: 4200, emMin: 7, emMax: 15 },
+      star: { name: 'Star Crate', icon: '✨', goldMult: 26000, emMin: 12, emMax: 25 },
+      xenotech: { name: 'Xenotech Vault', icon: '🛸', goldMult: 160000, emMin: 20, emMax: 42 },
+      abyssal: { name: 'Abyssal Reliquary', icon: '👑', goldMult: 1200000, emMin: 35, emMax: 75 }
+    };
 
-let state = defaultState();
-let cooldownRemaining = 0;
-let lastFrameTime = performance.now();
-let workerAccumulator = 0;
+    const PETS = [
+      { id: 'tuna', name: 'Golden Tuna', icon: '🐟', role: 'Fish Yield', desc: '+1.5% fish quantity per pet level (up to +150%).' },
+      { id: 'dolphin', name: 'Swift Dolphin', icon: '🐬', role: 'Speed & Gold', desc: '-0.002s cooldown & +1% Gold per pet level.' },
+      { id: 'zebrafish', name: 'Wise Zebrafish', icon: '🐠', role: 'XP Surge', desc: '+1.5% XP gained per pet level (up to +150%).' },
+      { id: 'axolotl', name: 'Lucky Axolotl', icon: '🦎', role: 'Crate Luck', desc: '+1.2% Crate chance & +1% Crate rewards per level.' },
+      { id: 'puffer', name: 'Mystic Puffer', icon: '🐡', role: 'Exotic & Pet XP', desc: '+1.5% Exotic fish odds & +1% Pet XP per level.' }
+    ];
 
-function saveGame(notify = false) {
-  try {
-    localStorage.setItem('vf_deep_horizons_v1', JSON.stringify(state));
-    if (notify) addLog('💾 Progress saved locally.', 'levelup');
-  } catch (e) {}
-}
+    const CHARMS = [
+      { id: 'c_hook', name: 'Lucky Hook Charm', icon: '🪝', desc: '+5% Critical Double-Catch chance per rank.' },
+      { id: 'c_scale', name: 'Midas Scale Charm', icon: '🪙', desc: '+10% Global Fish Sell Value per rank.' },
+      { id: 'c_pearl', name: 'Scholar Pearl Charm', icon: '🔮', desc: '+10% Global XP Gain per rank.' },
+      { id: 'c_magnet', name: 'Abyssal Magnet Charm', icon: '🧲', desc: '+8% Treasure Crate Find Rate per rank.' }
+    ];
 
-function loadGame() {
-  try {
-    const raw = localStorage.getItem('vf_deep_horizons_v1');
-    if (raw) {
-      const parsed = JSON.parse(raw);
+    const BOOST_DEFS = [
+      { id: 'b_fish', name: '2x Fish Frenzy (3m)', exoticType: 'goldfish', cost: 3, desc: 'Doubles all fish caught for 3 minutes.' },
+      { id: 'b_xp', name: '2x XP Surge (3m)', exoticType: 'emeraldfish', cost: 3, desc: 'Doubles all XP earned for 3 minutes.' },
+      { id: 'b_luck', name: '3x Treasure Radar (3m)', exoticType: 'lavafish', cost: 2, desc: 'Triples Treasure Crate drop rate for 3 minutes.' },
+      { id: 'b_overdrive', name: 'Hyper-Cast Overdrive (3m)', exoticType: 'diamondfish', cost: 2, desc: 'Cuts fishing cooldown by 35% for 3 minutes!' }
+    ];
+
+    const PRESTIGE_UPGRADES = [
+      { id: 'p_overclock', name: 'Overclocked Reel', baseCost: 1, costScale: 2, maxLv: 5, desc: 'Lowers hard cooldown cap by -0.05s per rank (0.40s → 0.15s).' },
+      { id: 'p_headstart', name: 'Angler Headstart', baseCost: 2, costScale: 2.5, maxLv: 3, desc: 'Start every Prestige with Steel/Lava Rod, Speedboat & starting Gold.' },
+      { id: 'p_angler', name: 'Ascended Harvest', baseCost: 1, costScale: 1.8, maxLv: 20, desc: 'Multiplicative +40% fish yield per rank.' },
+      { id: 'p_exotic', name: 'Exotic Resonance', baseCost: 2, costScale: 2.0, maxLv: 10, desc: 'Multiplicative +35% Exotic Fish & Pet find odds per rank.' }
+    ];
+
+    const RARITY_STYLES = {
+      Common: 'text-slate-300 border-slate-600/50 bg-slate-800/60',
+      Uncommon: 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10',
+      Rare: 'text-sky-300 border-sky-500/40 bg-sky-500/10',
+      Epic: 'text-fuchsia-300 border-fuchsia-500/40 bg-fuchsia-500/10',
+      Mythic: 'text-amber-300 border-amber-500/50 bg-amber-500/15'
+    };
+
+    /* ============================================================================
+       2. STATE & PERSISTENCE
+       ============================================================================ */
+    function defaultState() {
+      return {
+        displayName: 'Cosmic Angler',
+        gold: 0,
+        emeralds: 0,
+        ptokens: 0,
+        prestige: 0,
+        level: 1,
+        xp: 0,
+        totalCasts: 0,
+        biome: 'river',
+        rod: 'r_plastic',
+        ownedRods: ['r_plastic'],
+        boat: 'b_none',
+        ownedBoats: ['b_none'],
+        activeBait: null,
+        baits: { worms: 15 },
+        goldUpgrades: { cooldown: 0, salesman: 0, betterFish: 0, moreChests: 0, experienced: 0, baitEff: 0, workers: 0, duplicator: 0 },
+        emeraldUpgrades: { emScholar: 0, emMidas: 0, emCrate: 0, emPetXp: 0 },
+        prestigeUpgrades: { p_overclock: 0, p_headstart: 0, p_angler: 0, p_exotic: 0 },
+        exotics: { goldfish: 0, emeraldfish: 0, lavafish: 0, diamondfish: 0 },
+        boostTimers: { b_fish: 0, b_xp: 0, b_luck: 0, b_overdrive: 0 },
+        crates: { wooden: 1, magma: 0, sunken: 0, cloud: 0, star: 0, xenotech: 0, abyssal: 0 },
+        pets: {},
+        activePet: null,
+        charms: { c_hook: 0, c_scale: 0, c_pearl: 0, c_magnet: 0 },
+        livewellCount: 0,
+        livewellValue: 0,
+        bestiary: {},
+        autoCast: false,
+        autoSell: false,
+        lastDaily: 0,
+        dailyStreak: 0,
+        quests: []
+      };
+    }
+
+    let state = defaultState();
+    let activeTab = 'shop';
+    let shopSubTab = 'gold';
+    let cooldownRemaining = 0;
+    let lastFrameTime = performance.now();
+    let workerAccumulator = 0;
+
+    function mergeState(parsed) {
       const def = defaultState();
       state = {
         ...def,
@@ -997,1110 +712,1423 @@ function loadGame() {
         crates: { ...def.crates, ...(parsed.crates || {}) },
         charms: { ...def.charms, ...(parsed.charms || {}) }
       };
+      if (!state.quests || state.quests.length < 3) generateQuests();
     }
-  } catch (e) {}
-  if (!state.quests || state.quests.length < 3) generateQuests();
-}
 
-/* ============================================================================
-   FORMULAS & MULTIPLIERS
-   ============================================================================ */
-function fmt(n) {
-  if (!isFinite(n)) return '∞';
-  if (n < 1000) return Math.floor(n).toLocaleString();
-  const units = ['K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
-  let idx = -1;
-  let val = n;
-  while (val >= 1000 && idx < units.length - 1) {
-    val /= 1000;
-    idx++;
-  }
-  return val.toFixed(val >= 100 ? 1 : 2) + units[idx];
-}
+    function saveGame(notify = false) {
+      try {
+        localStorage.setItem(LOCAL_SAVE_KEY, JSON.stringify(state));
+        if (notify) showToast('💾 Progress saved locally!', 'emerald');
+      } catch (_) {}
+    }
 
-function xpRequired(lv) {
-  return Math.floor(120 * Math.pow(lv, 1.88));
-}
+    function loadGame() {
+      try {
+        const raw = localStorage.getItem(LOCAL_SAVE_KEY);
+        if (raw) mergeState(JSON.parse(raw));
+      } catch (_) {}
+      if (!state.quests || state.quests.length < 3) generateQuests();
+    }
 
-function getBiome(id = state.biome) {
-  return BIOMES.find(b => b.id === id) || BIOMES[0];
-}
+    /* ============================================================================
+       3. CORE FORMULAS (IDENTICAL TO INDEX.HTML)
+       ============================================================================ */
+    function fmt(n) {
+      if (!isFinite(n)) return '∞';
+      if (n < 1000) return Math.floor(n).toLocaleString();
+      const units = ['K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+      let idx = -1;
+      let val = n;
+      while (val >= 1000 && idx < units.length - 1) {
+        val /= 1000;
+        idx++;
+      }
+      return val.toFixed(val >= 100 ? 1 : 2) + units[idx];
+    }
 
-function getBiomeReqLevel(biome) {
-  if (biome.baseReq === 1) return 1;
-  const discount = Math.min(0.30, state.prestige * 0.02);
-  return Math.max(5, Math.floor(biome.baseReq * (1 - discount)));
-}
+    function xpRequired(lv) {
+      return Math.floor(120 * Math.pow(lv, 1.88));
+    }
 
-function getRod() {
-  return RODS.find(r => r.id === state.rod) || RODS[0];
-}
+    function getBiome(id = state.biome) {
+      return BIOMES.find(b => b.id === id) || BIOMES[0];
+    }
 
-function getBoat() {
-  return BOATS.find(b => b.id === state.boat) || BOATS[0];
-}
+    function getBiomeReqLevel(biome) {
+      if (biome.baseReq === 1) return 1;
+      const discount = Math.min(0.30, state.prestige * 0.02);
+      return Math.max(5, Math.floor(biome.baseReq * (1 - discount)));
+    }
 
-function getCooldownSeconds() {
-  const base = 1.60;
-  const upgCut = state.goldUpgrades.cooldown * 0.06; // up to -1.20s -> 0.40s
-  const boatCut = getBoat().cdCut * 0.35;
-  const petCut = (state.activePet === 'dolphin' && state.pets.dolphin) ? state.pets.dolphin.lv * 0.002 : 0;
-  const biomeAdd = getBiome().cdPenalty * 0.4;
-  let cd = base - upgCut - boatCut - petCut + biomeAdd;
-  if (state.boostTimers.b_overdrive > 0) cd *= 0.65;
-  const hardFloor = Math.max(0.15, 0.40 - state.prestigeUpgrades.p_overclock * 0.05);
-  return Math.max(hardFloor, cd);
-}
+    function getRod() {
+      return RODS.find(r => r.id === state.rod) || RODS[0];
+    }
 
-function getBestiaryMasteryCount() {
-  let completed = 0;
-  for (const b of BIOMES) {
-    if (b.fish.every(f => (state.bestiary[f.id] || 0) > 0)) completed++;
-  }
-  return completed;
-}
+    function getBoat() {
+      return BOATS.find(b => b.id === state.boat) || BOATS[0];
+    }
 
-function getLevelMilestoneBonus() {
-  // Every 10 levels grants +10% sell price
-  return Math.floor(state.level / 10) * 0.10;
-}
+    function getCooldownSeconds() {
+      const base = 1.60;
+      const upgCut = state.goldUpgrades.cooldown * 0.06;
+      const boatCut = getBoat().cdCut * 0.35;
+      const petCut = (state.activePet === 'dolphin' && state.pets.dolphin) ? state.pets.dolphin.lv * 0.002 : 0;
+      const biomeAdd = getBiome().cdPenalty * 0.4;
+      let cd = base - upgCut - boatCut - petCut + biomeAdd;
+      if (state.boostTimers.b_overdrive > 0) cd *= 0.65;
+      const hardFloor = Math.max(0.15, 0.40 - state.prestigeUpgrades.p_overclock * 0.05);
+      return Math.max(hardFloor, cd);
+    }
 
-function getFishYieldMultiplier() {
-  const rod = getRod();
-  const boat = getBoat();
-  const bait = state.activeBait && state.baits[state.activeBait] > 0
-    ? BAITS.find(b => b.id === state.activeBait)
-    : null;
-  let mult = rod.mult * boat.fishMult * (bait ? bait.fishMult : 1);
-  if (state.activePet === 'tuna' && state.pets.tuna) {
-    mult *= (1 + state.pets.tuna.lv * 0.015);
-  }
-  mult *= Math.pow(1.40, state.prestigeUpgrades.p_angler);
-  if (state.boostTimers.b_fish > 0) mult *= 2.0;
-  return mult;
-}
+    function getBestiaryMasteryCount() {
+      let completed = 0;
+      for (const b of BIOMES) {
+        if (b.fish.every(f => (state.bestiary[f.id] || 0) > 0)) completed++;
+      }
+      return completed;
+    }
 
-function getGoldMultiplier() {
-  let mult = 1 + state.goldUpgrades.salesman * 0.06;
-  mult *= (1 + state.emeraldUpgrades.emMidas * 0.12);
-  mult *= (1 + state.prestige * 0.30);
-  mult *= (1 + getLevelMilestoneBonus());
-  mult *= (1 + getBestiaryMasteryCount() * 0.25);
-  mult *= (1 + state.charms.c_scale * 0.10);
-  if (state.activePet === 'dolphin' && state.pets.dolphin) {
-    mult *= (1 + state.pets.dolphin.lv * 0.01);
-  }
-  return mult;
-}
+    function getLevelMilestoneBonus() {
+      return Math.floor(state.level / 10) * 0.10;
+    }
 
-function getXpMultiplier() {
-  const bait = state.activeBait && state.baits[state.activeBait] > 0
-    ? BAITS.find(b => b.id === state.activeBait)
-    : null;
-  let mult = (1 + state.goldUpgrades.experienced * 0.08) * (bait ? bait.xpMult : 1);
-  mult *= (1 + state.emeraldUpgrades.emScholar * 0.12);
-  mult *= (1 + state.prestige * 0.25);
-  mult *= (1 + getBestiaryMasteryCount() * 0.25);
-  mult *= (1 + state.charms.c_pearl * 0.10);
-  if (state.activePet === 'zebrafish' && state.pets.zebrafish) {
-    mult *= (1 + state.pets.zebrafish.lv * 0.015);
-  }
-  if (state.boostTimers.b_xp > 0) mult *= 2.0;
-  return mult;
-}
+    function getFishYieldMultiplier() {
+      const rod = getRod();
+      const boat = getBoat();
+      const bait = state.activeBait && state.baits[state.activeBait] > 0
+        ? BAITS.find(b => b.id === state.activeBait)
+        : null;
+      let mult = rod.mult * boat.fishMult * (bait ? bait.fishMult : 1);
+      if (state.activePet === 'tuna' && state.pets.tuna) {
+        mult *= (1 + state.pets.tuna.lv * 0.015);
+      }
+      mult *= Math.pow(1.40, state.prestigeUpgrades.p_angler);
+      if (state.boostTimers.b_fish > 0) mult *= 2.0;
+      return mult;
+    }
 
-function getCrateChance() {
-  const bait = state.activeBait && state.baits[state.activeBait] > 0
-    ? BAITS.find(b => b.id === state.activeBait)
-    : null;
-  let chance = 0.04 + state.goldUpgrades.moreChests * 0.0045;
-  chance *= (bait ? bait.chestMult : 1);
-  chance *= (1 + state.charms.c_magnet * 0.08);
-  if (state.activePet === 'axolotl' && state.pets.axolotl) {
-    chance *= (1 + state.pets.axolotl.lv * 0.012);
-  }
-  if (state.boostTimers.b_luck > 0) chance *= 3.0;
-  return Math.min(0.65, chance);
-}
+    function getGoldMultiplier() {
+      let mult = 1 + state.goldUpgrades.salesman * 0.06;
+      mult *= (1 + state.emeraldUpgrades.emMidas * 0.12);
+      mult *= (1 + state.prestige * 0.30);
+      mult *= (1 + getLevelMilestoneBonus());
+      mult *= (1 + getBestiaryMasteryCount() * 0.25);
+      mult *= (1 + state.charms.c_scale * 0.10);
+      if (state.activePet === 'dolphin' && state.pets.dolphin) {
+        mult *= (1 + state.pets.dolphin.lv * 0.01);
+      }
+      return mult;
+    }
 
-/* ============================================================================
-   QUEST SYSTEM
-   ============================================================================ */
-function generateQuests() {
-  const templates = [
-    { type: 'cast', label: 'Cast Line {target} times', base: 25, scale: 1.15 },
-    { type: 'fish', label: 'Catch {target} total fish', base: 60, scale: 1.35 },
-    { type: 'rare', label: 'Catch {target} Rare+ fish', base: 6, scale: 1.25 },
-    { type: 'crate', label: 'Find or Open {target} Crates', base: 2, scale: 1.15 }
-  ];
-  while (state.quests.length < 3) {
-    const t = templates[Math.floor(Math.random() * templates.length)];
-    const factor = Math.max(1, Math.pow(state.level, 0.45));
-    const target = Math.max(2, Math.floor(t.base * factor));
-    const emReward = Math.max(2, Math.floor(2 + Math.sqrt(state.level) * 0.8));
-    state.quests.push({
-      id: 'q_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-      type: t.type,
-      text: t.label.replace('{target}', fmt(target)),
-      progress: 0,
-      target,
-      emReward
+    function getXpMultiplier() {
+      const bait = state.activeBait && state.baits[state.activeBait] > 0
+        ? BAITS.find(b => b.id === state.activeBait)
+        : null;
+      let mult = (1 + state.goldUpgrades.experienced * 0.08) * (bait ? bait.xpMult : 1);
+      mult *= (1 + state.emeraldUpgrades.emScholar * 0.12);
+      mult *= (1 + state.prestige * 0.25);
+      mult *= (1 + getBestiaryMasteryCount() * 0.25);
+      mult *= (1 + state.charms.c_pearl * 0.10);
+      if (state.activePet === 'zebrafish' && state.pets.zebrafish) {
+        mult *= (1 + state.pets.zebrafish.lv * 0.015);
+      }
+      if (state.boostTimers.b_xp > 0) mult *= 2.0;
+      return mult;
+    }
+
+    function getCrateChance() {
+      const bait = state.activeBait && state.baits[state.activeBait] > 0
+        ? BAITS.find(b => b.id === state.activeBait)
+        : null;
+      let chance = 0.04 + state.goldUpgrades.moreChests * 0.0045;
+      chance *= (bait ? bait.chestMult : 1);
+      chance *= (1 + state.charms.c_magnet * 0.08);
+      if (state.activePet === 'axolotl' && state.pets.axolotl) {
+        chance *= (1 + state.pets.axolotl.lv * 0.012);
+      }
+      if (state.boostTimers.b_luck > 0) chance *= 3.0;
+      return Math.min(0.65, chance);
+    }
+
+    function getPrestigeRequirement() {
+      return 100 + state.prestige * 50;
+    }
+
+    function getPrestigeTokensOnReset() {
+      const req = getPrestigeRequirement();
+      if (state.level < req) return 0;
+      return Math.max(1, Math.floor(1 + (state.level - req) / 40));
+    }
+
+    /* ============================================================================
+       4. TOASTS & DISCORD-STYLE FEED
+       ============================================================================ */
+    function showToast(message, tone = 'cyan') {
+      const wrap = document.getElementById('toast-container');
+      const tones = {
+        cyan: 'border-cyan-400/50 bg-discord-900/95 text-cyan-100',
+        emerald: 'border-emerald-400/50 bg-discord-900/95 text-emerald-100',
+        amber: 'border-amber-400/50 bg-discord-900/95 text-amber-100',
+        fuchsia: 'border-fuchsia-400/50 bg-discord-900/95 text-fuchsia-100',
+        rose: 'border-rose-400/50 bg-discord-900/95 text-rose-100'
+      };
+      const el = document.createElement('div');
+      el.className = `pointer-events-auto px-3.5 py-2.5 rounded-xl border shadow-2xl backdrop-blur-xl text-xs font-bold feed-animate ${tones[tone] || tones.cyan}`;
+      el.textContent = message;
+      wrap.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.25s ease';
+        setTimeout(() => el.remove(), 260);
+      }, 2800);
+    }
+
+    function addFeed(html, tone = 'default') {
+      const box = document.getElementById('catch-feed-list');
+      const borderMap = {
+        default: 'border-indigo-500 bg-discord-850/90',
+        crate: 'border-amber-400 bg-amber-500/10',
+        exotic: 'border-emerald-400 bg-emerald-500/10',
+        pet: 'border-fuchsia-400 bg-fuchsia-500/15',
+        levelup: 'border-cyan-400 bg-cyan-500/15'
+      };
+      const div = document.createElement('div');
+      div.className = `discord-embed feed-animate rounded-r-xl px-3 py-2 text-slate-200 leading-snug ${borderMap[tone] || borderMap.default}`;
+      div.innerHTML = html;
+      box.prepend(div);
+      while (box.children.length > 40) box.removeChild(box.lastChild);
+    }
+
+    /* ============================================================================
+       5. QUESTS, FISHING, CRATES & PRESTIGE ACTIONS
+       ============================================================================ */
+    function generateQuests() {
+      const templates = [
+        { type: 'cast', label: 'Cast Line {target} times', base: 25 },
+        { type: 'fish', label: 'Catch {target} total fish', base: 60 },
+        { type: 'rare', label: 'Catch {target} Rare+ fish', base: 6 },
+        { type: 'crate', label: 'Find or Open {target} Crates', base: 2 }
+      ];
+      while (state.quests.length < 3) {
+        const t = templates[Math.floor(Math.random() * templates.length)];
+        const factor = Math.max(1, Math.pow(state.level, 0.45));
+        const target = Math.max(2, Math.floor(t.base * factor));
+        const emReward = Math.max(2, Math.floor(2 + Math.sqrt(state.level) * 0.8));
+        state.quests.push({
+          id: 'q_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          type: t.type,
+          text: t.label.replace('{target}', fmt(target)),
+          progress: 0,
+          target,
+          emReward
+        });
+      }
+    }
+
+    function advanceQuest(type, amount = 1) {
+      let completedAny = false;
+      for (let i = state.quests.length - 1; i >= 0; i--) {
+        const q = state.quests[i];
+        if (q.type === type) {
+          q.progress += amount;
+          if (q.progress >= q.target) {
+            state.emeralds += q.emReward;
+            state.exotics.goldfish += 1;
+            addFeed(`✅ <strong>Quest Complete:</strong> "${q.text}" → <span class="text-emerald-300">+${q.emReward} 💎</span> &amp; +1 Goldfish!`, 'exotic');
+            showToast(`✅ Quest Done! +${q.emReward} 💎`, 'emerald');
+            state.quests.splice(i, 1);
+            completedAny = true;
+          }
+        }
+      }
+      if (completedAny) generateQuests();
+    }
+
+    function rollFishFromBiome(biome) {
+      const rodBonus = getRod().rareBonus;
+      const adjusted = biome.fish.map((f, idx) => {
+        const rarityBoost = idx >= 2 ? (1 + rodBonus * idx * 0.5) : 1;
+        return { ...f, adjWeight: f.weight * rarityBoost };
+      });
+      const totalWeight = adjusted.reduce((s, f) => s + f.adjWeight, 0);
+      let r = Math.random() * totalWeight;
+      for (const f of adjusted) {
+        r -= f.adjWeight;
+        if (r <= 0) return f;
+      }
+      return adjusted[0];
+    }
+
+    function grantXp(amount) {
+      state.xp += amount;
+      let leveled = false;
+      while (state.xp >= xpRequired(state.level)) {
+        state.xp -= xpRequired(state.level);
+        state.level++;
+        leveled = true;
+        const bonusEmeralds = state.level % 10 === 0 ? 3 : 1;
+        state.emeralds += bonusEmeralds;
+        addFeed(`🎉 <strong>LEVEL UP!</strong> Reached <strong>Lv. ${state.level}</strong> (+${bonusEmeralds} 💎)`, 'levelup');
+        showToast(`🎉 Level ${state.level}! (+${bonusEmeralds} 💎)`, 'cyan');
+      }
+      if (leveled) renderActiveTab();
+    }
+
+    function triggerBobberAnim() {
+      const sprite = document.getElementById('bobber-sprite');
+      if (!sprite) return;
+      sprite.classList.remove('bobber-splash');
+      void sprite.offsetWidth;
+      sprite.classList.add('bobber-splash');
+    }
+
+    function performCast(isWorker = false) {
+      const biome = getBiome();
+      const baseFishCount = 1 + state.goldUpgrades.betterFish;
+      const yieldMult = getFishYieldMultiplier() * (isWorker ? 0.35 * getBoat().workerMult : 1);
+      let totalCaught = Math.max(1, Math.round(baseFishCount * yieldMult * (0.85 + Math.random() * 0.3)));
+
+      const doubleChance = Math.min(0.85, state.goldUpgrades.duplicator * 0.025 + state.charms.c_hook * 0.05);
+      let doubled = false;
+      if (Math.random() < doubleChance) {
+        totalCaught *= 2;
+        doubled = true;
+      }
+
+      if (!isWorker && state.activeBait && state.baits[state.activeBait] > 0) {
+        const saveChance = Math.min(0.50, state.goldUpgrades.baitEff * 0.02);
+        if (Math.random() >= saveChance) {
+          state.baits[state.activeBait]--;
+          if (state.baits[state.activeBait] <= 0) {
+            const bName = BAITS.find(b => b.id === state.activeBait)?.name || 'Bait';
+            addFeed(`🪱 Out of <strong>${bName}</strong>!`, 'crate');
+            showToast(`🪱 Ran out of ${bName}!`, 'amber');
+          }
+        }
+      }
+
+      const primary = rollFishFromBiome(biome);
+      const secondary = rollFishFromBiome(biome);
+      const count1 = Math.ceil(totalCaught * 0.65);
+      const count2 = totalCaught - count1;
+
+      state.bestiary[primary.id] = (state.bestiary[primary.id] || 0) + count1;
+      if (count2 > 0) state.bestiary[secondary.id] = (state.bestiary[secondary.id] || 0) + count2;
+
+      const earnedValue = Math.round((primary.val * count1 + secondary.val * count2) * biome.mult * getGoldMultiplier());
+      const earnedXp = Math.round((primary.xp * count1 + secondary.xp * count2) * biome.mult * getXpMultiplier());
+
+      if (state.autoSell) {
+        state.gold += earnedValue;
+      } else {
+        state.livewellCount += totalCaught;
+        state.livewellValue += earnedValue;
+      }
+
+      grantXp(earnedXp);
+
+      if (state.activePet && state.pets[state.activePet]) {
+        const p = state.pets[state.activePet];
+        if (p.lv < 100) {
+          let petXpGain = Math.max(1, Math.round((5 + biome.mult * 0.15) * (1 + state.emeraldUpgrades.emPetXp * 0.20)));
+          if (state.activePet === 'puffer') petXpGain = Math.round(petXpGain * (1 + p.lv * 0.01));
+          p.xp += petXpGain;
+          const req = Math.floor(80 * Math.pow(p.lv, 1.55));
+          if (p.xp >= req && p.lv < 100) {
+            p.xp -= req;
+            p.lv++;
+            const pName = PETS.find(x => x.id === state.activePet).name;
+            addFeed(`🐾 <strong>${pName}</strong> leveled up to <strong>Lv.${p.lv}</strong>!`, 'pet');
+            showToast(`🐾 ${pName} reached Lv.${p.lv}!`, 'fuchsia');
+          }
+        }
+      }
+
+      if (!isWorker) {
+        triggerBobberAnim();
+        state.totalCasts++;
+        cooldownRemaining = getCooldownSeconds();
+        advanceQuest('cast', 1);
+        advanceQuest('fish', totalCaught);
+        if (['Rare', 'Epic', 'Mythic'].includes(primary.rarity)) advanceQuest('rare', 1);
+
+        let msg = `${biome.icon} Caught <strong class="text-white">${fmt(count1)}x ${primary.name}</strong>`;
+        if (count2 > 0) msg += ` &amp; <strong class="text-white">${fmt(count2)}x ${secondary.name}</strong>`;
+        if (doubled) msg += ` <span class="text-amber-300 font-black">[2x TWIN!]</span>`;
+        msg += ` <span class="text-slate-400">(+${fmt(earnedXp)} XP${state.autoSell ? `, +$${fmt(earnedValue)}` : ''})</span>`;
+        addFeed(msg);
+
+        if (Math.random() < getCrateChance()) {
+          const cKey = biome.crate;
+          state.crates[cKey] = (state.crates[cKey] || 0) + 1;
+          advanceQuest('crate', 1);
+          addFeed(`📦 Found a <strong class="text-amber-300">${CRATE_TYPES[cKey].name}</strong>!`, 'crate');
+          showToast(`📦 Found ${CRATE_TYPES[cKey].name}!`, 'amber');
+        }
+
+        const exoticMult = Math.pow(1.35, state.prestigeUpgrades.p_exotic) *
+          (state.activePet === 'puffer' && state.pets.puffer ? (1 + state.pets.puffer.lv * 0.015) : 1);
+        if (state.level >= 10 && Math.random() < 0.025 * exoticMult) {
+          const pool = ['goldfish', 'emeraldfish'];
+          if (state.level >= 50) pool.push('lavafish');
+          if (state.level >= 100) pool.push('diamondfish');
+          const pick = pool[Math.floor(Math.random() * pool.length)];
+          state.exotics[pick]++;
+          const label = { goldfish: 'Goldfish', emeraldfish: 'Emerald Fish', lavafish: 'Lava Fish', diamondfish: 'Diamond Fish' }[pick];
+          addFeed(`✨ <strong>EXOTIC!</strong> Reeled in a rare <strong class="text-emerald-300">${label}</strong>!`, 'exotic');
+          showToast(`✨ Caught Exotic ${label}!`, 'emerald');
+        }
+
+        const petOdds = (1 / 350) * (1 + state.prestige * 0.05) * exoticMult;
+        if (Math.random() < petOdds) {
+          const petDef = PETS[Math.floor(Math.random() * PETS.length)];
+          if (!state.pets[petDef.id]) {
+            state.pets[petDef.id] = { lv: 1, xp: 0 };
+            if (!state.activePet) state.activePet = petDef.id;
+            addFeed(`🐾 <strong>NEW COMPANION!</strong> Befriended <strong>${petDef.icon} ${petDef.name}</strong>!`, 'pet');
+            showToast(`🐾 Discovered ${petDef.name}!`, 'fuchsia');
+          } else if (state.pets[petDef.id].lv < 100) {
+            state.pets[petDef.id].lv = Math.min(100, state.pets[petDef.id].lv + 1);
+            addFeed(`🐾 Duplicate <strong>${petDef.name}</strong> boosted to <strong>Lv.${state.pets[petDef.id].lv}</strong>!`, 'pet');
+          }
+        }
+      } else {
+        advanceQuest('fish', totalCaught);
+      }
+    }
+
+    function sellLivewell() {
+      if (state.livewellValue <= 0) return;
+      const val = state.livewellValue;
+      const cnt = state.livewellCount;
+      state.gold += val;
+      state.livewellCount = 0;
+      state.livewellValue = 0;
+      addFeed(`🪙 Sold <strong>${fmt(cnt)} fish</strong> for <strong class="text-amber-300">$${fmt(val)}</strong>!`);
+      showToast(`🪙 Sold ${fmt(cnt)} fish for $${fmt(val)}`, 'amber');
+      updateHUD();
+      if (activeTab === 'shop') renderActiveTab();
+    }
+
+    function openCrate(cKey, count = 1) {
+      const owned = state.crates[cKey] || 0;
+      const toOpen = Math.min(owned, count);
+      if (toOpen <= 0) return;
+      state.crates[cKey] -= toOpen;
+
+      const def = CRATE_TYPES[cKey];
+      const specMult = 1 + state.emeraldUpgrades.emCrate * 0.15 +
+        (state.activePet === 'axolotl' && state.pets.axolotl ? state.pets.axolotl.lv * 0.01 : 0);
+
+      let totalGold = 0;
+      let totalEm = 0;
+      let charmFound = null;
+
+      for (let i = 0; i < toOpen; i++) {
+        totalGold += Math.round(def.goldMult * Math.max(10, state.level * 12) * specMult * (0.8 + Math.random() * 0.5));
+        const emRoll = def.emMin + Math.floor(Math.random() * (def.emMax - def.emMin + 1));
+        totalEm += Math.max(1, Math.round(emRoll * specMult));
+
+        if (state.level >= 20 && Math.random() < 0.18) {
+          const ch = CHARMS[Math.floor(Math.random() * CHARMS.length)];
+          state.charms[ch.id] = (state.charms[ch.id] || 0) + 1;
+          charmFound = `${ch.icon} ${ch.name} (Rank ${state.charms[ch.id]})`;
+        }
+      }
+
+      state.gold += totalGold;
+      state.emeralds += totalEm;
+      let msg = `${def.icon} Opened <strong>${toOpen}x ${def.name}</strong> → <span class="text-amber-300">+$${fmt(totalGold)}</span> &amp; <span class="text-emerald-300">+${fmt(totalEm)} 💎</span>`;
+      if (charmFound) msg += ` + <strong class="text-fuchsia-300">${charmFound}</strong>!`;
+      addFeed(msg, 'crate');
+      showToast(`📦 +$${fmt(totalGold)} & +${fmt(totalEm)} 💎`, 'amber');
+      updateHUD();
+      renderActiveTab();
+    }
+
+    function openAllCrates() {
+      let opened = false;
+      for (const key of Object.keys(CRATE_TYPES)) {
+        if ((state.crates[key] || 0) > 0) {
+          openCrate(key, state.crates[key]);
+          opened = true;
+        }
+      }
+      if (!opened) showToast('No crates to open yet!', 'cyan');
+    }
+
+    function claimDaily() {
+      const now = Date.now();
+      const cooldownMs = 20 * 60 * 60 * 1000;
+      if (now - state.lastDaily < cooldownMs) {
+        const hrs = Math.ceil((cooldownMs - (now - state.lastDaily)) / 3600000);
+        showToast(`⏳ Daily ready in ~${hrs}h`, 'amber');
+        return;
+      }
+      state.lastDaily = now;
+      state.dailyStreak++;
+      const em = 10 + state.dailyStreak * 3;
+      const gold = Math.max(2500, state.level * 1500 * (1 + state.prestige));
+      state.emeralds += em;
+      state.gold += gold;
+      state.crates[getBiome().crate] += 2;
+      addFeed(`🎁 <strong>Daily Reward (Streak ${state.dailyStreak}):</strong> +$${fmt(gold)}, +${em} 💎 &amp; +2 Crates!`, 'crate');
+      showToast(`🎁 Daily Claimed! +${em} 💎 & +2 Crates`, 'emerald');
+      updateHUD();
+      renderActiveTab();
+    }
+
+    function doPrestige() {
+      const req = getPrestigeRequirement();
+      if (state.level < req) return;
+      const gain = getPrestigeTokensOnReset();
+      if (!confirm(`Prestige to Rank ${state.prestige + 1} for +${gain} Prestige Tokens?\n\nResets Level, Gold, Rods, Boats & Gold Upgrades. Keeps Emeralds, Pets, Charms, Exotics & Bestiary!`)) {
+        return;
+      }
+
+      state.prestige++;
+      state.ptokens += gain;
+      state.level = 1;
+      state.xp = 0;
+      state.biome = 'river';
+      state.livewellCount = 0;
+      state.livewellValue = 0;
+      state.goldUpgrades = { cooldown: 0, salesman: 0, betterFish: 0, moreChests: 0, experienced: 0, baitEff: 0, workers: 0, duplicator: 0 };
+
+      const hs = state.prestigeUpgrades.p_headstart;
+      if (hs >= 3) {
+        state.rod = 'r_lava'; state.ownedRods = ['r_plastic', 'r_improved', 'r_steel', 'r_fiber', 'r_heavy', 'r_lava'];
+        state.boat = 'b_sail'; state.ownedBoats = ['b_none', 'b_row', 'b_fish', 'b_speed', 'b_sail'];
+        state.gold = 2500000;
+      } else if (hs === 2) {
+        state.rod = 'r_fiber'; state.ownedRods = ['r_plastic', 'r_improved', 'r_steel', 'r_fiber'];
+        state.boat = 'b_speed'; state.ownedBoats = ['b_none', 'b_row', 'b_fish', 'b_speed'];
+        state.gold = 250000;
+      } else if (hs === 1) {
+        state.rod = 'r_steel'; state.ownedRods = ['r_plastic', 'r_improved', 'r_steel'];
+        state.boat = 'b_row'; state.ownedBoats = ['b_none', 'b_row'];
+        state.gold = 25000;
+      } else {
+        state.rod = 'r_plastic'; state.ownedRods = ['r_plastic'];
+        state.boat = 'b_none'; state.ownedBoats = ['b_none'];
+        state.gold = 0;
+      }
+
+      addFeed(`🔮 <strong>ASCENDED TO PRESTIGE ${state.prestige}!</strong> Earned +${gain} Prestige Tokens!`, 'pet');
+      showToast(`🔮 Prestige ${state.prestige} Unlocked!`, 'fuchsia');
+      saveGame();
+      updateHUD();
+      renderActiveTab();
+    }
+
+    /* ============================================================================
+       6. HUD & COSMIC TAB RENDERING
+       ============================================================================ */
+    function updateHUD() {
+      const biome = getBiome();
+      document.getElementById('ui-prestige-badge').textContent = `P${state.prestige}`;
+      document.getElementById('ui-gold').textContent = '$' + fmt(state.gold);
+      document.getElementById('ui-emeralds').textContent = fmt(state.emeralds);
+      document.getElementById('ui-ptokens').textContent = fmt(state.ptokens);
+      document.getElementById('ui-cd-stat').textContent = getCooldownSeconds().toFixed(2) + 's';
+      document.getElementById('ui-power-stat').textContent = fmt(getFishYieldMultiplier()) + 'x';
+
+      const reqXp = xpRequired(state.level);
+      const xpPct = Math.min(100, (state.xp / reqXp) * 100) + '%';
+      document.getElementById('stat-level-desktop').textContent = state.level;
+      document.getElementById('stat-xp-bar-desktop').style.width = xpPct;
+      document.getElementById('stat-xp-text-desktop').textContent = `${fmt(state.xp)} / ${fmt(reqXp)} XP`;
+      document.getElementById('stat-level-mobile').textContent = state.level;
+      document.getElementById('stat-xp-bar-mobile').style.width = xpPct;
+      document.getElementById('stat-xp-text-mobile').textContent = `${fmt(state.xp)}/${fmt(reqXp)}`;
+
+      // Biome Stage
+      document.getElementById('biome-stage').style.background = biome.gradient;
+      document.getElementById('ui-biome-icon').textContent = biome.icon;
+      document.getElementById('ui-biome-name').textContent = biome.name;
+      document.getElementById('ui-biome-desc').textContent = biome.desc;
+      document.getElementById('ui-biome-mult').textContent = `${fmt(biome.mult)}x Value & XP`;
+
+      let nextHint = 'All Biomes Unlocked!';
+      for (const b of BIOMES) {
+        const req = getBiomeReqLevel(b);
+        if (state.level < req) {
+          nextHint = `${b.name} (Lv ${req})`;
+          break;
+        }
+      }
+      document.getElementById('ui-next-biome-hint').textContent = nextHint;
+
+      // Livewell & Crates
+      document.getElementById('ui-livewell-count').textContent = `${fmt(state.livewellCount)} fish`;
+      document.getElementById('quick-sell-value').textContent = '$' + fmt(state.livewellValue);
+      document.getElementById('btn-sell-all').disabled = state.livewellValue <= 0;
+
+      const totalCrates = Object.values(state.crates).reduce((a, b) => a + b, 0);
+      document.getElementById('quick-chest-count').textContent = fmt(totalCrates);
+      document.getElementById('crate-ready-dot').classList.toggle('hidden', totalCrates === 0);
+
+      const workerFish = state.goldUpgrades.workers > 0
+        ? Math.max(1, Math.round((1 + state.goldUpgrades.betterFish) * getFishYieldMultiplier() * 0.35 * getBoat().workerMult))
+        : 0;
+      document.getElementById('ui-worker-rate').textContent = `${fmt(workerFish)} fish / 2s`;
+      document.getElementById('ui-milestone-bonus').textContent = `+${Math.round(getLevelMilestoneBonus() * 100)}% Lv`;
+      document.getElementById('ui-total-casts').textContent = fmt(state.totalCasts);
+
+      // Bait & Toggles
+      const baitObj = state.activeBait ? BAITS.find(b => b.id === state.activeBait) : null;
+      const baitQty = baitObj ? (state.baits[baitObj.id] || 0) : 0;
+      const baitShort = baitObj && baitQty > 0 ? `${baitObj.name} (${fmt(baitQty)})` : 'None';
+      document.getElementById('ui-active-bait-short').textContent = baitShort;
+
+      const acBtn = document.getElementById('btn-autocast');
+      acBtn.textContent = `🤖 Auto: ${state.autoCast ? 'ON' : 'OFF'}`;
+      acBtn.className = state.autoCast
+        ? 'py-2 px-2 rounded-xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 text-[11px] font-bold transition active:scale-95'
+        : 'py-2 px-2 rounded-xl bg-discord-850 hover:bg-discord-800 border border-slate-700 text-slate-300 text-[11px] font-bold transition active:scale-95';
+
+      const asBtn = document.getElementById('btn-autosell');
+      asBtn.textContent = `💰 Sell: ${state.autoSell ? 'ON' : 'OFF'}`;
+      asBtn.className = state.autoSell
+        ? 'py-2 px-2 rounded-xl bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[11px] font-bold transition active:scale-95'
+        : 'py-2 px-2 rounded-xl bg-discord-850 hover:bg-discord-800 border border-slate-700 text-slate-300 text-[11px] font-bold transition active:scale-95';
+
+      // Mobile Dock Sync
+      document.getElementById('dock-biome-label').textContent = `${biome.icon} ${biome.name}`;
+      document.getElementById('dock-bait-label').textContent = baitShort;
+      document.getElementById('dock-sell-val').textContent = '$' + fmt(state.livewellValue);
+
+      // Active Boost Pills
+      const buffsEl = document.getElementById('ui-active-buffs');
+      buffsEl.innerHTML = '';
+      for (const bo of BOOST_DEFS) {
+        const t = Math.ceil(state.boostTimers[bo.id] || 0);
+        if (t > 0) {
+          const pill = document.createElement('span');
+          pill.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-500/15 border border-amber-400/50 text-amber-200';
+          pill.textContent = `⚡ ${bo.name.split(' (')[0]} (${t}s)`;
+          buffsEl.appendChild(pill);
+        }
+      }
+    }
+
+    function setActiveTabStyles() {
+      document.querySelectorAll('#main-tabs .tab-btn').forEach(btn => {
+        const isOn = btn.dataset.tab === activeTab;
+        btn.className = `tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition relative ${
+          isOn
+            ? 'bg-gradient-to-r from-indigo-500/30 to-cyan-500/25 text-cyan-200 border border-indigo-400/50 shadow'
+            : 'text-slate-400 hover:text-white hover:bg-discord-800/70 border border-transparent'
+        }`;
+      });
+    }
+
+    function renderActiveTab() {
+      setActiveTabStyles();
+      const area = document.getElementById('tab-content-area');
+      if (activeTab === 'shop') renderShopTab(area);
+      else if (activeTab === 'biomes') renderBiomesTab(area);
+      else if (activeTab === 'crates') renderCratesTab(area);
+      else if (activeTab === 'pets') renderPetsTab(area);
+      else if (activeTab === 'fishdex') renderFishdexTab(area);
+      else if (activeTab === 'prestige') renderPrestigeTab(area);
+    }
+
+    function renderShopTab(container) {
+      const subTabs = [
+        { id: 'gold', label: '⬆️ Gold Upgrades' },
+        { id: 'emerald', label: '💎 Emerald Upgrades' },
+        { id: 'rods', label: '🎣 Rods' },
+        { id: 'boats', label: '⛵ Boats' },
+        { id: 'baits', label: '🪱 Baits & Boosts' }
+      ];
+
+      let body = '';
+      if (shopSubTab === 'gold') {
+        body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          ${GOLD_UPGRADES.map(u => {
+            const lv = state.goldUpgrades[u.id] || 0;
+            const maxed = lv >= u.maxLv;
+            const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
+            const canBuy = !maxed && state.gold >= cost;
+            return `
+              <div class="p-3.5 rounded-xl bg-discord-850/90 border ${lv > 0 ? 'border-indigo-500/35' : 'border-slate-800'} flex flex-col justify-between gap-3">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-extrabold text-sm text-white">${u.icon} ${u.name}</span>
+                    <span class="px-2 py-0.5 rounded-md bg-discord-950 text-[11px] font-mono font-bold text-cyan-300">Lv ${lv}/${u.maxLv}</span>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${u.desc}</p>
+                </div>
+                <button data-buy-gold="${u.id}" ${canBuy ? '' : 'disabled'} class="w-full py-2 px-3 rounded-xl font-extrabold text-xs transition active:scale-95 ${
+                  maxed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-default'
+                  : canBuy ? 'bg-indigo-500 hover:bg-indigo-400 text-white shadow'
+                  : 'bg-discord-950 text-slate-500 border border-slate-800 cursor-not-allowed'
+                }">${maxed ? 'MAXED' : `Upgrade — $${fmt(cost)}`}</button>
+              </div>
+            `;
+          }).join('')}
+        </div>`;
+      } else if (shopSubTab === 'emerald') {
+        body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          ${EMERALD_UPGRADES.map(u => {
+            const lv = state.emeraldUpgrades[u.id] || 0;
+            const maxed = lv >= u.maxLv;
+            const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
+            const canBuy = !maxed && state.emeralds >= cost;
+            return `
+              <div class="p-3.5 rounded-xl bg-discord-850/90 border ${lv > 0 ? 'border-emerald-500/40' : 'border-slate-800'} flex flex-col justify-between gap-3">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-extrabold text-sm text-white">${u.icon} ${u.name}</span>
+                    <span class="px-2 py-0.5 rounded-md bg-discord-950 text-[11px] font-mono font-bold text-emerald-300">Lv ${lv}/${u.maxLv}</span>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${u.desc}</p>
+                </div>
+                <button data-buy-em="${u.id}" ${canBuy ? '' : 'disabled'} class="w-full py-2 px-3 rounded-xl font-extrabold text-xs transition active:scale-95 ${
+                  maxed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-default'
+                  : canBuy ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow'
+                  : 'bg-discord-950 text-slate-500 border border-slate-800 cursor-not-allowed'
+                }">${maxed ? 'MAXED' : `Upgrade — ${fmt(cost)} 💎`}</button>
+              </div>
+            `;
+          }).join('')}
+        </div>`;
+      } else if (shopSubTab === 'rods') {
+        body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          ${RODS.map(r => {
+            const owned = state.ownedRods.includes(r.id);
+            const equipped = state.rod === r.id;
+            const locked = state.level < r.reqLv && !owned;
+            const disabled = equipped || locked || (!owned && state.gold < r.cost);
+            return `
+              <div class="p-3.5 rounded-xl bg-discord-850/90 border ${equipped ? 'border-cyan-400 bg-cyan-500/10' : owned ? 'border-emerald-500/35' : 'border-slate-800'} flex flex-col justify-between gap-3">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-extrabold text-sm text-white">🎣 ${r.name}</span>
+                    <span class="px-2 py-0.5 rounded-md bg-discord-950 text-[11px] font-mono font-bold text-amber-300">${r.mult}x Fish</span>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-1.5">+${Math.round(r.rareBonus * 100)}% Rare/Mythic odds • Unlocks Lv ${r.reqLv}</p>
+                </div>
+                <button data-rod="${r.id}" ${disabled ? 'disabled' : ''} class="w-full py-2 px-3 rounded-xl font-extrabold text-xs transition active:scale-95 ${
+                  equipped ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/40'
+                  : owned ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                  : !disabled ? 'bg-indigo-500 hover:bg-indigo-400 text-white'
+                  : 'bg-discord-950 text-slate-500 border border-slate-800 cursor-not-allowed'
+                }">${equipped ? 'EQUIPPED' : owned ? 'Equip' : locked ? `Requires Lv ${r.reqLv}` : `Buy — $${fmt(r.cost)}`}</button>
+              </div>
+            `;
+          }).join('')}
+        </div>`;
+      } else if (shopSubTab === 'boats') {
+        body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          ${BOATS.map(b => {
+            const owned = state.ownedBoats.includes(b.id);
+            const equipped = state.boat === b.id;
+            const locked = state.level < b.reqLv && !owned;
+            const disabled = equipped || locked || (!owned && state.gold < b.cost);
+            return `
+              <div class="p-3.5 rounded-xl bg-discord-850/90 border ${equipped ? 'border-cyan-400 bg-cyan-500/10' : owned ? 'border-emerald-500/35' : 'border-slate-800'} flex flex-col justify-between gap-3">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-extrabold text-sm text-white">⛵ ${b.name}</span>
+                    <span class="px-2 py-0.5 rounded-md bg-discord-950 text-[11px] font-mono font-bold text-cyan-300">${b.fishMult}x Yield</span>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-1.5">${b.workerMult}x Crew Speed • Unlocks Lv ${b.reqLv}</p>
+                </div>
+                <button data-boat="${b.id}" ${disabled ? 'disabled' : ''} class="w-full py-2 px-3 rounded-xl font-extrabold text-xs transition active:scale-95 ${
+                  equipped ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/40'
+                  : owned ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                  : !disabled ? 'bg-indigo-500 hover:bg-indigo-400 text-white'
+                  : 'bg-discord-950 text-slate-500 border border-slate-800 cursor-not-allowed'
+                }">${equipped ? 'EQUIPPED' : owned ? 'Equip' : locked ? `Requires Lv ${b.reqLv}` : `Buy — $${fmt(b.cost)}`}</button>
+              </div>
+            `;
+          }).join('')}
+        </div>`;
+      } else {
+        const exoticLabels = { goldfish: 'Goldfish', emeraldfish: 'Emerald Fish', lavafish: 'Lava Fish', diamondfish: 'Diamond Fish' };
+        body = `
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${BAITS.map(b => {
+                const qty = state.baits[b.id] || 0;
+                const equipped = state.activeBait === b.id;
+                const locked = state.level < b.reqLv;
+                return `
+                  <div class="p-3.5 rounded-xl bg-discord-850/90 border ${equipped ? 'border-cyan-400 bg-cyan-500/10' : qty > 0 ? 'border-emerald-500/35' : 'border-slate-800'} flex flex-col justify-between gap-3">
+                    <div>
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="font-extrabold text-sm text-white">🪱 ${b.name}</span>
+                        <span class="px-2 py-0.5 rounded-md bg-discord-950 text-[11px] font-mono text-emerald-300">Owned: ${fmt(qty)}</span>
+                      </div>
+                      <p class="text-xs text-slate-400 mt-1">${b.desc} (Lv ${b.reqLv})</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1.5">
+                      <button data-bait-buy="${b.id}:25" ${locked || state.gold < b.cost * 25 ? 'disabled' : ''} class="py-1.5 px-2 rounded-lg text-[11px] font-bold bg-indigo-500 hover:bg-indigo-400 disabled:bg-discord-950 disabled:text-slate-500 text-white transition">+25 ($${fmt(b.cost * 25)})</button>
+                      <button data-bait-buy="${b.id}:250" ${locked || state.gold < b.cost * 250 ? 'disabled' : ''} class="py-1.5 px-2 rounded-lg text-[11px] font-bold bg-indigo-500 hover:bg-indigo-400 disabled:bg-discord-950 disabled:text-slate-500 text-white transition">+250 ($${fmt(b.cost * 250)})</button>
+                      <button data-bait-eq="${b.id}" ${qty <= 0 ? 'disabled' : ''} class="py-1.5 px-2 rounded-lg text-[11px] font-bold ${equipped ? 'bg-cyan-500 text-slate-950' : 'bg-emerald-600 hover:bg-emerald-500 text-white'} disabled:bg-discord-950 disabled:text-slate-500 transition">${equipped ? 'Active' : 'Equip'}</button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 space-y-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">⚡ Exotic Fish Boost Shop (3m Surges)</h4>
+                <div class="text-[11px] font-mono text-emerald-300">
+                  Goldfish: ${state.exotics.goldfish} | Emerald: ${state.exotics.emeraldfish} | Lava: ${state.exotics.lavafish} | Diamond: ${state.exotics.diamondfish}
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                ${BOOST_DEFS.map(bo => {
+                  const have = state.exotics[bo.exoticType] || 0;
+                  const rem = Math.ceil(state.boostTimers[bo.id] || 0);
+                  return `
+                    <div class="p-3.5 rounded-xl bg-discord-850/90 border ${rem > 0 ? 'border-amber-400/60 bg-amber-500/10' : 'border-slate-800'} flex flex-col justify-between gap-2.5">
+                      <div>
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="font-extrabold text-sm text-white">⚡ ${bo.name}</span>
+                          <span class="text-[11px] font-mono ${rem > 0 ? 'text-amber-300 font-bold' : 'text-slate-400'}">${rem > 0 ? `${rem}s left` : 'Ready'}</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">${bo.desc}</p>
+                      </div>
+                      <button data-boost="${bo.id}" ${have < bo.cost ? 'disabled' : ''} class="w-full py-2 px-3 rounded-xl font-extrabold text-xs bg-emerald-600 hover:bg-emerald-500 disabled:bg-discord-950 disabled:text-slate-500 text-white transition">
+                        Activate — ${bo.cost} ${exoticLabels[bo.exoticType]} (Have ${have})
+                      </button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="scroll-fade-wrap bg-discord-950/80 p-1.5 rounded-xl border border-slate-800">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pr-6">
+              ${subTabs.map(t => `
+                <button data-sub="${t.id}" class="shop-sub-btn shrink-0 py-2 px-3 rounded-lg text-[11px] sm:text-xs font-extrabold whitespace-nowrap transition ${
+                  shopSubTab === t.id ? 'bg-indigo-500/25 text-cyan-200 border border-indigo-400/40' : 'text-slate-400 hover:text-white'
+                }">${t.label}</button>
+              `).join('')}
+            </div>
+          </div>
+          ${body}
+        </div>
+      `;
+
+      container.querySelectorAll('[data-sub]').forEach(btn => {
+        btn.onclick = () => { shopSubTab = btn.dataset.sub; renderActiveTab(); };
+      });
+      container.querySelectorAll('[data-buy-gold]').forEach(btn => {
+        btn.onclick = () => {
+          const u = GOLD_UPGRADES.find(x => x.id === btn.dataset.buyGold);
+          const lv = state.goldUpgrades[u.id] || 0;
+          const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
+          if (lv < u.maxLv && state.gold >= cost) {
+            state.gold -= cost;
+            state.goldUpgrades[u.id]++;
+            updateHUD();
+            renderActiveTab();
+          }
+        };
+      });
+      container.querySelectorAll('[data-buy-em]').forEach(btn => {
+        btn.onclick = () => {
+          const u = EMERALD_UPGRADES.find(x => x.id === btn.dataset.buyEm);
+          const lv = state.emeraldUpgrades[u.id] || 0;
+          const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
+          if (lv < u.maxLv && state.emeralds >= cost) {
+            state.emeralds -= cost;
+            state.emeraldUpgrades[u.id]++;
+            updateHUD();
+            renderActiveTab();
+          }
+        };
+      });
+      container.querySelectorAll('[data-rod]').forEach(btn => {
+        btn.onclick = () => {
+          const r = RODS.find(x => x.id === btn.dataset.rod);
+          if (state.ownedRods.includes(r.id)) {
+            state.rod = r.id;
+          } else if (state.level >= r.reqLv && state.gold >= r.cost) {
+            state.gold -= r.cost;
+            state.ownedRods.push(r.id);
+            state.rod = r.id;
+            showToast(`🎣 Equipped ${r.name}!`, 'cyan');
+          }
+          updateHUD();
+          renderActiveTab();
+        };
+      });
+      container.querySelectorAll('[data-boat]').forEach(btn => {
+        btn.onclick = () => {
+          const b = BOATS.find(x => x.id === btn.dataset.boat);
+          if (state.ownedBoats.includes(b.id)) {
+            state.boat = b.id;
+          } else if (state.level >= b.reqLv && state.gold >= b.cost) {
+            state.gold -= b.cost;
+            state.ownedBoats.push(b.id);
+            state.boat = b.id;
+            showToast(`⛵ Boarded ${b.name}!`, 'cyan');
+          }
+          updateHUD();
+          renderActiveTab();
+        };
+      });
+      container.querySelectorAll('[data-bait-buy]').forEach(btn => {
+        btn.onclick = () => {
+          const [id, amtStr] = btn.dataset.baitBuy.split(':');
+          const amt = Number(amtStr);
+          const b = BAITS.find(x => x.id === id);
+          if (state.level >= b.reqLv && state.gold >= b.cost * amt) {
+            state.gold -= b.cost * amt;
+            state.baits[id] = (state.baits[id] || 0) + amt;
+            if (!state.activeBait) state.activeBait = id;
+            updateHUD();
+            renderActiveTab();
+          }
+        };
+      });
+      container.querySelectorAll('[data-bait-eq]').forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.baitEq;
+          state.activeBait = state.activeBait === id ? null : id;
+          updateHUD();
+          renderActiveTab();
+        };
+      });
+      container.querySelectorAll('[data-boost]').forEach(btn => {
+        btn.onclick = () => {
+          const bo = BOOST_DEFS.find(x => x.id === btn.dataset.boost);
+          if (state.exotics[bo.exoticType] >= bo.cost) {
+            state.exotics[bo.exoticType] -= bo.cost;
+            state.boostTimers[bo.id] = (state.boostTimers[bo.id] || 0) + 180;
+            addFeed(`⚡ Activated <strong class="text-amber-300">${bo.name}</strong>!`, 'exotic');
+            showToast(`⚡ ${bo.name} Active!`, 'amber');
+            updateHUD();
+            renderActiveTab();
+          }
+        };
+      });
+    }
+
+    function renderBiomesTab(container) {
+      container.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          ${BIOMES.map(b => {
+            const req = getBiomeReqLevel(b);
+            const unlocked = state.level >= req;
+            const active = state.biome === b.id;
+            const mastered = b.fish.every(f => (state.bestiary[f.id] || 0) > 0);
+            return `
+              <div class="rounded-2xl overflow-hidden border ${active ? 'border-cyan-400 shadow-lg shadow-cyan-500/15' : unlocked ? 'border-slate-700' : 'border-slate-800 opacity-65'} bg-discord-850 flex flex-col justify-between">
+                <div class="p-3.5" style="background: ${b.gradient};">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-black text-base text-white">${b.icon} ${b.name}</span>
+                    <span class="px-2 py-0.5 rounded-md bg-black/40 text-[11px] font-mono font-bold text-amber-300">${fmt(b.mult)}x</span>
+                  </div>
+                  <p class="text-[11px] text-slate-200/90 mt-1">${b.desc}</p>
+                </div>
+                <div class="p-3 flex items-center justify-between gap-2 bg-discord-850">
+                  <div class="text-[11px] text-slate-400">
+                    <div>Crate: <strong class="text-slate-200">${CRATE_TYPES[b.crate].name}</strong></div>
+                    <div>${mastered ? '<span class="text-emerald-300 font-bold">✅ Bestiary Mastered</span>' : `Unlock: Lv ${req}`}</div>
+                  </div>
+                  <button data-travel="${b.id}" ${!unlocked || active ? 'disabled' : ''} class="px-3.5 py-2 rounded-xl font-extrabold text-xs transition active:scale-95 ${
+                    active ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/40'
+                    : unlocked ? 'bg-indigo-500 hover:bg-indigo-400 text-white'
+                    : 'bg-discord-950 text-slate-500 border border-slate-800 cursor-not-allowed'
+                  }">${active ? 'CURRENT' : unlocked ? 'Travel' : `🔒 Lv ${req}`}</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      container.querySelectorAll('[data-travel]').forEach(btn => {
+        btn.onclick = () => {
+          state.biome = btn.dataset.travel;
+          const b = getBiome();
+          showToast(`🌌 Traveled to ${b.icon} ${b.name}!`, 'cyan');
+          updateHUD();
+          renderActiveTab();
+        };
+      });
+    }
+
+    function renderCratesTab(container) {
+      const totalCrates = Object.values(state.crates).reduce((a, b) => a + b, 0);
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 p-3.5 rounded-2xl bg-gradient-to-r from-indigo-500/15 to-cyan-500/15 border border-indigo-400/30">
+            <div>
+              <div class="font-extrabold text-sm text-white">🎁 Daily Streak &amp; Crate Vault</div>
+              <div class="text-xs text-slate-300">Streak: ${state.dailyStreak} days • ${fmt(totalCrates)} crates stored</div>
+            </div>
+            <div class="flex gap-2">
+              <button id="tab-btn-daily" class="px-3 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs transition active:scale-95">🎁 Claim Daily</button>
+              <button id="tab-btn-openall" ${totalCrates <= 0 ? 'disabled' : ''} class="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 disabled:bg-discord-950 disabled:text-slate-500 text-slate-950 font-extrabold text-xs transition active:scale-95">📦 Open All (${totalCrates})</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            ${Object.entries(CRATE_TYPES).map(([key, def]) => {
+              const qty = state.crates[key] || 0;
+              return `
+                <div class="p-3.5 rounded-xl bg-discord-850/90 border ${qty > 0 ? 'border-amber-400/40' : 'border-slate-800'} flex flex-col justify-between gap-2.5">
+                  <div>
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="font-extrabold text-sm text-white">${def.icon} ${def.name}</span>
+                      <span class="px-2 py-0.5 rounded-md bg-discord-950 text-[11px] font-mono text-amber-300">x${qty}</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">Drops Gold, ${def.emMin}–${def.emMax} 💎 &amp; 18% Charm roll (Lv 20+).</p>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button data-crate="${key}:1" ${qty < 1 ? 'disabled' : ''} class="py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-discord-950 disabled:text-slate-500 text-white font-bold text-xs transition">Open 1</button>
+                    <button data-crate="${key}:all" ${qty < 1 ? 'disabled' : ''} class="py-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-400 disabled:bg-discord-950 disabled:text-slate-500 text-white font-bold text-xs transition">Open All</button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="pt-2 border-t border-slate-800 space-y-2.5">
+            <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">🎯 Active Quests (Reward Emeralds &amp; Goldfish)</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              ${state.quests.map(q => {
+                const pct = Math.min(100, Math.round((q.progress / q.target) * 100));
+                return `
+                  <div class="p-3.5 rounded-xl bg-discord-850/90 border border-slate-800 space-y-2">
+                    <div class="flex items-start justify-between gap-2">
+                      <span class="font-bold text-xs text-white leading-snug">📜 ${q.text}</span>
+                      <span class="text-[11px] font-mono font-bold text-emerald-300 shrink-0">+${q.emReward}💎</span>
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-mono">${fmt(q.progress)} / ${fmt(q.target)} (${pct}%)</div>
+                    <div class="w-full h-1.5 bg-discord-950 rounded-full overflow-hidden">
+                      <div class="h-full bg-gradient-to-r from-emerald-400 to-cyan-400" style="width:${pct}%;"></div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.querySelector('#tab-btn-daily').onclick = claimDaily;
+      container.querySelector('#tab-btn-openall').onclick = openAllCrates;
+      container.querySelectorAll('[data-crate]').forEach(btn => {
+        btn.onclick = () => {
+          const [key, mode] = btn.dataset.crate.split(':');
+          openCrate(key, mode === 'all' ? (state.crates[key] || 0) : 1);
+        };
+      });
+    }
+
+    function renderPetsTab(container) {
+      container.innerHTML = `
+        <div class="space-y-4">
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">🐾 Companions (1 Active — Levels up to Lv. 100 as you fish)</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            ${PETS.map(p => {
+              const owned = state.pets[p.id];
+              const active = state.activePet === p.id;
+              const req = owned ? Math.floor(80 * Math.pow(owned.lv, 1.55)) : 100;
+              const pct = owned ? Math.min(100, Math.round((owned.xp / req) * 100)) : 0;
+              return `
+                <div class="p-3.5 rounded-xl bg-discord-850/90 border ${active ? 'border-fuchsia-400 bg-fuchsia-500/10' : owned ? 'border-emerald-500/35' : 'border-slate-800'} flex flex-col justify-between gap-3">
+                  <div>
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="font-extrabold text-sm text-white">${p.icon} ${p.name}</span>
+                      <span class="px-2 py-0.5 rounded-md bg-discord-950 text-[11px] font-mono ${owned ? 'text-fuchsia-300 font-bold' : 'text-slate-500'}">${owned ? `Lv ${owned.lv}/100` : 'Locked'}</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">${p.desc}</p>
+                    ${owned ? `
+                      <div class="mt-2">
+                        <div class="w-full h-1.5 bg-discord-950 rounded-full overflow-hidden">
+                          <div class="h-full bg-gradient-to-r from-fuchsia-400 to-cyan-400" style="width:${pct}%;"></div>
+                        </div>
+                      </div>
+                    ` : ''}
+                  </div>
+                  <button data-pet="${p.id}" ${!owned || active ? 'disabled' : ''} class="w-full py-2 rounded-xl font-extrabold text-xs transition ${
+                    active ? 'bg-fuchsia-500/25 text-fuchsia-200 border border-fuchsia-400/50'
+                    : owned ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                    : 'bg-discord-950 text-slate-500 border border-slate-800 cursor-not-allowed'
+                  }">${active ? 'ACTIVE COMPANION' : owned ? 'Select Pet' : 'Found Randomly While Fishing'}</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="pt-2 border-t border-slate-800 space-y-2.5">
+            <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">✨ Permanent Charms (Found in Crates at Lv 20+)</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${CHARMS.map(c => {
+                const rank = state.charms[c.id] || 0;
+                return `
+                  <div class="p-3.5 rounded-xl bg-discord-850/90 border ${rank > 0 ? 'border-amber-400/40' : 'border-slate-800'}">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="font-extrabold text-sm text-white">${c.icon} ${c.name}</span>
+                      <span class="px-2 py-0.5 rounded-md bg-discord-950 text-[11px] font-mono text-amber-300">Rank ${rank}</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">${c.desc}</p>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.querySelectorAll('[data-pet]').forEach(btn => {
+        btn.onclick = () => {
+          if (state.pets[btn.dataset.pet]) {
+            state.activePet = btn.dataset.pet;
+            updateHUD();
+            renderActiveTab();
+          }
+        };
+      });
+    }
+
+    function renderFishdexTab(container) {
+      let discovered = 0;
+      let total = 0;
+      const sections = BIOMES.map(b => {
+        const complete = b.fish.every(f => (state.bestiary[f.id] || 0) > 0);
+        const chips = b.fish.map(f => {
+          total++;
+          const cnt = state.bestiary[f.id] || 0;
+          if (cnt > 0) discovered++;
+          const cls = RARITY_STYLES[f.rarity] || RARITY_STYLES.Common;
+          return `<span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold ${cls} ${cnt > 0 ? '' : 'opacity-40'}">
+            ${cnt > 0 ? `${f.name} (${fmt(cnt)})` : `??? [${f.rarity}]`}
+          </span>`;
+        }).join('');
+        return `
+          <div class="p-3.5 rounded-xl bg-discord-850/90 border ${complete ? 'border-emerald-400/50' : 'border-slate-800'} space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-extrabold text-sm text-white">${b.icon} ${b.name} Fishdex</span>
+              <span class="text-[11px] font-bold ${complete ? 'text-emerald-300' : 'text-slate-400'}">
+                ${complete ? '✅ MASTERED (+25% Gold & XP)' : 'In Progress'}
+              </span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">${chips}</div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">📖 Complete Biomes for Permanent +25% Mastery</h4>
+            <span class="text-xs font-mono font-bold text-amber-300">${discovered} / ${total} Discovered</span>
+          </div>
+          ${sections}
+        </div>
+      `;
+    }
+
+    function renderPrestigeTab(container) {
+      const req = getPrestigeRequirement();
+      const gain = getPrestigeTokensOnReset();
+      const canPrestige = state.level >= req;
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/20 via-fuchsia-500/20 to-discord-900 border border-fuchsia-400/50 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 class="text-lg font-black text-fuchsia-200">🔮 Ascend to Prestige ${state.prestige + 1}</h3>
+                <p class="text-xs text-slate-300 mt-0.5">Requires Level ${req} (Current: Lv.${state.level}). Higher levels grant bonus Tokens!</p>
+              </div>
+              <button id="tab-btn-prestige" ${canPrestige ? '' : 'disabled'} class="px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:brightness-110 disabled:bg-discord-950 disabled:from-discord-950 disabled:to-discord-950 disabled:text-slate-500 text-white shadow-lg transition active:scale-95">
+                🔮 PRESTIGE (+${gain} Tokens)
+              </button>
+            </div>
+            <div class="text-xs text-fuchsia-100/85 leading-relaxed">
+              <strong>Keeps Forever:</strong> Prestige Rank, Tokens, Emeralds, Emerald Upgrades, Pets, Charms, Exotics &amp; Fishdex.<br/>
+              <strong>Rank Bonus:</strong> +30% Gold, +25% XP, +5% Pet Odds, and -2% Biome Level Req per Prestige!
+            </div>
+          </div>
+
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Prestige Token Meta-Shop</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            ${PRESTIGE_UPGRADES.map(u => {
+              const lv = state.prestigeUpgrades[u.id] || 0;
+              const maxed = lv >= u.maxLv;
+              const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
+              const canBuy = !maxed && state.ptokens >= cost;
+              return `
+                <div class="p-3.5 rounded-xl bg-discord-850/90 border ${lv > 0 ? 'border-fuchsia-400/40' : 'border-slate-800'} flex flex-col justify-between gap-3">
+                  <div>
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="font-extrabold text-sm text-white">🔮 ${u.name}</span>
+                      <span class="px-2 py-0.5 rounded-md bg-discord-950 text-[11px] font-mono text-fuchsia-300">Rank ${lv}/${u.maxLv}</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">${u.desc}</p>
+                  </div>
+                  <button data-pupg="${u.id}" ${canBuy ? '' : 'disabled'} class="w-full py-2 rounded-xl font-extrabold text-xs transition ${
+                    maxed ? 'bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-400/30'
+                    : canBuy ? 'bg-fuchsia-600 hover:bg-fuchsia-500 text-white'
+                    : 'bg-discord-950 text-slate-500 border border-slate-800 cursor-not-allowed'
+                  }">${maxed ? 'MAXED' : `Ascend Perk — ${cost} Tokens`}</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="pt-2 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+            <div class="p-2.5 rounded-xl bg-discord-850 border border-slate-800">
+              <div class="text-[10px] uppercase text-slate-400 font-bold">Gold Mult</div>
+              <div class="text-sm font-black text-amber-300 font-mono">${fmt(getGoldMultiplier())}x</div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-discord-850 border border-slate-800">
+              <div class="text-[10px] uppercase text-slate-400 font-bold">XP Mult</div>
+              <div class="text-sm font-black text-cyan-300 font-mono">${fmt(getXpMultiplier())}x</div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-discord-850 border border-slate-800">
+              <div class="text-[10px] uppercase text-slate-400 font-bold">Crate Chance</div>
+              <div class="text-sm font-black text-emerald-300 font-mono">${(getCrateChance() * 100).toFixed(1)}%</div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-discord-850 border border-slate-800">
+              <div class="text-[10px] uppercase text-slate-400 font-bold">Mastered Biomes</div>
+              <div class="text-sm font-black text-fuchsia-300 font-mono">${getBestiaryMasteryCount()} / ${BIOMES.length}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.querySelector('#tab-btn-prestige').onclick = doPrestige;
+      container.querySelectorAll('[data-pupg]').forEach(btn => {
+        btn.onclick = () => {
+          const u = PRESTIGE_UPGRADES.find(x => x.id === btn.dataset.pupg);
+          const lv = state.prestigeUpgrades[u.id] || 0;
+          const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
+          if (lv < u.maxLv && state.ptokens >= cost) {
+            state.ptokens -= cost;
+            state.prestigeUpgrades[u.id]++;
+            updateHUD();
+            renderActiveTab();
+          }
+        };
+      });
+    }
+
+    /* ============================================================================
+       7. MAIN GAME LOOP & EVENT WIRING
+       ============================================================================ */
+    function attemptManualCast() {
+      if (cooldownRemaining <= 0) {
+        performCast(false);
+        updateHUD();
+      }
+    }
+
+    function cycleOwnedBait() {
+      const owned = [null, ...BAITS.filter(b => (state.baits[b.id] || 0) > 0).map(b => b.id)];
+      const idx = owned.indexOf(state.activeBait);
+      state.activeBait = owned[(idx + 1) % owned.length];
+      updateHUD();
+      if (activeTab === 'shop' && shopSubTab === 'baits') renderActiveTab();
+    }
+
+    function gameLoop(now) {
+      const dt = Math.min(0.25, (now - lastFrameTime) / 1000);
+      lastFrameTime = now;
+
+      const totalCd = getCooldownSeconds();
+      if (cooldownRemaining > 0) {
+        cooldownRemaining = Math.max(0, cooldownRemaining - dt);
+      }
+
+      const btn = document.getElementById('btn-cast-line');
+      const fill = document.getElementById('cooldown-bar-fill');
+      const label = document.getElementById('cooldown-timer-text');
+      const stageText = document.getElementById('stage-status-text');
+      const dockBtn = document.getElementById('dock-cast-btn');
+      const dockFill = document.getElementById('dock-cooldown-bar');
+      const dockLabel = document.getElementById('dock-cooldown-text');
+
+      if (cooldownRemaining <= 0) {
+        btn.disabled = false;
+        fill.style.width = '100%';
+        label.textContent = `Ready (${totalCd.toFixed(2)}s)`;
+        stageText.textContent = 'Ready to cast! Press Space or tap Cast';
+        dockBtn.disabled = false;
+        dockFill.style.width = '100%';
+        dockLabel.textContent = 'Ready';
+        if (state.autoCast) {
+          performCast(false);
+          updateHUD();
+        }
+      } else {
+        const pct = Math.max(0, Math.min(100, ((totalCd - cooldownRemaining) / totalCd) * 100));
+        const secStr = `${cooldownRemaining.toFixed(2)}s`;
+        btn.disabled = true;
+        fill.style.width = pct + '%';
+        label.textContent = secStr;
+        stageText.textContent = 'Reeling in the cosmos...';
+        dockBtn.disabled = true;
+        dockFill.style.width = pct + '%';
+        dockLabel.textContent = secStr;
+      }
+
+      if (state.goldUpgrades.workers > 0) {
+        workerAccumulator += dt;
+        if (workerAccumulator >= 2.0) {
+          workerAccumulator -= 2.0;
+          performCast(true);
+          updateHUD();
+        }
+      }
+
+      let boostTick = false;
+      for (const key of Object.keys(state.boostTimers)) {
+        if (state.boostTimers[key] > 0) {
+          state.boostTimers[key] = Math.max(0, state.boostTimers[key] - dt);
+          boostTick = true;
+        }
+      }
+      if (boostTick && Math.random() < 0.2) updateHUD();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Export / Import JSON Save
+    function exportSaveJson() {
+      const payload = JSON.stringify({ ...state, exportedAt: Date.now() }, null, 2);
+      try {
+        const blob = new Blob([payload], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `virtual_fisher_save_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (_) {}
+      try { navigator.clipboard?.writeText(payload); } catch (_) {}
+      showToast('📤 Exported save .json & copied to clipboard!', 'emerald');
+    }
+
+    function applyImportedJson(rawText) {
+      try {
+        const parsed = JSON.parse(rawText.trim());
+        if (!parsed || typeof parsed !== 'object') throw new Error('Invalid');
+        mergeState(parsed);
+        saveGame(false);
+        updateHUD();
+        renderActiveTab();
+        document.getElementById('import-json-panel').classList.add('hidden');
+        document.getElementById('input-import-json').value = '';
+        showToast('📥 Save imported successfully!', 'emerald');
+      } catch (_) {
+        showToast('Invalid save JSON format.', 'rose');
+      }
+    }
+
+    // Bind Controls
+    document.querySelectorAll('#main-tabs .tab-btn').forEach(btn => {
+      btn.onclick = () => {
+        activeTab = btn.dataset.tab;
+        renderActiveTab();
+      };
     });
-  }
-}
 
-function advanceQuest(type, amount = 1) {
-  let completedAny = false;
-  for (let i = state.quests.length - 1; i >= 0; i--) {
-    const q = state.quests[i];
-    if (q.type === type) {
-      q.progress += amount;
-      if (q.progress >= q.target) {
-        state.emeralds += q.emReward;
-        state.exotics.goldfish += 1;
-        addLog(`✅ Quest Complete: "${q.text}" → +${q.emReward} 💎 & +1 Goldfish!`, 'exotic');
-        state.quests.splice(i, 1);
-        completedAny = true;
-      }
-    }
-  }
-  if (completedAny) generateQuests();
-}
+    document.getElementById('btn-cast-line').onclick = attemptManualCast;
+    document.getElementById('dock-cast-btn').onclick = attemptManualCast;
+    document.getElementById('btn-sell-all').onclick = sellLivewell;
+    document.getElementById('dock-sell-btn').onclick = sellLivewell;
+    document.getElementById('btn-cycle-bait').onclick = cycleOwnedBait;
+    document.getElementById('dock-cycle-bait').onclick = cycleOwnedBait;
 
-/* ============================================================================
-   CORE FISHING ACTION
-   ============================================================================ */
-function rollFishFromBiome(biome) {
-  const rodBonus = getRod().rareBonus;
-  const adjusted = biome.fish.map((f, idx) => {
-    const rarityBoost = idx >= 2 ? (1 + rodBonus * idx * 0.5) : 1;
-    return { ...f, adjWeight: f.weight * rarityBoost };
-  });
-  const totalWeight = adjusted.reduce((s, f) => s + f.adjWeight, 0);
-  let r = Math.random() * totalWeight;
-  for (const f of adjusted) {
-    r -= f.adjWeight;
-    if (r <= 0) return f;
-  }
-  return adjusted[0];
-}
-
-function grantXp(amount) {
-  state.xp += amount;
-  let leveled = false;
-  while (state.xp >= xpRequired(state.level)) {
-    state.xp -= xpRequired(state.level);
-    state.level++;
-    leveled = true;
-    const bonusEmeralds = state.level % 10 === 0 ? 3 : 1;
-    state.emeralds += bonusEmeralds;
-    addLog(`🎉 LEVEL UP! You reached Level ${state.level}! (+${bonusEmeralds} 💎)`, 'levelup');
-  }
-  if (leveled) {
-    renderBiomes();
-    renderGear();
-    renderBaits();
-  }
-}
-
-function performCast(isWorker = false) {
-  const biome = getBiome();
-  const baseFishCount = 1 + state.goldUpgrades.betterFish;
-  const yieldMult = getFishYieldMultiplier() * (isWorker ? 0.35 * getBoat().workerMult : 1);
-  let totalCaught = Math.max(1, Math.round(baseFishCount * yieldMult * (0.85 + Math.random() * 0.3)));
-
-  // Twin-hook + Lucky Hook Charm double catch
-  const doubleChance = Math.min(0.85, state.goldUpgrades.duplicator * 0.025 + state.charms.c_hook * 0.05);
-  let doubled = false;
-  if (Math.random() < doubleChance) {
-    totalCaught *= 2;
-    doubled = true;
-  }
-
-  // Consume Bait (manual casts only)
-  if (!isWorker && state.activeBait && state.baits[state.activeBait] > 0) {
-    const saveChance = Math.min(0.50, state.goldUpgrades.baitEff * 0.02);
-    if (Math.random() >= saveChance) {
-      state.baits[state.activeBait]--;
-      if (state.baits[state.activeBait] <= 0) {
-        addLog(`🪱 You ran out of ${BAITS.find(b => b.id === state.activeBait).name}!`, 'crate');
-      }
-    }
-  }
-
-  // Roll primary and secondary species
-  const primary = rollFishFromBiome(biome);
-  const secondary = rollFishFromBiome(biome);
-  const count1 = Math.ceil(totalCaught * 0.65);
-  const count2 = totalCaught - count1;
-
-  state.bestiary[primary.id] = (state.bestiary[primary.id] || 0) + count1;
-  if (count2 > 0) state.bestiary[secondary.id] = (state.bestiary[secondary.id] || 0) + count2;
-
-  const goldMult = getGoldMultiplier();
-  const xpMult = getXpMultiplier();
-
-  const earnedValue = Math.round(
-    (primary.val * count1 + secondary.val * count2) * biome.mult * goldMult
-  );
-  const earnedXp = Math.round(
-    (primary.xp * count1 + secondary.xp * count2) * biome.mult * xpMult
-  );
-
-  if (state.autoSell) {
-    state.gold += earnedValue;
-  } else {
-    state.livewellCount += totalCaught;
-    state.livewellValue += earnedValue;
-  }
-
-  grantXp(earnedXp);
-
-  // Pet XP
-  if (state.activePet && state.pets[state.activePet]) {
-    const p = state.pets[state.activePet];
-    if (p.lv < 100) {
-      let petXpGain = Math.max(1, Math.round((5 + biome.mult * 0.15) * (1 + state.emeraldUpgrades.emPetXp * 0.20)));
-      if (state.activePet === 'puffer') petXpGain = Math.round(petXpGain * (1 + p.lv * 0.01));
-      p.xp += petXpGain;
-      const req = Math.floor(80 * Math.pow(p.lv, 1.55));
-      if (p.xp >= req && p.lv < 100) {
-        p.xp -= req;
-        p.lv++;
-        addLog(`🐾 Your ${PETS.find(x => x.id === state.activePet).name} leveled up to Lv.${p.lv}!`, 'pet');
-      }
-    }
-  }
-
-  if (!isWorker) {
-    state.totalCasts++;
-    cooldownRemaining = getCooldownSeconds();
-    advanceQuest('cast', 1);
-    advanceQuest('fish', totalCaught);
-    if (['Rare', 'Epic', 'Mythic'].includes(primary.rarity)) advanceQuest('rare', 1);
-
-    let msg = `${biome.icon} Caught <strong>${fmt(count1)}x ${primary.name}</strong>`;
-    if (count2 > 0) msg += ` & <strong>${fmt(count2)}x ${secondary.name}</strong>`;
-    if (doubled) msg += ` <span style="color:var(--gold); font-weight:800;">[2x TWIN CATCH!]</span>`;
-    msg += ` (+${fmt(earnedXp)} XP${state.autoSell ? `, +$${fmt(earnedValue)}` : ''})`;
-    addLog(msg);
-
-    // Treasure Crate Drop Roll
-    if (Math.random() < getCrateChance()) {
-      const cKey = biome.crate;
-      state.crates[cKey] = (state.crates[cKey] || 0) + 1;
-      advanceQuest('crate', 1);
-      addLog(`📦 Found a <strong>${CRATE_TYPES[cKey].name}</strong>! Check the Crates tab!`, 'crate');
-    }
-
-    // Exotic Fish Roll
-    const exoticMult = Math.pow(1.35, state.prestigeUpgrades.p_exotic) *
-      (state.activePet === 'puffer' && state.pets.puffer ? (1 + state.pets.puffer.lv * 0.015) : 1);
-    if (state.level >= 10 && Math.random() < 0.025 * exoticMult) {
-      const pool = ['goldfish', 'emeraldfish'];
-      if (state.level >= 50) pool.push('lavafish');
-      if (state.level >= 100) pool.push('diamondfish');
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      state.exotics[pick]++;
-      const label = { goldfish: 'Goldfish', emeraldfish: 'Emerald Fish', lavafish: 'Lava Fish', diamondfish: 'Diamond Fish' }[pick];
-      addLog(`✨ EXOTIC CATCH! You reeled in a rare <strong>${label}</strong>!`, 'exotic');
-    }
-
-    // Pet Discovery Roll (1 in 350 base, improved by Prestige)
-    const petOdds = (1 / 350) * (1 + state.prestige * 0.05) * exoticMult;
-    if (Math.random() < petOdds) {
-      const petDef = PETS[Math.floor(Math.random() * PETS.length)];
-      if (!state.pets[petDef.id]) {
-        state.pets[petDef.id] = { lv: 1, xp: 0 };
-        if (!state.activePet) state.activePet = petDef.id;
-        addLog(`🐾 RARE DISCOVERY! You befriended a <strong>${petDef.icon} ${petDef.name}</strong> companion!`, 'pet');
-      } else if (state.pets[petDef.id].lv < 100) {
-        state.pets[petDef.id].lv = Math.min(100, state.pets[petDef.id].lv + 1);
-        addLog(`🐾 Duplicate ${petDef.name} found! Boosted directly to <strong>Lv.${state.pets[petDef.id].lv}</strong>!`, 'pet');
-      }
-    }
-  } else {
-    advanceQuest('fish', totalCaught);
-  }
-}
-
-function sellLivewell() {
-  if (state.livewellValue <= 0) return;
-  const val = state.livewellValue;
-  const cnt = state.livewellCount;
-  state.gold += val;
-  state.livewellCount = 0;
-  state.livewellValue = 0;
-  addLog(`🪙 Sold <strong>${fmt(cnt)} fish</strong> for <strong class="gold-text">$${fmt(val)}</strong>!`);
-  updateUI();
-}
-
-/* ============================================================================
-   CRATES, DAILY & PRESTIGE ACTIONS
-   ============================================================================ */
-function openCrate(cKey, count = 1) {
-  const owned = state.crates[cKey] || 0;
-  const toOpen = Math.min(owned, count);
-  if (toOpen <= 0) return;
-  state.crates[cKey] -= toOpen;
-
-  const def = CRATE_TYPES[cKey];
-  const specMult = 1 + state.emeraldUpgrades.emCrate * 0.15 +
-    (state.activePet === 'axolotl' && state.pets.axolotl ? state.pets.axolotl.lv * 0.01 : 0);
-
-  let totalGold = 0;
-  let totalEm = 0;
-  let charmFound = null;
-
-  for (let i = 0; i < toOpen; i++) {
-    totalGold += Math.round(def.goldMult * Math.max(10, state.level * 12) * specMult * (0.8 + Math.random() * 0.5));
-    const emRoll = def.emMin + Math.floor(Math.random() * (def.emMax - def.emMin + 1));
-    totalEm += Math.max(1, Math.round(emRoll * specMult));
-
-    // 18% chance per crate to find/upgrade a Charm if Lv >= 20
-    if (state.level >= 20 && Math.random() < 0.18) {
-      const ch = CHARMS[Math.floor(Math.random() * CHARMS.length)];
-      state.charms[ch.id] = (state.charms[ch.id] || 0) + 1;
-      charmFound = `${ch.icon} ${ch.name} (Rank ${state.charms[ch.id]})`;
-    }
-  }
-
-  state.gold += totalGold;
-  state.emeralds += totalEm;
-  let msg = `${def.icon} Opened <strong>${toOpen}x ${def.name}</strong> → <span class="gold-text">+$${fmt(totalGold)}</span> & <span class="emerald-text">+${fmt(totalEm)} 💎</span>`;
-  if (charmFound) msg += ` + <strong>${charmFound}</strong>!`;
-  addLog(msg, 'crate');
-  updateUI();
-}
-
-function openAllCrates() {
-  for (const key of Object.keys(CRATE_TYPES)) {
-    if ((state.crates[key] || 0) > 0) openCrate(key, state.crates[key]);
-  }
-}
-
-function claimDaily() {
-  const now = Date.now();
-  const cooldownMs = 20 * 60 * 60 * 1000; // 20 hours
-  if (now - state.lastDaily < cooldownMs) {
-    const hrs = Math.ceil((cooldownMs - (now - state.lastDaily)) / 3600000);
-    addLog(`⏳ Daily reward already claimed! Come back in ~${hrs}h.`);
-    return;
-  }
-  state.lastDaily = now;
-  state.dailyStreak++;
-  const em = 10 + state.dailyStreak * 3;
-  const gold = Math.max(2500, state.level * 1500 * (1 + state.prestige));
-  state.emeralds += em;
-  state.gold += gold;
-  state.crates[getBiome().crate] += 2;
-  addLog(`🎁 Daily Reward (Streak ${state.dailyStreak}): +$${fmt(gold)}, +${em} 💎 & +2 Crates!`, 'crate');
-  updateUI();
-}
-
-function getPrestigeRequirement() {
-  return 100 + state.prestige * 50;
-}
-
-function getPrestigeTokensOnReset() {
-  const req = getPrestigeRequirement();
-  if (state.level < req) return 0;
-  return Math.max(1, Math.floor(1 + (state.level - req) / 40));
-}
-
-function doPrestige() {
-  const req = getPrestigeRequirement();
-  if (state.level < req) return;
-  const gain = getPrestigeTokensOnReset();
-  if (!confirm(`Prestige to Rank ${state.prestige + 1} for +${gain} Prestige Tokens?\n\nResets Level, Gold, Rods, Boats & Gold Upgrades. Keeps Emeralds, Pets, Charms, Exotics & Bestiary!`)) {
-    return;
-  }
-
-  state.prestige++;
-  state.ptokens += gain;
-  state.level = 1;
-  state.xp = 0;
-  state.biome = 'river';
-  state.livewellCount = 0;
-  state.livewellValue = 0;
-  state.goldUpgrades = { cooldown: 0, salesman: 0, betterFish: 0, moreChests: 0, experienced: 0, baitEff: 0, workers: 0, duplicator: 0 };
-
-  // Headstart Perk
-  const hs = state.prestigeUpgrades.p_headstart;
-  if (hs >= 3) {
-    state.rod = 'r_lava'; state.ownedRods = ['r_plastic', 'r_improved', 'r_steel', 'r_fiber', 'r_heavy', 'r_lava'];
-    state.boat = 'b_sail'; state.ownedBoats = ['b_none', 'b_row', 'b_fish', 'b_speed', 'b_sail'];
-    state.gold = 2500000;
-  } else if (hs === 2) {
-    state.rod = 'r_fiber'; state.ownedRods = ['r_plastic', 'r_improved', 'r_steel', 'r_fiber'];
-    state.boat = 'b_speed'; state.ownedBoats = ['b_none', 'b_row', 'b_fish', 'b_speed'];
-    state.gold = 250000;
-  } else if (hs === 1) {
-    state.rod = 'r_steel'; state.ownedRods = ['r_plastic', 'r_improved', 'r_steel'];
-    state.boat = 'b_row'; state.ownedBoats = ['b_none', 'b_row'];
-    state.gold = 25000;
-  } else {
-    state.rod = 'r_plastic'; state.ownedRods = ['r_plastic'];
-    state.boat = 'b_none'; state.ownedBoats = ['b_none'];
-    state.gold = 0;
-  }
-
-  addLog(`🔮 ASCENDED TO PRESTIGE ${state.prestige}! Earned +${gain} Prestige Tokens!`, 'pet');
-  saveGame();
-  renderAll();
-}
-
-/* ============================================================================
-   UI RENDERING
-   ============================================================================ */
-function addLog(html, cls = '') {
-  const box = document.getElementById('ui-log');
-  const div = document.createElement('div');
-  div.className = 'log-entry ' + cls;
-  div.innerHTML = html;
-  box.prepend(div);
-  while (box.children.length > 45) box.removeChild(box.lastChild);
-}
-
-function renderBiomes() {
-  const current = getBiome();
-  const banner = document.getElementById('ui-biome-banner');
-  banner.style.background = current.gradient;
-  document.getElementById('ui-biome-name').textContent = `${current.icon} ${current.name}`;
-  document.getElementById('ui-biome-mult').textContent = `${fmt(current.mult)}x Value & XP`;
-  document.getElementById('ui-biome-desc').textContent = current.desc;
-
-  const list = document.getElementById('ui-biome-list');
-  list.innerHTML = '';
-  let nextHint = 'All Biomes Unlocked!';
-  for (const b of BIOMES) {
-    const req = getBiomeReqLevel(b);
-    const unlocked = state.level >= req;
-    if (!unlocked && nextHint === 'All Biomes Unlocked!') {
-      nextHint = `Next: ${b.name} (Lv ${req})`;
-    }
-    const btn = document.createElement('button');
-    btn.className = 'biome-btn' + (state.biome === b.id ? ' active' : '');
-    btn.disabled = !unlocked;
-    btn.textContent = unlocked ? `${b.icon} ${b.name}` : `🔒 ${b.name} (Lv ${req})`;
-    btn.onclick = () => {
-      state.biome = b.id;
-      renderBiomes();
-      updateUI();
+    document.getElementById('btn-quick-crates').onclick = () => {
+      activeTab = 'crates';
+      renderActiveTab();
     };
-    list.appendChild(btn);
-  }
-  document.getElementById('ui-biome-req-hint').textContent = nextHint;
-}
 
-function renderUpgrades() {
-  const gGrid = document.getElementById('grid-gold-upgrades');
-  gGrid.innerHTML = '';
-  for (const u of GOLD_UPGRADES) {
-    const lv = state.goldUpgrades[u.id] || 0;
-    const maxed = lv >= u.maxLv;
-    const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
-    const card = document.createElement('div');
-    card.className = 'item-card' + (lv > 0 ? ' owned' : '');
-    card.innerHTML = `
-      <div>
-        <div class="item-top">
-          <div class="item-name">${u.name}</div>
-          <div class="item-tag">Lv ${lv} / ${u.maxLv}</div>
-        </div>
-        <div class="item-desc" style="margin-top:6px;">${u.desc}</div>
-      </div>
-      <button class="buy-btn" ${maxed || state.gold < cost ? 'disabled' : ''}>
-        ${maxed ? 'MAXED' : `Upgrade — $${fmt(cost)}`}
-      </button>
-    `;
-    card.querySelector('button').onclick = () => {
-      if (state.gold >= cost && !maxed) {
-        state.gold -= cost;
-        state.goldUpgrades[u.id]++;
-        renderUpgrades();
-        updateUI();
+    document.getElementById('btn-autocast').onclick = () => {
+      state.autoCast = !state.autoCast;
+      updateHUD();
+    };
+    document.getElementById('btn-autosell').onclick = () => {
+      state.autoSell = !state.autoSell;
+      if (state.autoSell && state.livewellValue > 0) sellLivewell();
+      updateHUD();
+    };
+
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' && !['INPUT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        attemptManualCast();
+      }
+    });
+
+    // Modal Events
+    document.getElementById('btn-open-account').onclick = () => {
+      document.getElementById('input-display-name').value = state.displayName || 'Cosmic Angler';
+      document.getElementById('account-modal').classList.remove('hidden');
+    };
+    document.getElementById('btn-close-account').onclick = () => {
+      document.getElementById('account-modal').classList.add('hidden');
+    };
+    document.getElementById('btn-save-name').onclick = () => {
+      const v = document.getElementById('input-display-name').value.trim();
+      if (v) state.displayName = v.slice(0, 22);
+      saveGame(true);
+    };
+    document.getElementById('btn-save-now').onclick = () => saveGame(true);
+    document.getElementById('btn-export-save').onclick = exportSaveJson;
+    document.getElementById('btn-import-save-toggle').onclick = () => {
+      document.getElementById('import-json-panel').classList.toggle('hidden');
+    };
+    document.getElementById('btn-import-file-pick').onclick = () => {
+      document.getElementById('input-import-file').click();
+    };
+    document.getElementById('input-import-file').onchange = e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => applyImportedJson(String(reader.result || ''));
+      reader.readAsText(file);
+      e.target.value = '';
+    };
+    document.getElementById('btn-import-json-apply').onclick = () => {
+      applyImportedJson(document.getElementById('input-import-json').value);
+    };
+    document.getElementById('btn-hard-reset').onclick = () => {
+      if (confirm('Wipe ALL progress and restart from Level 1?')) {
+        localStorage.removeItem(LOCAL_SAVE_KEY);
+        state = defaultState();
+        generateQuests();
+        updateHUD();
+        renderActiveTab();
+        document.getElementById('account-modal').classList.add('hidden');
+        showToast('🔄 Game reset to fresh start.', 'rose');
       }
     };
-    gGrid.appendChild(card);
-  }
 
-  const eGrid = document.getElementById('grid-emerald-upgrades');
-  eGrid.innerHTML = '';
-  for (const u of EMERALD_UPGRADES) {
-    const lv = state.emeraldUpgrades[u.id] || 0;
-    const maxed = lv >= u.maxLv;
-    const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
-    const card = document.createElement('div');
-    card.className = 'item-card' + (lv > 0 ? ' owned' : '');
-    card.innerHTML = `
-      <div>
-        <div class="item-top">
-          <div class="item-name">${u.name}</div>
-          <div class="item-tag">Lv ${lv} / ${u.maxLv}</div>
-        </div>
-        <div class="item-desc" style="margin-top:6px;">${u.desc}</div>
-      </div>
-      <button class="buy-btn green" ${maxed || state.emeralds < cost ? 'disabled' : ''}>
-        ${maxed ? 'MAXED' : `Upgrade — ${fmt(cost)} 💎`}
-      </button>
-    `;
-    card.querySelector('button').onclick = () => {
-      if (state.emeralds >= cost && !maxed) {
-        state.emeralds -= cost;
-        state.emeraldUpgrades[u.id]++;
-        renderUpgrades();
-        updateUI();
-      }
-    };
-    eGrid.appendChild(card);
-  }
-}
+    // Periodic Auto-Save & Active Tab Refresh
+    setInterval(() => saveGame(false), 15000);
+    setInterval(() => {
+      if (activeTab === 'shop' || activeTab === 'crates') renderActiveTab();
+    }, 1500);
 
-function renderGear() {
-  const rGrid = document.getElementById('grid-rods');
-  rGrid.innerHTML = '';
-  for (const r of RODS) {
-    const owned = state.ownedRods.includes(r.id);
-    const equipped = state.rod === r.id;
-    const locked = state.level < r.reqLv && !owned;
-    const card = document.createElement('div');
-    card.className = 'item-card' + (equipped ? ' equipped' : owned ? ' owned' : '');
-    card.innerHTML = `
-      <div>
-        <div class="item-top">
-          <div class="item-name">🎣 ${r.name}</div>
-          <div class="item-tag">${r.mult}x Fish</div>
-        </div>
-        <div class="item-desc" style="margin-top:6px;">
-          +${Math.round(r.rareBonus * 100)}% Rare/Mythic odds • Unlocks Lv ${r.reqLv}
-        </div>
-      </div>
-      <button class="buy-btn ${owned ? 'green' : ''}" ${equipped || locked || (!owned && state.gold < r.cost) ? 'disabled' : ''}>
-        ${equipped ? 'EQUIPPED' : owned ? 'Equip' : locked ? `Requires Lv ${r.reqLv}` : `Buy — $${fmt(r.cost)}`}
-      </button>
-    `;
-    card.querySelector('button').onclick = () => {
-      if (owned) {
-        state.rod = r.id;
-      } else if (!locked && state.gold >= r.cost) {
-        state.gold -= r.cost;
-        state.ownedRods.push(r.id);
-        state.rod = r.id;
-      }
-      renderGear();
-      updateUI();
-    };
-    rGrid.appendChild(card);
-  }
-
-  const bGrid = document.getElementById('grid-boats');
-  bGrid.innerHTML = '';
-  for (const b of BOATS) {
-    const owned = state.ownedBoats.includes(b.id);
-    const equipped = state.boat === b.id;
-    const locked = state.level < b.reqLv && !owned;
-    const card = document.createElement('div');
-    card.className = 'item-card' + (equipped ? ' equipped' : owned ? ' owned' : '');
-    card.innerHTML = `
-      <div>
-        <div class="item-top">
-          <div class="item-name">⛵ ${b.name}</div>
-          <div class="item-tag">${b.fishMult}x Yield</div>
-        </div>
-        <div class="item-desc" style="margin-top:6px;">
-          ${b.workerMult}x Crew Speed • Unlocks Lv ${b.reqLv}
-        </div>
-      </div>
-      <button class="buy-btn ${owned ? 'green' : ''}" ${equipped || locked || (!owned && state.gold < b.cost) ? 'disabled' : ''}>
-        ${equipped ? 'EQUIPPED' : owned ? 'Equip' : locked ? `Requires Lv ${b.reqLv}` : `Buy — $${fmt(b.cost)}`}
-      </button>
-    `;
-    card.querySelector('button').onclick = () => {
-      if (owned) {
-        state.boat = b.id;
-      } else if (!locked && state.gold >= b.cost) {
-        state.gold -= b.cost;
-        state.ownedBoats.push(b.id);
-        state.boat = b.id;
-      }
-      renderGear();
-      updateUI();
-    };
-    bGrid.appendChild(card);
-  }
-}
-
-function renderBaits() {
-  const grid = document.getElementById('grid-baits');
-  grid.innerHTML = '';
-  for (const b of BAITS) {
-    const qty = state.baits[b.id] || 0;
-    const equipped = state.activeBait === b.id;
-    const locked = state.level < b.reqLv;
-    const card = document.createElement('div');
-    card.className = 'item-card' + (equipped ? ' equipped' : qty > 0 ? ' owned' : '');
-    card.innerHTML = `
-      <div>
-        <div class="item-top">
-          <div class="item-name">🪱 ${b.name}</div>
-          <div class="item-tag">Owned: ${fmt(qty)}</div>
-        </div>
-        <div class="item-desc" style="margin-top:6px;">${b.desc} (Lv ${b.reqLv})</div>
-      </div>
-      <div class="btn-row">
-        <button class="buy-btn" data-buy="25" ${locked || state.gold < b.cost * 25 ? 'disabled' : ''}>+25 ($${fmt(b.cost * 25)})</button>
-        <button class="buy-btn" data-buy="250" ${locked || state.gold < b.cost * 250 ? 'disabled' : ''}>+250 ($${fmt(b.cost * 250)})</button>
-        <button class="buy-btn green" data-eq="1" ${qty <= 0 ? 'disabled' : ''}>${equipped ? 'Active' : 'Equip'}</button>
-      </div>
-    `;
-    card.querySelector('[data-buy="25"]').onclick = () => {
-      if (state.gold >= b.cost * 25) {
-        state.gold -= b.cost * 25;
-        state.baits[b.id] = (state.baits[b.id] || 0) + 25;
-        if (!state.activeBait) state.activeBait = b.id;
-        renderBaits();
-        updateUI();
-      }
-    };
-    card.querySelector('[data-buy="250"]').onclick = () => {
-      if (state.gold >= b.cost * 250) {
-        state.gold -= b.cost * 250;
-        state.baits[b.id] = (state.baits[b.id] || 0) + 250;
-        if (!state.activeBait) state.activeBait = b.id;
-        renderBaits();
-        updateUI();
-      }
-    };
-    card.querySelector('[data-eq="1"]').onclick = () => {
-      state.activeBait = equipped ? null : b.id;
-      renderBaits();
-      updateUI();
-    };
-    grid.appendChild(card);
-  }
-
-  document.getElementById('ui-exotic-wallet').textContent =
-    `Goldfish: ${state.exotics.goldfish} | Emerald Fish: ${state.exotics.emeraldfish} | Lava Fish: ${state.exotics.lavafish} | Diamond Fish: ${state.exotics.diamondfish}`;
-
-  const boostGrid = document.getElementById('grid-boosts');
-  boostGrid.innerHTML = '';
-  const exoticLabels = { goldfish: 'Goldfish', emeraldfish: 'Emerald Fish', lavafish: 'Lava Fish', diamondfish: 'Diamond Fish' };
-  for (const bo of BOOST_DEFS) {
-    const have = state.exotics[bo.exoticType] || 0;
-    const rem = Math.ceil(state.boostTimers[bo.id] || 0);
-    const card = document.createElement('div');
-    card.className = 'item-card' + (rem > 0 ? ' equipped' : '');
-    card.innerHTML = `
-      <div>
-        <div class="item-top">
-          <div class="item-name">⚡ ${bo.name}</div>
-          <div class="item-tag">${rem > 0 ? `${rem}s left` : 'Ready'}</div>
-        </div>
-        <div class="item-desc" style="margin-top:6px;">${bo.desc}</div>
-      </div>
-      <button class="buy-btn green" ${have < bo.cost ? 'disabled' : ''}>
-        Activate — ${bo.cost} ${exoticLabels[bo.exoticType]} (Have ${have})
-      </button>
-    `;
-    card.querySelector('button').onclick = () => {
-      if (state.exotics[bo.exoticType] >= bo.cost) {
-        state.exotics[bo.exoticType] -= bo.cost;
-        state.boostTimers[bo.id] = (state.boostTimers[bo.id] || 0) + 180;
-        addLog(`⚡ Activated <strong>${bo.name}</strong>!`, 'exotic');
-        renderBaits();
-        updateUI();
-      }
-    };
-    boostGrid.appendChild(card);
-  }
-}
-
-function renderCratesAndQuests() {
-  const cGrid = document.getElementById('grid-crates');
-  cGrid.innerHTML = '';
-  for (const [key, def] of Object.entries(CRATE_TYPES)) {
-    const qty = state.crates[key] || 0;
-    const card = document.createElement('div');
-    card.className = 'item-card' + (qty > 0 ? ' owned' : '');
-    card.innerHTML = `
-      <div>
-        <div class="item-top">
-          <div class="item-name">${def.icon} ${def.name}</div>
-          <div class="item-tag">Owned: ${qty}</div>
-        </div>
-        <div class="item-desc" style="margin-top:6px;">Contains Gold, ${def.emMin}–${def.emMax} Emeralds & Charm chance.</div>
-      </div>
-      <div class="btn-row">
-        <button class="buy-btn green" data-o="1" ${qty < 1 ? 'disabled' : ''}>Open 1</button>
-        <button class="buy-btn" data-o="all" ${qty < 1 ? 'disabled' : ''}>Open All (${qty})</button>
-      </div>
-    `;
-    card.querySelector('[data-o="1"]').onclick = () => { openCrate(key, 1); renderCratesAndQuests(); };
-    card.querySelector('[data-o="all"]').onclick = () => { openCrate(key, qty); renderCratesAndQuests(); };
-    cGrid.appendChild(card);
-  }
-
-  const qGrid = document.getElementById('grid-quests');
-  qGrid.innerHTML = '';
-  for (const q of state.quests) {
-    const pct = Math.min(100, Math.round((q.progress / q.target) * 100));
-    const card = document.createElement('div');
-    card.className = 'item-card';
-    card.innerHTML = `
-      <div>
-        <div class="item-top">
-          <div class="item-name">📜 ${q.text}</div>
-          <div class="item-tag">+${q.emReward} 💎</div>
-        </div>
-        <div class="item-desc" style="margin-top:6px;">Progress: ${fmt(q.progress)} / ${fmt(q.target)} (${pct}%)</div>
-      </div>
-      <div class="xp-track"><div class="xp-fill" style="width:${pct}%;"></div></div>
-    `;
-    qGrid.appendChild(card);
-  }
-}
-
-function renderPetsAndCharms() {
-  const pGrid = document.getElementById('grid-pets');
-  pGrid.innerHTML = '';
-  for (const p of PETS) {
-    const owned = state.pets[p.id];
-    const active = state.activePet === p.id;
-    const card = document.createElement('div');
-    card.className = 'item-card' + (active ? ' equipped' : owned ? ' owned' : '');
-    card.innerHTML = `
-      <div>
-        <div class="item-top">
-          <div class="item-name">${p.icon} ${p.name}</div>
-          <div class="item-tag">${owned ? `Lv ${owned.lv}/100` : 'Undiscovered'}</div>
-        </div>
-        <div class="item-desc" style="margin-top:6px;">${p.desc}</div>
-      </div>
-      <button class="buy-btn ${owned ? 'green' : ''}" ${!owned || active ? 'disabled' : ''}>
-        ${active ? 'ACTIVE COMPANION' : owned ? 'Select Pet' : 'Found Randomly While Fishing'}
-      </button>
-    `;
-    card.querySelector('button').onclick = () => {
-      if (owned) {
-        state.activePet = p.id;
-        renderPetsAndCharms();
-        updateUI();
-      }
-    };
-    pGrid.appendChild(card);
-  }
-
-  const chGrid = document.getElementById('grid-charms');
-  chGrid.innerHTML = '';
-  for (const c of CHARMS) {
-    const rank = state.charms[c.id] || 0;
-    const card = document.createElement('div');
-    card.className = 'item-card' + (rank > 0 ? ' owned' : '');
-    card.innerHTML = `
-      <div>
-        <div class="item-top">
-          <div class="item-name">${c.icon} ${c.name}</div>
-          <div class="item-tag">Rank ${rank}</div>
-        </div>
-        <div class="item-desc" style="margin-top:6px;">${c.desc}</div>
-      </div>
-    `;
-    chGrid.appendChild(card);
-  }
-}
-
-function renderBestiary() {
-  const wrap = document.getElementById('grid-bestiary');
-  wrap.innerHTML = '';
-  let discovered = 0;
-  let total = 0;
-
-  for (const b of BIOMES) {
-    const complete = b.fish.every(f => (state.bestiary[f.id] || 0) > 0);
-    const box = document.createElement('div');
-    box.className = 'item-card' + (complete ? ' owned' : '');
-    let fishesHtml = '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">';
-    for (const f of b.fish) {
-      total++;
-      const cnt = state.bestiary[f.id] || 0;
-      if (cnt > 0) discovered++;
-      fishesHtml += `<span class="item-tag rarity-${f.rarity}" style="opacity:${cnt > 0 ? 1 : 0.45};">
-        ${cnt > 0 ? `${f.name} (${fmt(cnt)})` : `??? [${f.rarity}]`}
-      </span>`;
-    }
-    fishesHtml += '</div>';
-    box.innerHTML = `
-      <div class="item-top">
-        <div class="item-name">${b.icon} ${b.name} Bestiary</div>
-        <div class="item-tag" style="color:${complete ? 'var(--emerald)' : 'var(--text-muted)'};">
-          ${complete ? '✅ MASTERED (+25% Gold & XP)' : 'In Progress'}
-        </div>
-      </div>
-      ${fishesHtml}
-    `;
-    wrap.appendChild(box);
-  }
-  document.getElementById('ui-bestiary-summary').textContent = `${discovered} / ${total} Discovered`;
-}
-
-function renderPrestige() {
-  const req = getPrestigeRequirement();
-  const gain = getPrestigeTokensOnReset();
-  document.getElementById('ui-prestige-req-text').textContent =
-    `Requires Level ${req} to Prestige (Current: Lv.${state.level}). Higher levels grant bonus Prestige Tokens!`;
-  const btn = document.getElementById('btn-prestige');
-  btn.disabled = state.level < req;
-  btn.textContent = `🔮 PRESTIGE NOW (+${gain} Tokens)`;
-
-  const grid = document.getElementById('grid-prestige-shop');
-  grid.innerHTML = '';
-  for (const u of PRESTIGE_UPGRADES) {
-    const lv = state.prestigeUpgrades[u.id] || 0;
-    const maxed = lv >= u.maxLv;
-    const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
-    const card = document.createElement('div');
-    card.className = 'item-card' + (lv > 0 ? ' owned' : '');
-    card.innerHTML = `
-      <div>
-        <div class="item-top">
-          <div class="item-name">🔮 ${u.name}</div>
-          <div class="item-tag">Rank ${lv} / ${u.maxLv}</div>
-        </div>
-        <div class="item-desc" style="margin-top:6px;">${u.desc}</div>
-      </div>
-      <button class="buy-btn purple" ${maxed || state.ptokens < cost ? 'disabled' : ''}>
-        ${maxed ? 'MAXED' : `Ascend Perk — ${cost} Tokens`}
-      </button>
-    `;
-    card.querySelector('button').onclick = () => {
-      if (state.ptokens >= cost && !maxed) {
-        state.ptokens -= cost;
-        state.prestigeUpgrades[u.id]++;
-        renderPrestige();
-        updateUI();
-      }
-    };
-    grid.appendChild(card);
-  }
-}
-
-function updateUI() {
-  document.getElementById('ui-prestige-badge').textContent = `Prestige ${state.prestige}`;
-  document.getElementById('ui-gold').textContent = '$' + fmt(state.gold);
-  document.getElementById('ui-emeralds').textContent = fmt(state.emeralds);
-  document.getElementById('ui-ptokens').textContent = fmt(state.ptokens);
-  document.getElementById('ui-cd-stat').textContent = getCooldownSeconds().toFixed(2) + 's';
-  document.getElementById('ui-power-stat').textContent = fmt(getFishYieldMultiplier()) + 'x';
-
-  const reqXp = xpRequired(state.level);
-  document.getElementById('ui-level').textContent = `Lv. ${state.level}`;
-  document.getElementById('ui-xp-fill').style.width = Math.min(100, (state.xp / reqXp) * 100) + '%';
-  document.getElementById('ui-xp-text').textContent = `${fmt(state.xp)} / ${fmt(reqXp)} XP`;
-
-  document.getElementById('ui-livewell-count').textContent = fmt(state.livewellCount);
-  document.getElementById('ui-livewell-val').textContent = '$' + fmt(state.livewellValue);
-  document.getElementById('btn-sell').disabled = state.livewellValue <= 0;
-
-  const workerFish = state.goldUpgrades.workers > 0
-    ? Math.max(1, Math.round((1 + state.goldUpgrades.betterFish) * getFishYieldMultiplier() * 0.35 * getBoat().workerMult))
-    : 0;
-  document.getElementById('ui-worker-rate').textContent = `${fmt(workerFish)} fish / 2s`;
-  document.getElementById('ui-milestone-bonus').textContent = `+${Math.round(getLevelMilestoneBonus() * 100)}%`;
-  document.getElementById('ui-total-casts').textContent = fmt(state.totalCasts);
-
-  const baitObj = state.activeBait ? BAITS.find(b => b.id === state.activeBait) : null;
-  const baitQty = baitObj ? (state.baits[baitObj.id] || 0) : 0;
-  document.getElementById('ui-active-bait').textContent =
-    baitObj && baitQty > 0 ? `Bait: ${baitObj.name} (${fmt(baitQty)})` : 'Bait: None';
-
-  const autoCastBtn = document.getElementById('btn-autocast');
-  autoCastBtn.className = 'toggle-pill' + (state.autoCast ? ' on' : '');
-  autoCastBtn.textContent = `🤖 Auto-Cast: ${state.autoCast ? 'ON' : 'OFF'}`;
-
-  const autoSellBtn = document.getElementById('btn-autosell');
-  autoSellBtn.className = 'toggle-pill' + (state.autoSell ? ' on' : '');
-  autoSellBtn.textContent = `💰 Auto-Sell: ${state.autoSell ? 'ON' : 'OFF'}`;
-
-  // Crates badge
-  const totalCrates = Object.values(state.crates).reduce((a, b) => a + b, 0);
-  const badge = document.getElementById('badge-crates');
-  badge.style.display = totalCrates > 0 ? 'inline-block' : 'none';
-  badge.textContent = totalCrates;
-
-  // Active Buffs Strip
-  const buffsEl = document.getElementById('ui-active-buffs');
-  buffsEl.innerHTML = '';
-  for (const bo of BOOST_DEFS) {
-    const t = Math.ceil(state.boostTimers[bo.id] || 0);
-    if (t > 0) {
-      const pill = document.createElement('div');
-      pill.className = 'buff-pill';
-      pill.textContent = `⚡ ${bo.name.split(' (')[0]} (${t}s)`;
-      buffsEl.appendChild(pill);
-    }
-  }
-}
-
-function renderAll() {
-  renderBiomes();
-  renderUpgrades();
-  renderGear();
-  renderBaits();
-  renderCratesAndQuests();
-  renderPetsAndCharms();
-  renderBestiary();
-  renderPrestige();
-  updateUI();
-}
-
-/* ============================================================================
-   MAIN LOOP & EVENT LISTENERS
-   ============================================================================ */
-function gameLoop(now) {
-  const dt = Math.min(0.25, (now - lastFrameTime) / 1000);
-  lastFrameTime = now;
-
-  // Cooldown tick
-  const totalCd = getCooldownSeconds();
-  if (cooldownRemaining > 0) {
-    cooldownRemaining = Math.max(0, cooldownRemaining - dt);
-  }
-
-  const castBtn = document.getElementById('btn-cast');
-  const cdFill = document.getElementById('ui-cd-fill');
-  const cdTimer = document.getElementById('ui-cd-timer');
-
-  if (cooldownRemaining <= 0) {
-    castBtn.disabled = false;
-    cdFill.style.width = '100%';
-    cdTimer.textContent = 'Ready!';
-    if (state.autoCast) {
-      performCast(false);
-      updateUI();
-    }
-  } else {
-    castBtn.disabled = true;
-    const pct = Math.max(0, Math.min(100, ((totalCd - cooldownRemaining) / totalCd) * 100));
-    cdFill.style.width = pct + '%';
-    cdTimer.textContent = `Reeling... ${cooldownRemaining.toFixed(2)}s`;
-  }
-
-  // Worker Crew tick (every 2s)
-  if (state.goldUpgrades.workers > 0) {
-    workerAccumulator += dt;
-    if (workerAccumulator >= 2.0) {
-      workerAccumulator -= 2.0;
-      performCast(true);
-      updateUI();
-    }
-  }
-
-  // Boost timers
-  let boostChanged = false;
-  for (const key of Object.keys(state.boostTimers)) {
-    if (state.boostTimers[key] > 0) {
-      state.boostTimers[key] = Math.max(0, state.boostTimers[key] - dt);
-      boostChanged = true;
-    }
-  }
-  if (boostChanged && Math.random() < 0.25) updateUI();
-
-  requestAnimationFrame(gameLoop);
-}
-
-// Tabs
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    const tabId = btn.dataset.tab;
-    document.getElementById('tab-' + tabId).classList.add('active');
-    if (tabId === 'upgrades') renderUpgrades();
-    if (tabId === 'gear') renderGear();
-    if (tabId === 'bait') renderBaits();
-    if (tabId === 'crates') renderCratesAndQuests();
-    if (tabId === 'pets') renderPetsAndCharms();
-    if (tabId === 'bestiary') renderBestiary();
-    if (tabId === 'prestige') renderPrestige();
-  };
-});
-
-document.getElementById('btn-cast').onclick = () => {
-  if (cooldownRemaining <= 0) {
-    performCast(false);
-    updateUI();
-  }
-};
-
-document.addEventListener('keydown', e => {
-  if (e.code === 'Space' && document.activeElement.tagName !== 'BUTTON') {
-    e.preventDefault();
-    if (cooldownRemaining <= 0) {
-      performCast(false);
-      updateUI();
-    }
-  }
-});
-
-document.getElementById('btn-autocast').onclick = () => {
-  state.autoCast = !state.autoCast;
-  updateUI();
-};
-
-document.getElementById('btn-autosell').onclick = () => {
-  state.autoSell = !state.autoSell;
-  if (state.autoSell && state.livewellValue > 0) sellLivewell();
-  updateUI();
-};
-
-document.getElementById('btn-sell').onclick = sellLivewell;
-document.getElementById('btn-open-all-crates').onclick = () => { openAllCrates(); renderCratesAndQuests(); };
-document.getElementById('btn-daily').onclick = claimDaily;
-document.getElementById('btn-prestige').onclick = doPrestige;
-
-document.getElementById('btn-save').onclick = () => saveGame(true);
-document.getElementById('btn-export').onclick = () => {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-  navigator.clipboard?.writeText(code);
-  prompt('Copy your save string below (also copied to clipboard):', code);
-};
-document.getElementById('btn-import').onclick = () => {
-  const code = prompt('Paste your exported save string:');
-  if (!code) return;
-  try {
-    const parsed = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
-    localStorage.setItem('vf_deep_horizons_v1', JSON.stringify(parsed));
+    // Boot
     loadGame();
-    renderAll();
-    addLog('📥 Save imported successfully!', 'levelup');
-  } catch (e) {
-    alert('Invalid save string.');
-  }
-};
-document.getElementById('btn-reset').onclick = () => {
-  if (confirm('Are you sure you want to wipe ALL progress and restart from Level 1?')) {
-    localStorage.removeItem('vf_deep_horizons_v1');
-    state = defaultState();
-    generateQuests();
-    renderAll();
-    addLog('🔄 Game reset to fresh start.');
-  }
-};
-
-setInterval(() => saveGame(false), 15000);
-setInterval(() => {
-  const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-  if (activeTab === 'upgrades') renderUpgrades();
-  else if (activeTab === 'gear') renderGear();
-  else if (activeTab === 'crates') renderCratesAndQuests();
-}, 1500);
-
-loadGame();
-renderAll();
-addLog('🎣 Welcome to <strong>Virtual Fisher: Deep Horizons</strong>! Click <strong>Cast Line</strong> or press <strong>Space</strong> to start fishing.');
-requestAnimationFrame(gameLoop);
-</script>
+    updateHUD();
+    renderActiveTab();
+    addFeed('🎣 Welcome to <strong>Virtual Fisher — Cosmic Deep Horizons</strong>! Press <strong>Space</strong> or tap <strong>Cast Line</strong> to begin.', 'levelup');
+    requestAnimationFrame(gameLoop);
+  </script>
 </body>
 </html>
