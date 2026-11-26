@@ -1,5 +1,5 @@
 /* ============================================================================
-   FIREBASE CLOUD SYNC — GUEST (ANONYMOUS) + GOOGLE SIGN-IN + FIRESTORE SAVE
+   FIREBASE CLOUD SYNC — GUEST + GOOGLE LOGIN + FIRESTORE SAVE & LEADERBOARD
    ============================================================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-analytics.js";
@@ -18,7 +18,12 @@ import {
   getFirestore,
   doc,
   getDoc,
-  setDoc
+  setDoc,
+  collection,
+  query,
+  orderBy,
+  limit,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -35,6 +40,9 @@ let auth = null;
 let db = null;
 let currentUser = null;
 let cloudReady = false;
+let leaderboardEntries = [];
+let leaderboardStatus = 'local'; // 'local' | 'live' | 'error'
+let unsubLeaderboard = null;
 
 function setSyncStatus(text, dotColorClass) {
   const txt = document.getElementById('sync-text');
@@ -82,6 +90,36 @@ function clearAuthError() {
   if (box) box.classList.add('hidden');
 }
 
+function subscribeLeaderboard() {
+  if (!db) return;
+  if (unsubLeaderboard) {
+    try { unsubLeaderboard(); } catch (_) {}
+  }
+  try {
+    const q = query(
+      collection(db, 'leaderboard'),
+      orderBy('score', 'desc'),
+      limit(50)
+    );
+    unsubLeaderboard = onSnapshot(
+      q,
+      (snapshot) => {
+        leaderboardEntries = snapshot.docs.map(d => ({ uid: d.id, ...d.data() }));
+        leaderboardStatus = 'live';
+        if (window.onLeaderboardUpdate) window.onLeaderboardUpdate();
+      },
+      (err) => {
+        console.warn('Leaderboard subscription error:', err);
+        leaderboardStatus = 'error';
+        if (window.onLeaderboardUpdate) window.onLeaderboardUpdate();
+      }
+    );
+  } catch (err) {
+    console.warn('Leaderboard init error:', err);
+    leaderboardStatus = 'error';
+  }
+}
+
 async function saveToCloud(showFeedback = false) {
   if (!db || !currentUser || !window.getGameState) {
     if (showFeedback && window.showToast) window.showToast('💾 Saved locally on this device.', 'emerald');
@@ -89,10 +127,32 @@ async function saveToCloud(showFeedback = false) {
   }
   try {
     setSyncStatus('Saving...', 'bg-cyan-400');
-    const data = { ...window.getGameState(), updatedAt: Date.now() };
-    await setDoc(doc(db, 'users', currentUser.uid), data, { merge: true });
+    const s = window.getGameState();
+    const now = Date.now();
+    await setDoc(doc(db, 'users', currentUser.uid), { ...s, updatedAt: now }, { merge: true });
+
+    // Also update public leaderboard document
+    const score = (s.prestige || 0) * 1000000 + (s.level || 1);
+    const lbPayload = {
+      uid: currentUser.uid,
+      displayName: (s.displayName || (currentUser.displayName ? currentUser.displayName.slice(0, 22) : 'Cosmic Angler')),
+      prestige: s.prestige || 0,
+      level: s.level || 1,
+      gold: Math.floor(s.gold || 0),
+      totalCasts: s.totalCasts || 0,
+      biome: s.biome || 'river',
+      isGoogle: !currentUser.isAnonymous,
+      score,
+      updatedAt: now
+    };
+    try {
+      await setDoc(doc(db, 'leaderboard', currentUser.uid), lbPayload, { merge: true });
+    } catch (lbErr) {
+      console.warn('Leaderboard write skipped (check rules):', lbErr);
+    }
+
     setSyncStatus('Cloud Synced', 'bg-emerald-400');
-    if (showFeedback && window.showToast) window.showToast('☁️ Progress synced to Cloud!', 'emerald');
+    if (showFeedback && window.showToast) window.showToast('☁️ Progress & Rank synced to Cloud!', 'emerald');
   } catch (err) {
     console.error('Cloud save error:', err);
     setSyncStatus('Local Save Mode', 'bg-amber-400');
@@ -110,16 +170,15 @@ async function loadFromCloud(user) {
     if (snap.exists()) {
       const cloudData = snap.data();
       if (window.applyCloudState) window.applyCloudState(cloudData);
-    } else {
-      // First time for this UID: upload current local progress so nothing is lost
-      await saveToCloud(false);
     }
+    await saveToCloud(false);
     setSyncStatus('Cloud Synced', 'bg-emerald-400');
   } catch (err) {
     console.error('Cloud load error:', err);
     setSyncStatus('Local Save Mode', 'bg-amber-400');
   }
   updateAccountModalUI();
+  subscribeLeaderboard();
 }
 
 async function handleGoogleSignIn() {
@@ -190,11 +249,13 @@ async function handleSignOutToGuest() {
   }
 }
 
-// Expose global bridge for main.js / engine.js
 window.CloudSync = {
   isReady: () => Boolean(cloudReady && db && currentUser),
   save: saveToCloud,
-  updateUI: updateAccountModalUI
+  updateUI: updateAccountModalUI,
+  getUid: () => (currentUser ? currentUser.uid : 'local-me'),
+  getLeaderboard: () => leaderboardEntries,
+  getLeaderboardStatus: () => leaderboardStatus
 };
 
 async function initFirebaseCloud() {
@@ -207,7 +268,6 @@ async function initFirebaseCloud() {
     auth = getAuth(app);
     db = getFirestore(app);
 
-    // Handle returning from mobile Google redirect login
     try {
       const redirectRes = await getRedirectResult(auth);
       if (redirectRes && redirectRes.user) {
