@@ -45,7 +45,7 @@
         </div>
       </div>
 
-      <!-- Resource Chips -->
+      <!-- Resource Chips & Cloud Account Button -->
       <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
         <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-discord-850 border border-amber-500/30 text-xs sm:text-sm font-extrabold">
           <span>🪙</span>
@@ -68,9 +68,16 @@
           <span id="ui-power-stat" class="text-indigo-200 font-mono">1.0x</span>
         </div>
 
-        <button id="btn-open-account" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold bg-discord-850 hover:bg-discord-800 border border-slate-700 text-slate-200 transition active:scale-95" title="Save &amp; Backup Settings">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
-          <span class="hidden sm:inline">Save</span>
+        <!-- Sync Status Pill -->
+        <div id="sync-status-badge" class="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-discord-850 border border-slate-700 text-slate-300" title="Cloud Sync Status">
+          <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+          <span id="sync-text">Connecting...</span>
+        </div>
+
+        <!-- Account / Google Login Trigger -->
+        <button id="btn-open-account" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold bg-discord-850 hover:bg-discord-800 border border-slate-700 text-slate-200 transition active:scale-95" title="Account, Google Login &amp; Save Backup">
+          <span id="account-avatar">👤</span>
+          <span id="account-label" class="max-w-[90px] sm:max-w-[130px] truncate">Guest</span>
           <span class="text-slate-400">⚙️</span>
         </button>
       </div>
@@ -191,7 +198,7 @@
       </div>
     </section>
 
-    <!-- RIGHT COLUMN: TABBED COMMAND CENTER (SHOP, BIOMES, CRATES, PETS, FISHDEX, PRESTIGE) -->
+    <!-- RIGHT COLUMN: TABBED COMMAND CENTER -->
     <section id="right-command-col" class="lg:col-span-7 xl:col-span-7 bg-discord-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col min-h-[600px] lg:min-h-[660px]">
       <div class="scroll-fade-wrap bg-discord-850 border-b border-slate-800">
         <nav id="main-tabs" class="flex items-center gap-1 p-2 overflow-x-auto no-scrollbar pr-8">
@@ -221,7 +228,7 @@
       <div id="tab-content-area" class="p-3.5 sm:p-5 flex-1 overflow-y-auto max-h-[820px]"></div>
     </section>
 
-    <!-- BOTTOM SECTION: LIVE CATCH FEED (BELOW SHOP SO IT NEVER SHIFTS CONTROLS OR SHOP) -->
+    <!-- BOTTOM SECTION: LIVE CATCH FEED (BELOW SHOP) -->
     <section id="catch-feed-section" class="lg:col-span-12 bg-discord-900 rounded-2xl border border-slate-800 shadow-xl p-3.5 sm:p-4 flex flex-col gap-2.5">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -264,15 +271,41 @@
   <!-- ==================== TOAST NOTIFICATION STACK ==================== -->
   <div id="toast-container" class="fixed right-3 sm:right-5 bottom-4 z-50 flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
-  <!-- ==================== SAVE / BACKUP MODAL ==================== -->
+  <!-- ==================== ACCOUNT, GOOGLE LOGIN & SAVE BACKUP MODAL ==================== -->
   <div id="account-modal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-    <div class="bg-discord-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+    <div class="bg-discord-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-black text-white">⚙️ Angler Profile &amp; Save Backup</h3>
+        <h3 class="text-base font-black text-white">☁️ Angler Account &amp; Cloud Sync</h3>
         <button id="btn-close-account" class="w-8 h-8 rounded-lg bg-discord-850 hover:bg-discord-700 text-slate-300 font-bold">✕</button>
       </div>
 
+      <!-- Cloud Account Status Box -->
+      <div class="p-3 rounded-xl bg-discord-950 border border-slate-800 space-y-1.5 text-xs">
+        <div class="flex justify-between gap-2">
+          <span class="text-slate-400">Account Mode:</span>
+          <span id="modal-account-type" class="font-bold text-cyan-300 truncate">Connecting...</span>
+        </div>
+        <div class="flex justify-between gap-2">
+          <span class="text-slate-400">User ID:</span>
+          <span id="modal-user-id" class="font-mono text-[11px] text-slate-300 truncate max-w-[220px]">—</span>
+        </div>
+      </div>
+
+      <div id="modal-auth-error" class="hidden p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs leading-snug"></div>
+
+      <!-- Google & Guest Auth Buttons -->
       <div class="space-y-2">
+        <button id="btn-modal-google" class="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98]">
+          <span>🔵</span>
+          <span>Sign in / Link Google Account</span>
+        </button>
+        <button id="btn-modal-signout" class="hidden w-full py-2.5 px-4 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold text-xs transition active:scale-[0.98]">
+          Sign Out to Guest
+        </button>
+      </div>
+
+      <!-- Display Name -->
+      <div class="pt-3 border-t border-slate-800 space-y-2">
         <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Angler Display Name</label>
         <div class="flex gap-2">
           <input id="input-display-name" type="text" maxlength="22" placeholder="Cosmic Angler" class="flex-1 bg-discord-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400" />
@@ -280,10 +313,11 @@
         </div>
       </div>
 
+      <!-- Manual Save Backup -->
       <div class="pt-3 border-t border-slate-800 space-y-2">
-        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Manual Save Backup (JSON)</div>
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Cloud &amp; Manual JSON Backup</div>
         <div class="grid grid-cols-3 gap-2">
-          <button id="btn-save-now" class="py-2.5 px-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition">💾 Save Now</button>
+          <button id="btn-save-now" class="py-2.5 px-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition">☁️ Save Now</button>
           <button id="btn-export-save" class="py-2.5 px-2 rounded-xl bg-discord-850 hover:bg-discord-700 border border-slate-700 text-slate-200 font-bold text-xs transition">📤 Export</button>
           <button id="btn-import-save-toggle" class="py-2.5 px-2 rounded-xl bg-discord-850 hover:bg-discord-700 border border-slate-700 text-slate-200 font-bold text-xs transition">📥 Import</button>
         </div>
@@ -304,11 +338,14 @@
       </div>
     </div>
   </div>
-<script defer src="js/data.js"></script>
-<script defer src="js/state.js"></script>
-<script defer src="js/engine.js"></script>
-<script defer src="js/ui.js"></script>
-<script defer src="js/main.js"></script>
- 
+
+  <!-- Core Modular Scripts -->
+  <script defer src="js/data.js"></script>
+  <script defer src="js/state.js"></script>
+  <script defer src="js/engine.js"></script>
+  <script defer src="js/ui.js"></script>
+  <script defer src="js/main.js"></script>
+  <!-- Firebase Auth (Guest + Google) & Firestore Cloud Sync -->
+  <script type="module" src="js/firebase.js"></script>
 </body>
 </html>
