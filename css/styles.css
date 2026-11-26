@@ -19,7 +19,7 @@ button, a, input, select, [role="button"] {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Horizontal scroll fade cue for mobile tabs */
+/* Horizontal scroll fade cue for mobile tabs only */
 .scroll-fade-wrap { position: relative; }
 .scroll-fade-wrap::after {
   content: '';
@@ -28,6 +28,9 @@ button, a, input, select, [role="button"] {
   width: 28px;
   pointer-events: none;
   background: linear-gradient(to left, rgba(24, 29, 47, 0.96), transparent);
+}
+@media (min-width: 640px) {
+  .scroll-fade-wrap::after { display: none; }
 }
 
 /* GPU-composited cooldown & XP bars */
