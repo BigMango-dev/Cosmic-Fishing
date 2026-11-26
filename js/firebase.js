@@ -8,6 +8,7 @@ import {
   signInAnonymously,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithCredential,
   signInWithRedirect,
   getRedirectResult,
   linkWithPopup,
@@ -181,13 +182,18 @@ async function loadFromCloud(user) {
   subscribeLeaderboard();
 }
 
+let authInProgress = false;
+
 async function handleGoogleSignIn() {
+  if (authInProgress) return;
   clearAuthError();
   if (!auth) {
     showAuthError('Firebase Auth could not initialize (check internet connection).');
     return;
   }
+  authInProgress = true;
   const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
   try {
     if (currentUser && currentUser.isAnonymous) {
       try {
@@ -201,8 +207,15 @@ async function handleGoogleSignIn() {
         if (window.showToast) window.showToast('🔗 Guest save linked to Google!', 'emerald');
       } catch (linkErr) {
         if (linkErr.code === 'auth/credential-already-in-use') {
-          const res = await signInWithPopup(auth, provider);
-          currentUser = res.user;
+          // Reuse the Google credential from the FIRST popup — no second popup!
+          const cred = GoogleAuthProvider.credentialFromError(linkErr);
+          if (cred) {
+            const res = await signInWithCredential(auth, cred);
+            currentUser = res.user;
+          } else {
+            const res = await signInWithPopup(auth, provider);
+            currentUser = res.user;
+          }
           await loadFromCloud(currentUser);
           if (window.showToast) window.showToast('✅ Signed into existing Google save!', 'emerald');
         } else {
@@ -231,6 +244,8 @@ async function handleGoogleSignIn() {
       msg = 'Enable Google Sign-In under Firebase Console → Authentication → Sign-in method.';
     }
     showAuthError(msg);
+  } finally {
+    authInProgress = false;
   }
 }
 
