@@ -185,18 +185,103 @@ function flushHUD() {
   }
 }
 
+
+let upgradeBuyMode = '1'; // '1' | '10' | 'max'
+
+function calcBulkUpgrade(baseCost, costScale, currentLv, maxLv, currency, mode) {
+  const remaining = Math.max(0, maxLv - currentLv);
+  if (remaining <= 0) {
+    return { count: 0, cost: 0, canBuy: false, maxed: true };
+  }
+  if (mode === 'max') {
+    let count = 0;
+    let totalCost = 0;
+    let lv = currentLv;
+    while (lv < maxLv) {
+      const stepCost = Math.floor(baseCost * Math.pow(costScale, lv));
+      if (totalCost + stepCost <= currency) {
+        totalCost += stepCost;
+        count++;
+        lv++;
+      } else {
+        break;
+      }
+    }
+    if (count === 0) {
+      const nextCost = Math.floor(baseCost * Math.pow(costScale, currentLv));
+      return { count: 1, cost: nextCost, canBuy: false, maxed: false };
+    }
+    return { count, cost: totalCost, canBuy: true, maxed: false };
+  }
+  const want = mode === '10' ? Math.min(10, remaining) : 1;
+  let totalCost = 0;
+  for (let i = 0; i < want; i++) {
+    totalCost += Math.floor(baseCost * Math.pow(costScale, currentLv + i));
+  }
+  return { count: want, cost: totalCost, canBuy: currency >= totalCost, maxed: false };
+}
+
+function renderBuyModeBar() {
+  const modes = [
+    { id: '1', label: 'x1' },
+    { id: '10', label: 'x10' },
+    { id: 'max', label: 'xMax' }
+  ];
+  return `
+    <div class="flex items-center justify-between gap-2 mb-3">
+      <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Bulk Upgrade Amount</span>
+      <div class="inline-flex items-center gap-1 bg-discord-950 p-1 rounded-xl border border-slate-800">
+        ${modes.map(m => `
+          <button data-buy-mode="${m.id}" class="px-3 py-1 rounded-lg text-xs font-extrabold transition ${
+            upgradeBuyMode === m.id
+              ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/50'
+              : 'text-slate-400 hover:text-white border border-transparent'
+          }">${m.label}</button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function formatBulkLabel(calc, prefix, unit) {
+  if (calc.maxed) return 'MAXED';
+  const qtyText = calc.count > 1 ? ` (+${calc.count})` : '';
+  if (unit === '$') return `${prefix}${qtyText} — $${fmt(calc.cost)}`;
+  return `${prefix}${qtyText} — ${fmt(calc.cost)} ${unit}`;
+}
+
 function refreshAffordability() {
   if (activeTab === 'shop') {
+    DOM.tabArea.querySelectorAll('[data-buy-gold]').forEach(btn => {
+      const u = GOLD_UPGRADES.find(x => x.id === btn.dataset.buyGold);
+      if (!u) return;
+      const lv = state.goldUpgrades[u.id] || 0;
+      const calc = calcBulkUpgrade(u.baseCost, u.costScale, lv, u.maxLv, state.gold, upgradeBuyMode);
+      btn.disabled = !calc.canBuy;
+      btn.textContent = formatBulkLabel(calc, 'Upgrade', '$');
+    });
+    DOM.tabArea.querySelectorAll('[data-buy-em]').forEach(btn => {
+      const u = EMERALD_UPGRADES.find(x => x.id === btn.dataset.buyEm);
+      if (!u) return;
+      const lv = state.emeraldUpgrades[u.id] || 0;
+      const calc = calcBulkUpgrade(u.baseCost, u.costScale, lv, u.maxLv, state.emeralds, upgradeBuyMode);
+      btn.disabled = !calc.canBuy;
+      btn.textContent = formatBulkLabel(calc, 'Upgrade', '💎');
+    });
     DOM.tabArea.querySelectorAll('[data-cost-gold]').forEach(btn => {
       const cost = Number(btn.dataset.costGold);
       const locked = btn.dataset.locked === '1';
       const maxed = btn.dataset.maxed === '1';
       if (!locked && !maxed) btn.disabled = state.gold < cost;
     });
-    DOM.tabArea.querySelectorAll('[data-cost-em]').forEach(btn => {
-      const cost = Number(btn.dataset.costEm);
-      const maxed = btn.dataset.maxed === '1';
-      if (!maxed) btn.disabled = state.emeralds < cost;
+  } else if (activeTab === 'prestige') {
+    DOM.tabArea.querySelectorAll('[data-pupg]').forEach(btn => {
+      const u = PRESTIGE_UPGRADES.find(x => x.id === btn.dataset.pupg);
+      if (!u) return;
+      const lv = state.prestigeUpgrades[u.id] || 0;
+      const calc = calcBulkUpgrade(u.baseCost, u.costScale, lv, u.maxLv, state.ptokens, upgradeBuyMode);
+      btn.disabled = !calc.canBuy;
+      btn.textContent = formatBulkLabel(calc, 'Ascend Perk', 'Tokens');
     });
   } else if (activeTab === 'crates') {
     state.quests.forEach(q => {
@@ -247,12 +332,10 @@ function renderShopTab(container) {
 
   let body = '';
   if (shopSubTab === 'gold') {
-    body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    body = renderBuyModeBar() + `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       ${GOLD_UPGRADES.map(u => {
         const lv = state.goldUpgrades[u.id] || 0;
-        const maxed = lv >= u.maxLv;
-        const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
-        const canBuy = !maxed && state.gold >= cost;
+        const calc = calcBulkUpgrade(u.baseCost, u.costScale, lv, u.maxLv, state.gold, upgradeBuyMode);
         return `
           <div class="p-3.5 rounded-xl bg-discord-850 border ${lv > 0 ? 'border-indigo-500/35' : 'border-slate-800'} flex flex-col justify-between gap-3">
             <div>
@@ -262,21 +345,19 @@ function renderShopTab(container) {
               </div>
               <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${u.desc}</p>
             </div>
-            <button data-buy-gold="${u.id}" data-cost-gold="${cost}" data-maxed="${maxed ? '1' : '0'}" ${canBuy ? '' : 'disabled'} class="w-full py-2 px-3 rounded-xl font-extrabold text-xs transition active:scale-95 ${
-              maxed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-default'
+            <button data-buy-gold="${u.id}" ${calc.canBuy ? '' : 'disabled'} class="w-full py-2 px-3 rounded-xl font-extrabold text-xs transition active:scale-95 ${
+              calc.maxed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-default'
               : 'bg-indigo-500 hover:bg-indigo-400 disabled:bg-discord-950 disabled:text-slate-500 disabled:border disabled:border-slate-800 text-white'
-            }">${maxed ? 'MAXED' : `Upgrade — $${fmt(cost)}`}</button>
+            }">${formatBulkLabel(calc, 'Upgrade', '$')}</button>
           </div>
         `;
       }).join('')}
     </div>`;
   } else if (shopSubTab === 'emerald') {
-    body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    body = renderBuyModeBar() + `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       ${EMERALD_UPGRADES.map(u => {
         const lv = state.emeraldUpgrades[u.id] || 0;
-        const maxed = lv >= u.maxLv;
-        const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
-        const canBuy = !maxed && state.emeralds >= cost;
+        const calc = calcBulkUpgrade(u.baseCost, u.costScale, lv, u.maxLv, state.emeralds, upgradeBuyMode);
         return `
           <div class="p-3.5 rounded-xl bg-discord-850 border ${lv > 0 ? 'border-emerald-500/40' : 'border-slate-800'} flex flex-col justify-between gap-3">
             <div>
@@ -286,10 +367,10 @@ function renderShopTab(container) {
               </div>
               <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${u.desc}</p>
             </div>
-            <button data-buy-em="${u.id}" data-cost-em="${cost}" data-maxed="${maxed ? '1' : '0'}" ${canBuy ? '' : 'disabled'} class="w-full py-2 px-3 rounded-xl font-extrabold text-xs transition active:scale-95 ${
-              maxed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-default'
+            <button data-buy-em="${u.id}" ${calc.canBuy ? '' : 'disabled'} class="w-full py-2 px-3 rounded-xl font-extrabold text-xs transition active:scale-95 ${
+              calc.maxed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-default'
               : 'bg-emerald-600 hover:bg-emerald-500 disabled:bg-discord-950 disabled:text-slate-500 disabled:border disabled:border-slate-800 text-white'
-            }">${maxed ? 'MAXED' : `Upgrade — ${fmt(cost)} 💎`}</button>
+            }">${formatBulkLabel(calc, 'Upgrade', '💎')}</button>
           </div>
         `;
       }).join('')}
@@ -424,14 +505,17 @@ function renderShopTab(container) {
   container.querySelectorAll('[data-sub]').forEach(btn => {
     btn.onclick = () => { shopSubTab = btn.dataset.sub; renderActiveTab(); };
   });
+  container.querySelectorAll('[data-buy-mode]').forEach(btn => {
+    btn.onclick = () => { upgradeBuyMode = btn.dataset.buyMode; renderActiveTab(); };
+  });
   container.querySelectorAll('[data-buy-gold]').forEach(btn => {
     btn.onclick = () => {
       const u = GOLD_UPGRADES.find(x => x.id === btn.dataset.buyGold);
       const lv = state.goldUpgrades[u.id] || 0;
-      const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
-      if (lv < u.maxLv && state.gold >= cost) {
-        state.gold -= cost;
-        state.goldUpgrades[u.id]++;
+      const calc = calcBulkUpgrade(u.baseCost, u.costScale, lv, u.maxLv, state.gold, upgradeBuyMode);
+      if (calc.canBuy && calc.count > 0) {
+        state.gold -= calc.cost;
+        state.goldUpgrades[u.id] = lv + calc.count;
         hudDirty = true;
         flushHUD();
         renderActiveTab();
@@ -442,10 +526,10 @@ function renderShopTab(container) {
     btn.onclick = () => {
       const u = EMERALD_UPGRADES.find(x => x.id === btn.dataset.buyEm);
       const lv = state.emeraldUpgrades[u.id] || 0;
-      const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
-      if (lv < u.maxLv && state.emeralds >= cost) {
-        state.emeralds -= cost;
-        state.emeraldUpgrades[u.id]++;
+      const calc = calcBulkUpgrade(u.baseCost, u.costScale, lv, u.maxLv, state.emeralds, upgradeBuyMode);
+      if (calc.canBuy && calc.count > 0) {
+        state.emeralds -= calc.cost;
+        state.emeraldUpgrades[u.id] = lv + calc.count;
         hudDirty = true;
         flushHUD();
         renderActiveTab();
@@ -764,18 +848,17 @@ function renderPrestigeTab(container) {
           </button>
         </div>
         <div class="text-xs text-fuchsia-100/85 leading-relaxed">
+          <strong>Resets:</strong> Level, Gold, Rods, Boats, Baits, Crates &amp; Gold Upgrades.<br/>
           <strong>Keeps Forever:</strong> Prestige Rank, Tokens, Emeralds, Emerald Upgrades, Pets, Charms, Exotics &amp; Fishdex.<br/>
           <strong>Rank Multiplier:</strong> Compounding <strong>1.55x XP</strong> &amp; <strong>1.75x Gold</strong> per Prestige rank (Current: <strong>${fmt(Math.pow(1.55, state.prestige))}x XP</strong>, <strong>${fmt(Math.pow(1.75, state.prestige))}x Gold</strong>)!
         </div>
       </div>
 
-      <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Prestige Token Meta-Shop</h4>
+      ${renderBuyModeBar()}
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         ${PRESTIGE_UPGRADES.map(u => {
           const lv = state.prestigeUpgrades[u.id] || 0;
-          const maxed = lv >= u.maxLv;
-          const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
-          const canBuy = !maxed && state.ptokens >= cost;
+          const calc = calcBulkUpgrade(u.baseCost, u.costScale, lv, u.maxLv, state.ptokens, upgradeBuyMode);
           return `
             <div class="p-3.5 rounded-xl bg-discord-850 border ${lv > 0 ? 'border-fuchsia-400/40' : 'border-slate-800'} flex flex-col justify-between gap-3">
               <div>
@@ -785,11 +868,10 @@ function renderPrestigeTab(container) {
                 </div>
                 <p class="text-xs text-slate-400 mt-1">${u.desc}</p>
               </div>
-              <button data-pupg="${u.id}" ${canBuy ? '' : 'disabled'} class="w-full py-2 rounded-xl font-extrabold text-xs transition ${
-                maxed ? 'bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-400/30'
-                : canBuy ? 'bg-fuchsia-600 hover:bg-fuchsia-500 text-white'
-                : 'bg-discord-950 text-slate-500 border border-slate-800 cursor-not-allowed'
-              }">${maxed ? 'MAXED' : `Ascend Perk — ${cost} Tokens`}</button>
+              <button data-pupg="${u.id}" ${calc.canBuy ? '' : 'disabled'} class="w-full py-2 rounded-xl font-extrabold text-xs transition ${
+                calc.maxed ? 'bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-400/30'
+                : 'bg-fuchsia-600 hover:bg-fuchsia-500 disabled:bg-discord-950 disabled:text-slate-500 disabled:border disabled:border-slate-800 text-white'
+              }">${formatBulkLabel(calc, 'Ascend Perk', 'Tokens')}</button>
             </div>
           `;
         }).join('')}
@@ -817,14 +899,17 @@ function renderPrestigeTab(container) {
   `;
 
   container.querySelector('#tab-btn-prestige').onclick = doPrestige;
+  container.querySelectorAll('[data-buy-mode]').forEach(btn => {
+    btn.onclick = () => { upgradeBuyMode = btn.dataset.buyMode; renderActiveTab(); };
+  });
   container.querySelectorAll('[data-pupg]').forEach(btn => {
     btn.onclick = () => {
       const u = PRESTIGE_UPGRADES.find(x => x.id === btn.dataset.pupg);
       const lv = state.prestigeUpgrades[u.id] || 0;
-      const cost = Math.floor(u.baseCost * Math.pow(u.costScale, lv));
-      if (lv < u.maxLv && state.ptokens >= cost) {
-        state.ptokens -= cost;
-        state.prestigeUpgrades[u.id]++;
+      const calc = calcBulkUpgrade(u.baseCost, u.costScale, lv, u.maxLv, state.ptokens, upgradeBuyMode);
+      if (calc.canBuy && calc.count > 0) {
+        state.ptokens -= calc.cost;
+        state.prestigeUpgrades[u.id] = lv + calc.count;
         hudDirty = true;
         flushHUD();
         renderActiveTab();
