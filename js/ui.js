@@ -211,10 +211,12 @@ function refreshAffordability() {
   }
 }
 
+let leaderboardSort = 'score';
+
 function setActiveTabStyles() {
   document.querySelectorAll('#main-tabs .tab-btn').forEach(btn => {
     const isOn = btn.dataset.tab === activeTab;
-    btn.className = `tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition relative ${
+    btn.className = `tab-btn flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold whitespace-nowrap transition relative ${
       isOn
         ? 'bg-gradient-to-r from-indigo-500/30 to-cyan-500/25 text-cyan-200 border border-indigo-400/50 shadow'
         : 'text-slate-400 hover:text-white hover:bg-discord-800/70 border border-transparent'
@@ -231,6 +233,7 @@ function renderActiveTab() {
   else if (activeTab === 'pets') renderPetsTab(area);
   else if (activeTab === 'fishdex') renderFishdexTab(area);
   else if (activeTab === 'prestige') renderPrestigeTab(area);
+  else if (activeTab === 'leaderboard') renderLeaderboardTab(area);
 }
 
 function renderShopTab(container) {
@@ -829,3 +832,143 @@ function renderPrestigeTab(container) {
     };
   });
 }
+
+
+function escHtml(str) {
+  return String(str || 'Angler')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function renderLeaderboardTab(container) {
+  const cloud = window.CloudSync;
+  const myUid = cloud && cloud.getUid ? cloud.getUid() : 'local-me';
+  const rawList = cloud && cloud.getLeaderboard ? cloud.getLeaderboard() : [];
+  const lbStatus = cloud && cloud.getLeaderboardStatus ? cloud.getLeaderboardStatus() : 'local';
+
+  // Build merged list (always ensure current player appears even before first cloud sync)
+  const list = rawList.length > 0 ? rawList.map(x => ({ ...x })) : [{
+    uid: myUid,
+    displayName: state.displayName || 'Cosmic Angler',
+    prestige: state.prestige || 0,
+    level: state.level || 1,
+    gold: state.gold || 0,
+    totalCasts: state.totalCasts || 0,
+    biome: state.biome || 'river',
+    isGoogle: false
+  }];
+
+  // Sort by selected metric
+  list.sort((a, b) => {
+    if (leaderboardSort === 'gold') return (b.gold || 0) - (a.gold || 0);
+    if (leaderboardSort === 'casts') return (b.totalCasts || 0) - (a.totalCasts || 0);
+    // Default: Prestige first, then Level, then Gold
+    if ((b.prestige || 0) !== (a.prestige || 0)) return (b.prestige || 0) - (a.prestige || 0);
+    if ((b.level || 0) !== (a.level || 0)) return (b.level || 0) - (a.level || 0);
+    return (b.gold || 0) - (a.gold || 0);
+  });
+
+  const myIndex = list.findIndex(e => e.uid === myUid);
+  const myRankText = myIndex >= 0 ? `#${myIndex + 1}` : 'Unranked (Syncing...)';
+
+  const sortButtons = [
+    { id: 'score', label: '🏅 Prestige & Level' },
+    { id: 'gold', label: '🪙 Richest (Gold)' },
+    { id: 'casts', label: '🎣 Most Casts' }
+  ];
+
+  const rowsHtml = list.slice(0, 50).map((p, idx) => {
+    const rank = idx + 1;
+    const isMe = p.uid === myUid;
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+    const biomeObj = BIOMES.find(b => b.id === p.biome) || BIOMES[0];
+    return `
+      <div class="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border ${
+        isMe
+          ? 'bg-indigo-500/20 border-cyan-400/60'
+          : rank <= 3
+            ? 'bg-amber-500/10 border-amber-400/30'
+            : 'bg-discord-850 border-slate-800'
+      }">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 text-center font-black text-sm ${rank <= 3 ? 'text-amber-300' : 'text-slate-400'} shrink-0">${medal}</div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-xs sm:text-sm text-white truncate">${escHtml(p.displayName || 'Cosmic Angler')}</span>
+              <span class="text-[11px]" title="${p.isGoogle ? 'Google Account' : 'Guest Angler'}">${p.isGoogle ? '⭐' : '👤'}</span>
+              ${isMe ? '<span class="px-1.5 py-0.5 rounded bg-cyan-500/25 text-cyan-200 text-[10px] font-extrabold">YOU</span>' : ''}
+            </div>
+            <div class="text-[11px] text-slate-400 flex items-center gap-2">
+              <span class="text-fuchsia-300 font-bold">P${p.prestige || 0}</span>
+              <span>•</span>
+              <span class="text-cyan-300 font-bold">Lv. ${fmt(p.level || 1)}</span>
+              <span class="hidden sm:inline">•</span>
+              <span class="hidden sm:inline">${biomeObj.icon} ${biomeObj.name}</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-right shrink-0 font-mono">
+          <div class="text-xs sm:text-sm font-black text-amber-300">$${fmt(p.gold || 0)}</div>
+          <div class="text-[10px] text-slate-400">${fmt(p.totalCasts || 0)} casts</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const statusBanner = lbStatus === 'error'
+    ? `<div class="p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs">
+         ⚠️ Global leaderboard needs Firestore read/write permission for the <code class="font-mono">leaderboard</code> collection. Showing your local stats until rules are published.
+       </div>`
+    : lbStatus === 'local'
+      ? `<div class="p-3 rounded-xl bg-discord-850 border border-slate-700 text-slate-300 text-xs">
+           🔌 Connecting to live global leaderboard...
+         </div>`
+      : '';
+
+  container.innerHTML = `
+    <div class="space-y-4">
+      <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-indigo-500/15 to-fuchsia-500/15 border border-amber-400/35 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div class="text-xs font-extrabold uppercase tracking-wider text-amber-200">🏆 Global Angler Rankings</div>
+          <div class="text-sm sm:text-base font-black text-white mt-0.5">
+            Your Rank: <span class="text-cyan-300 font-mono">${myRankText}</span>
+            <span class="text-xs font-normal text-slate-300 ml-2">(P${state.prestige} • Lv.${state.level} • $${fmt(state.gold)})</span>
+          </div>
+        </div>
+        <button id="btn-lb-sync" class="px-3.5 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-extrabold text-xs transition active:scale-95">
+          🔄 Sync My Rank
+        </button>
+      </div>
+
+      ${statusBanner}
+
+      <div class="flex flex-wrap items-center gap-1.5 bg-discord-950 p-1.5 rounded-xl border border-slate-800">
+        ${sortButtons.map(b => `
+          <button data-lb-sort="${b.id}" class="flex-1 min-w-[110px] py-2 px-3 rounded-lg text-[11px] sm:text-xs font-extrabold transition ${
+            leaderboardSort === b.id
+              ? 'bg-indigo-500/25 text-cyan-200 border border-indigo-400/40'
+              : 'text-slate-400 hover:text-white'
+          }">${b.label}</button>
+        `).join('')}
+      </div>
+
+      <div class="space-y-2">${rowsHtml}</div>
+    </div>
+  `;
+
+  container.querySelector('#btn-lb-sync').onclick = () => {
+    saveGame(true);
+  };
+  container.querySelectorAll('[data-lb-sort]').forEach(btn => {
+    btn.onclick = () => {
+      leaderboardSort = btn.dataset.lbSort;
+      renderActiveTab();
+    };
+  });
+}
+
+window.onLeaderboardUpdate = () => {
+  if (activeTab === 'leaderboard') renderActiveTab();
+};
