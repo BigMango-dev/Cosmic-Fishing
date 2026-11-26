@@ -1,5 +1,5 @@
 /* ============================================================================
-   CORE GAME ENGINE — QUESTS, FISHING, CRATES, DAILY & PRESTIGE
+   CORE GAME ENGINE — QUESTS, FISHING, CRATES, DAILY, PRESTIGE & BACKGROUND SIM
    ============================================================================ */
 function generateQuests() {
   const templates = [
@@ -24,7 +24,7 @@ function generateQuests() {
   }
 }
 
-function advanceQuest(type, amount = 1) {
+function advanceQuest(type, amount = 1, silent = false) {
   let completedAny = false;
   for (let i = state.quests.length - 1; i >= 0; i--) {
     const q = state.quests[i];
@@ -33,8 +33,10 @@ function advanceQuest(type, amount = 1) {
       if (q.progress >= q.target) {
         state.emeralds += q.emReward;
         state.exotics.goldfish += 1;
-        addFeed(`✅ <span class="feed-strong">Quest Complete:</span> "${q.text}" → <span class="feed-emerald">+${q.emReward} 💎</span> &amp; +1 Goldfish!`, 'exotic');
-        showToast(`✅ Quest Done! +${q.emReward} 💎`, 'emerald');
+        if (!silent) {
+          addFeed(`✅ <span class="feed-strong">Quest Complete:</span> "${q.text}" → <span class="feed-emerald">+${q.emReward} 💎</span> &amp; +1 Goldfish!`, 'exotic');
+          showToast(`✅ Quest Done! +${q.emReward} 💎`, 'emerald');
+        }
         state.quests.splice(i, 1);
         completedAny = true;
       }
@@ -42,7 +44,7 @@ function advanceQuest(type, amount = 1) {
   }
   if (completedAny) {
     generateQuests();
-    if (activeTab === 'crates') renderActiveTab();
+    if (!silent && activeTab === 'crates') renderActiveTab();
   }
 }
 
@@ -63,7 +65,7 @@ function rollFishFromBiome(biome) {
   return biome.fish[0];
 }
 
-function grantXp(amount) {
+function grantXp(amount, silent = false) {
   state.xp += amount;
   let leveled = false;
   while (state.xp >= xpRequired(state.level)) {
@@ -72,14 +74,17 @@ function grantXp(amount) {
     leveled = true;
     const bonusEmeralds = state.level % 10 === 0 ? 3 : 1;
     state.emeralds += bonusEmeralds;
-    addFeed(`🎉 <span class="feed-strong">LEVEL UP!</span> Reached <span class="feed-strong">Lv. ${state.level}</span> (+${bonusEmeralds} 💎)`, 'levelup');
+    if (!silent) {
+      addFeed(`🎉 <span class="feed-strong">LEVEL UP!</span> Reached <span class="feed-strong">Lv. ${state.level}</span> (+${bonusEmeralds} 💎)`, 'levelup');
+    }
   }
-  if (leveled && (activeTab === 'biomes' || activeTab === 'prestige' || (activeTab === 'shop' && (shopSubTab === 'rods' || shopSubTab === 'boats')))) {
+  if (leveled && !silent && (activeTab === 'biomes' || activeTab === 'prestige' || (activeTab === 'shop' && (shopSubTab === 'rods' || shopSubTab === 'boats')))) {
     renderActiveTab();
   }
 }
 
-function performCast(isWorker = false) {
+function performCast(isWorker = false, silent = false, batchScale = 1) {
+  const scale = Math.max(1, batchScale);
   const biome = getBiome();
   const baseFishCount = 1 + state.goldUpgrades.betterFish;
   const yieldMult = getFishYieldMultiplier() * (isWorker ? 0.30 * getBoat().workerMult : 1);
@@ -94,9 +99,12 @@ function performCast(isWorker = false) {
 
   if (!isWorker && state.activeBait && state.baits[state.activeBait] > 0) {
     const saveChance = Math.min(0.50, state.goldUpgrades.baitEff * 0.02);
-    if (Math.random() >= saveChance) {
-      state.baits[state.activeBait]--;
-      if (state.baits[state.activeBait] <= 0) {
+    const baitUsed = scale === 1
+      ? (Math.random() >= saveChance ? 1 : 0)
+      : Math.min(state.baits[state.activeBait], Math.round(scale * (1 - saveChance)));
+    if (baitUsed > 0) {
+      state.baits[state.activeBait] = Math.max(0, state.baits[state.activeBait] - baitUsed);
+      if (state.baits[state.activeBait] <= 0 && !silent) {
         const bName = BAITS.find(b => b.id === state.activeBait)?.name || 'Bait';
         addFeed(`🪱 Out of <span class="feed-strong">${bName}</span>!`, 'crate');
         showToast(`🪱 Ran out of ${bName}!`, 'amber');
@@ -106,8 +114,9 @@ function performCast(isWorker = false) {
 
   const primary = rollFishFromBiome(biome);
   const secondary = rollFishFromBiome(biome);
-  const count1 = Math.ceil(totalCaught * 0.65);
-  const count2 = totalCaught - count1;
+  const scaledCaught = Math.round(totalCaught * scale);
+  const count1 = Math.ceil(scaledCaught * 0.65);
+  const count2 = scaledCaught - count1;
 
   state.bestiary[primary.id] = (state.bestiary[primary.id] || 0) + count1;
   if (count2 > 0) state.bestiary[secondary.id] = (state.bestiary[secondary.id] || 0) + count2;
@@ -118,84 +127,106 @@ function performCast(isWorker = false) {
   const catchLogFactor = 1 + 0.35 * Math.log2(Math.max(1, totalCaught));
   const workerXpPenalty = isWorker ? 0.35 : 1.0;
   const earnedXp = Math.max(1, Math.round(
-    biome.xpBase * catchLogFactor * rarityXpBonus * getXpMultiplier() * workerXpPenalty * (0.9 + Math.random() * 0.2)
+    biome.xpBase * catchLogFactor * rarityXpBonus * getXpMultiplier() * workerXpPenalty * (0.9 + Math.random() * 0.2) * scale
   ));
 
   if (state.autoSell) {
     state.gold += earnedValue;
   } else {
-    state.livewellCount += totalCaught;
+    state.livewellCount += scaledCaught;
     state.livewellValue += earnedValue;
   }
 
-  grantXp(earnedXp);
+  grantXp(earnedXp, silent);
 
   if (state.activePet && state.pets[state.activePet]) {
     const p = state.pets[state.activePet];
     if (p.lv < 100) {
-      let petXpGain = Math.max(1, Math.round((4 + Math.sqrt(biome.xpBase) * 0.4) * (1 + state.emeraldUpgrades.emPetXp * 0.20)));
+      let petXpGain = Math.max(1, Math.round((4 + Math.sqrt(biome.xpBase) * 0.4) * (1 + state.emeraldUpgrades.emPetXp * 0.20) * scale));
       if (state.activePet === 'puffer') petXpGain = Math.round(petXpGain * (1 + p.lv * 0.01));
       p.xp += petXpGain;
-      const req = Math.floor(90 * Math.pow(p.lv, 1.65));
-      if (p.xp >= req && p.lv < 100) {
-        p.xp -= req;
-        p.lv++;
-        const pName = PETS.find(x => x.id === state.activePet).name;
-        addFeed(`🐾 <span class="feed-strong">${pName}</span> leveled up to <span class="feed-fuchsia">Lv.${p.lv}</span>!`, 'pet');
+      while (p.lv < 100) {
+        const req = Math.floor(90 * Math.pow(p.lv, 1.65));
+        if (p.xp >= req) {
+          p.xp -= req;
+          p.lv++;
+          if (!silent) {
+            const pName = PETS.find(x => x.id === state.activePet).name;
+            addFeed(`🐾 <span class="feed-strong">${pName}</span> leveled up to <span class="feed-fuchsia">Lv.${p.lv}</span>!`, 'pet');
+          }
+        } else {
+          break;
+        }
       }
     }
   }
 
   if (!isWorker) {
-    triggerBobberAnim();
-    state.totalCasts++;
-    cooldownRemaining = getCooldownSeconds();
-    advanceQuest('cast', 1);
-    advanceQuest('fish', totalCaught);
-    if (['Rare', 'Epic', 'Mythic'].includes(primary.rarity)) advanceQuest('rare', 1);
+    if (!silent) triggerBobberAnim();
+    state.totalCasts += Math.round(scale);
+    if (!silent) cooldownRemaining = getCooldownSeconds();
+    advanceQuest('cast', Math.round(scale), silent);
+    advanceQuest('fish', scaledCaught, silent);
+    if (['Rare', 'Epic', 'Mythic'].includes(primary.rarity)) advanceQuest('rare', Math.round(scale), silent);
 
-    let msg = `${biome.icon} Caught <span class="feed-strong">${fmt(count1)}x ${primary.name}</span>`;
-    if (count2 > 0) msg += ` &amp; <span class="feed-strong">${fmt(count2)}x ${secondary.name}</span>`;
-    if (doubled) msg += ` <span class="feed-amber">[2x TWIN!]</span>`;
-    msg += ` <span class="feed-muted">(+${fmt(earnedXp)} XP${state.autoSell ? `, +$${fmt(earnedValue)}` : ''})</span>`;
-    addFeed(msg);
+    if (!silent) {
+      let msg = `${biome.icon} Caught <span class="feed-strong">${fmt(count1)}x ${primary.name}</span>`;
+      if (count2 > 0) msg += ` &amp; <span class="feed-strong">${fmt(count2)}x ${secondary.name}</span>`;
+      if (doubled) msg += ` <span class="feed-amber">[2x TWIN!]</span>`;
+      msg += ` <span class="feed-muted">(+${fmt(earnedXp)} XP${state.autoSell ? `, +$${fmt(earnedValue)}` : ''})</span>`;
+      addFeed(msg);
+    }
 
-    if (Math.random() < getCrateChance()) {
+    const crateChance = getCrateChance();
+    const cratesFound = scale === 1
+      ? (Math.random() < crateChance ? 1 : 0)
+      : Math.floor(scale * crateChance + (Math.random() < ((scale * crateChance) % 1) ? 1 : 0));
+    if (cratesFound > 0) {
       const cKey = biome.crate;
-      state.crates[cKey] = (state.crates[cKey] || 0) + 1;
-      advanceQuest('crate', 1);
-      addFeed(`📦 Found a <span class="feed-amber">${CRATE_TYPES[cKey].name}</span>!`, 'crate');
-      if (activeTab === 'crates') renderActiveTab();
+      state.crates[cKey] = (state.crates[cKey] || 0) + cratesFound;
+      advanceQuest('crate', cratesFound, silent);
+      if (!silent) {
+        addFeed(`📦 Found a <span class="feed-amber">${CRATE_TYPES[cKey].name}</span>!`, 'crate');
+        if (activeTab === 'crates') renderActiveTab();
+      }
     }
 
     const exoticMult = Math.pow(1.35, state.prestigeUpgrades.p_exotic) *
       (state.activePet === 'puffer' && state.pets.puffer ? (1 + state.pets.puffer.lv * 0.015) : 1);
-    if (state.level >= 10 && Math.random() < 0.022 * exoticMult) {
+    const exoticOdds = Math.min(0.85, 0.022 * exoticMult * scale);
+    if (state.level >= 10 && Math.random() < exoticOdds) {
       const pool = ['goldfish', 'emeraldfish'];
       if (state.level >= 50) pool.push('lavafish');
       if (state.level >= 100) pool.push('diamondfish');
       const pick = pool[Math.floor(Math.random() * pool.length)];
-      state.exotics[pick]++;
-      const label = { goldfish: 'Goldfish', emeraldfish: 'Emerald Fish', lavafish: 'Lava Fish', diamondfish: 'Diamond Fish' }[pick];
-      addFeed(`✨ <span class="feed-strong">EXOTIC!</span> Reeled in a rare <span class="feed-emerald">${label}</span>!`, 'exotic');
-      showToast(`✨ Caught Exotic ${label}!`, 'emerald');
+      const exCount = Math.max(1, Math.floor(0.022 * exoticMult * scale));
+      state.exotics[pick] += exCount;
+      if (!silent) {
+        const label = { goldfish: 'Goldfish', emeraldfish: 'Emerald Fish', lavafish: 'Lava Fish', diamondfish: 'Diamond Fish' }[pick];
+        addFeed(`✨ <span class="feed-strong">EXOTIC!</span> Reeled in a rare <span class="feed-emerald">${label}</span>!`, 'exotic');
+        showToast(`✨ Caught Exotic ${label}!`, 'emerald');
+      }
     }
 
-    const petOdds = (1 / 400) * (1 + state.prestige * 0.08) * exoticMult;
+    const petOdds = Math.min(0.75, (1 / 400) * (1 + state.prestige * 0.08) * exoticMult * scale);
     if (Math.random() < petOdds) {
       const petDef = PETS[Math.floor(Math.random() * PETS.length)];
       if (!state.pets[petDef.id]) {
         state.pets[petDef.id] = { lv: 1, xp: 0 };
         if (!state.activePet) state.activePet = petDef.id;
-        addFeed(`🐾 <span class="feed-strong">NEW COMPANION!</span> Befriended <span class="feed-fuchsia">${petDef.icon} ${petDef.name}</span>!`, 'pet');
-        showToast(`🐾 Discovered ${petDef.name}!`, 'fuchsia');
+        if (!silent) {
+          addFeed(`🐾 <span class="feed-strong">NEW COMPANION!</span> Befriended <span class="feed-fuchsia">${petDef.icon} ${petDef.name}</span>!`, 'pet');
+          showToast(`🐾 Discovered ${petDef.name}!`, 'fuchsia');
+        }
       } else if (state.pets[petDef.id].lv < 100) {
         state.pets[petDef.id].lv = Math.min(100, state.pets[petDef.id].lv + 1);
-        addFeed(`🐾 Duplicate <span class="feed-strong">${petDef.name}</span> boosted to <span class="feed-fuchsia">Lv.${state.pets[petDef.id].lv}</span>!`, 'pet');
+        if (!silent) {
+          addFeed(`🐾 Duplicate <span class="feed-strong">${petDef.name}</span> boosted to <span class="feed-fuchsia">Lv.${state.pets[petDef.id].lv}</span>!`, 'pet');
+        }
       }
     }
   } else {
-    advanceQuest('fish', totalCaught);
+    advanceQuest('fish', scaledCaught, silent);
   }
   hudDirty = true;
 }
