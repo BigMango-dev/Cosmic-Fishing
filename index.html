@@ -1,0 +1,3027 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Virtual Fisher — Cosmic &amp; Multiverse Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            discord: {
+              950: '#0d0f17',
+              900: '#141724',
+              850: '#1b1f30',
+              800: '#23283d',
+              700: '#2e3550',
+              blurple: '#5865F2',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: radial-gradient(circle at 15% 10%, #191e36 0%, #0d0f17 55%, #07080d 100%);
+      color: #f1f5f9;
+      overflow-x: hidden;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(13, 15, 23, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.45);
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.7);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    button, a, input, select, [role="button"] {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Discord Embed Accent */
+    .discord-embed {
+      border-left-width: 4px;
+      transition: border-color 0.35s ease;
+    }
+
+    /* Horizontal scroll fade cue for mobile tabs */
+    .scroll-fade-wrap {
+      position: relative;
+    }
+    .scroll-fade-wrap::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 26px;
+      pointer-events: none;
+      background: linear-gradient(to left, rgba(20, 23, 36, 0.96), transparent);
+    }
+
+    /* Stage Animations */
+    @keyframes floatBobber {
+      0%, 100% { transform: translateY(0px) rotate(-3deg); }
+      50% { transform: translateY(-8px) rotate(4deg); }
+    }
+    @keyframes castDip {
+      0% { transform: translateY(0px) scale(1); }
+      35% { transform: translateY(16px) scale(0.86) rotate(14deg); }
+      70% { transform: translateY(-12px) scale(1.14) rotate(-8deg); }
+      100% { transform: translateY(0px) scale(1); }
+    }
+    @keyframes rippleExpand {
+      0% { transform: scale(0.45); opacity: 0.85; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+    @keyframes orbitSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes particleDrift {
+      0% { transform: translateY(0px) translateX(0px); opacity: 0.25; }
+      50% { opacity: 0.9; }
+      100% { transform: translateY(-34px) translateX(12px); opacity: 0; }
+    }
+    @keyframes prismaticText {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .animate-bobber {
+      animation: floatBobber 2.8s ease-in-out infinite;
+    }
+    .animate-cast-dip {
+      animation: castDip 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .ripple-ring {
+      animation: rippleExpand 2.4s ease-out infinite;
+    }
+    .orbit-ring {
+      animation: orbitSpin 14s linear infinite;
+    }
+    .prismatic-badge {
+      background: linear-gradient(90deg, #f472b6, #c084fc, #38bdf8, #34d399, #fbbf24, #f472b6);
+      background-size: 300% 300%;
+      animation: prismaticText 4s ease infinite;
+    }
+
+    /* Mobile Portrait Optimizations (<= 767px) */
+    @media (max-width: 767px) {
+      body {
+        padding-bottom: calc(116px + env(safe-area-inset-bottom));
+      }
+      .tab-btn, .shop-sub-btn {
+        min-height: 44px;
+      }
+      #toast-container {
+        bottom: calc(122px + env(safe-area-inset-bottom));
+      }
+    }
+
+    #mobile-cast-dock {
+      padding-bottom: calc(0.6rem + env(safe-area-inset-bottom));
+    }
+
+    /* Mobile Landscape Split-Screen Mode */
+    @media (max-height: 540px) and (orientation: landscape) {
+      body {
+        padding-bottom: 0 !important;
+        overflow: hidden;
+      }
+      #mobile-cast-dock {
+        display: none !important;
+      }
+      #top-header-bar {
+        padding-top: 0.3rem;
+        padding-bottom: 0.3rem;
+      }
+      #mobile-xp-subbar {
+        display: none !important;
+      }
+      #main-workspace {
+        display: grid !important;
+        grid-template-columns: 42% 58% !important;
+        gap: 0.65rem !important;
+        padding-top: 0.45rem !important;
+        padding-bottom: 0.45rem !important;
+        height: calc(100vh - 52px);
+        overflow: hidden;
+        align-items: stretch !important;
+      }
+      #left-console-col {
+        height: 100%;
+        overflow-y: auto;
+        gap: 0.5rem !important;
+      }
+      #biome-stage {
+        height: 5.5rem !important;
+      }
+      #bobber-sprite {
+        font-size: 2.25rem !important;
+      }
+      #right-command-col {
+        height: 100%;
+        min-height: 0 !important;
+      }
+      #tab-content-area {
+        max-height: none !important;
+        height: 100%;
+        padding: 0.65rem !important;
+      }
+      #catch-feed-list {
+        max-height: 140px !important;
+      }
+      #toast-container {
+        bottom: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+
+  <!-- ==================== TOP STATUS BAR ==================== -->
+  <header class="sticky top-0 z-30 bg-discord-900/90 backdrop-blur-xl border-b border-slate-800/80 shadow-xl">
+    <div id="top-header-bar" class="max-w-[1440px] mx-auto px-3 sm:px-5 py-2 sm:py-2.5 flex flex-wrap items-center justify-between gap-2">
+      <!-- Brand + Prestige -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-cyan-500 via-indigo-500 to-fuchsia-600 flex items-center justify-center text-lg sm:text-xl shadow-lg shadow-indigo-500/25 shrink-0">
+          🌌
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-black text-sm sm:text-base tracking-tight text-white">Virtual Fisher</h1>
+            <span class="hidden sm:inline-block text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-400/30">
+              Multiverse
+            </span>
+            <span id="header-prestige-badge" class="hidden text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-fuchsia-500/25 text-fuchsia-200 border border-fuchsia-400/40">
+              P0
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Zero-Captcha Cosmic &amp; Multiversal Angling</p>
+        </div>
+      </div>
+
+      <!-- Resource Pills -->
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+        <!-- Coins -->
+        <div class="flex items-center gap-1.5 bg-discord-850 border border-amber-500/30 px-2.5 sm:px-3 py-1.5 rounded-xl shadow-inner">
+          <span class="text-sm sm:text-base">🪙</span>
+          <div>
+            <div class="text-[9px] uppercase tracking-wider text-amber-300/75 font-bold leading-none">Coins</div>
+            <div id="hud-coins" class="text-xs sm:text-sm font-black text-amber-300 tabular-nums leading-tight">0</div>
+          </div>
+        </div>
+
+        <!-- Exotic Currencies Pill -->
+        <div class="hidden md:flex items-center gap-2.5 bg-discord-850 border border-slate-700/80 px-3 py-1.5 rounded-xl text-xs font-bold">
+          <span title="Gold Fish (Exotic Drop)" class="flex items-center gap-1 text-amber-300">🐠 <span id="hud-goldfish" class="tabular-nums">0</span></span>
+          <span class="text-slate-700">|</span>
+          <span title="Emerald Fish (Exotic Drop)" class="flex items-center gap-1 text-emerald-300">🐟 <span id="hud-emeraldfish" class="tabular-nums">0</span></span>
+          <span class="text-slate-700">|</span>
+          <span title="Diamond Fish (Exotic Drop)" class="flex items-center gap-1 text-cyan-300">💎 <span id="hud-diamondfish" class="tabular-nums">0</span></span>
+          <span class="text-slate-700">|</span>
+          <span title="Cosmic Orbs (Exotic Drop)" class="flex items-center gap-1 text-fuchsia-300">🔮 <span id="hud-orbs" class="tabular-nums">0</span></span>
+        </div>
+
+        <!-- Desktop Level & XP -->
+        <div class="hidden lg:flex items-center gap-2.5 bg-discord-850 border border-slate-700/80 px-3 py-1.5 rounded-xl min-w-[165px]">
+          <div class="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-xs font-black text-cyan-300" id="hud-level">
+            1
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between text-[10px] font-bold text-slate-300 mb-0.5">
+              <span>Angler Lv.</span>
+              <span id="hud-xp-text" class="text-slate-400 tabular-nums">0 / 100</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="hud-xp-bar" class="h-full bg-gradient-to-r from-cyan-400 to-indigo-500 rounded-full transition-all duration-300" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Daily Reward Button -->
+        <button id="btn-open-daily" class="min-h-[38px] px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-xs font-extrabold flex items-center gap-1.5 transition active:scale-95 relative">
+          <span>🎁</span>
+          <span class="hidden sm:inline">Daily</span>
+          <span id="daily-ready-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        </button>
+
+        <!-- Sync Status Badge -->
+        <div id="sync-status-badge" class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold bg-discord-850 border border-slate-700 text-slate-300" title="Save Sync Status">
+          <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+          <span id="sync-text" class="truncate max-w-[88px] sm:max-w-none">Connecting...</span>
+        </div>
+
+        <!-- Account Button -->
+        <button id="btn-open-account" class="min-h-[38px] px-2.5 sm:px-3 py-1.5 rounded-xl bg-discord-blurple/20 hover:bg-discord-blurple/30 border border-discord-blurple/50 text-indigo-200 text-xs font-extrabold flex items-center gap-1.5 transition active:scale-95">
+          <span id="account-avatar">👤</span>
+          <span id="account-label" class="max-w-[85px] sm:max-w-[120px] truncate">Guest</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile XP Sub-bar -->
+    <div id="mobile-xp-subbar" class="lg:hidden px-3 pb-2 flex items-center gap-2 text-[11px]">
+      <span class="font-bold text-cyan-300 shrink-0">Lv. <span id="stat-level-mobile">1</span></span>
+      <div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+        <div id="stat-xp-bar-mobile" class="h-full bg-gradient-to-r from-cyan-400 to-indigo-400 rounded-full transition-all duration-300" style="width: 0%;"></div>
+      </div>
+      <span id="stat-xp-text-mobile" class="text-slate-400 tabular-nums shrink-0">0/100</span>
+      <span class="text-slate-600">•</span>
+      <span class="text-amber-300 font-bold shrink-0">🐠<span id="hud-goldfish-m">0</span></span>
+      <span class="text-emerald-300 font-bold shrink-0">🐟<span id="hud-emeraldfish-m">0</span></span>
+      <span class="text-cyan-300 font-bold shrink-0">💎<span id="hud-diamondfish-m">0</span></span>
+      <span class="text-fuchsia-300 font-bold shrink-0">🔮<span id="hud-orbs-m">0</span></span>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <main id="main-workspace" class="flex-1 max-w-[1440px] w-full mx-auto px-3 sm:px-5 py-3.5 sm:py-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
+
+    <!-- LEFT COLUMN: FISHING CONSOLE & LIVE CATCH FEED -->
+    <section id="left-console-col" class="lg:col-span-5 xl:col-span-5 flex flex-col gap-4 sm:gap-5">
+
+      <!-- Discord-Embed Styled Fishing Console -->
+      <div id="fishing-console-card" class="discord-embed border-cyan-400 bg-discord-900/95 rounded-2xl border-y border-r border-slate-800 shadow-2xl overflow-hidden">
+        <!-- Console Header -->
+        <div class="px-4 py-3 bg-discord-850/80 border-b border-slate-800 flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <span id="console-biome-icon" class="text-xl shrink-0">🏞️</span>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <h2 id="console-biome-name" class="font-black text-sm sm:text-base text-white truncate">Quiet River</h2>
+                <span id="console-biome-tier" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shrink-0">Realm 1/10</span>
+              </div>
+              <p id="console-biome-desc" class="text-[11px] text-slate-400 truncate">Crystal freshwater currents teeming with river life.</p>
+            </div>
+          </div>
+          <button id="btn-quick-biome" class="min-h-[36px] px-2.5 py-1.5 rounded-xl bg-discord-800 hover:bg-discord-700 border border-slate-700 text-xs font-bold text-slate-200 shrink-0 transition active:scale-95">
+            Travel 🌌
+          </button>
+        </div>
+
+        <!-- Animated Biome Stage -->
+        <div id="biome-stage" class="relative h-44 sm:h-52 w-full overflow-hidden flex flex-col items-center justify-center select-none transition-all duration-500" style="background: linear-gradient(180deg, #0c2d48 0%, #145374 55%, #0a192f 100%);">
+          <!-- Dynamic Particles / Orbits / Ripples Container -->
+          <div id="stage-fx-layer" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+
+          <!-- Active Companion Pet Badge -->
+          <div id="stage-pet-badge" class="hidden absolute top-2.5 left-3 px-2.5 py-1 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-[11px] font-bold text-slate-100 flex items-center gap-1.5 shadow">
+            <span id="stage-pet-icon">🦦</span>
+            <span id="stage-pet-name">River Otter</span>
+          </div>
+
+          <!-- Active Boost Pill -->
+          <div id="stage-boost-badge" class="hidden absolute top-2.5 right-3 px-2.5 py-1 rounded-full bg-fuchsia-600/40 backdrop-blur-md border border-fuchsia-400/40 text-[11px] font-extrabold text-fuchsia-100 flex items-center gap-1 shadow">
+            <span>⚡</span>
+            <span id="stage-boost-text">Boost Active</span>
+          </div>
+
+          <!-- Center Bobber / Cosmic Probe Sprite -->
+          <div class="relative z-10 flex flex-col items-center">
+            <div class="absolute -inset-6 rounded-full border border-white/25 ripple-ring pointer-events-none"></div>
+            <div id="bobber-sprite" class="text-5xl sm:text-6xl drop-shadow-[0_8px_18px_rgba(0,0,0,0.65)] animate-bobber cursor-pointer" title="Click or tap to cast!">
+              🎣
+            </div>
+          </div>
+
+          <!-- Stage Status Banner -->
+          <div class="absolute bottom-2.5 inset-x-3 z-10 flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-black/50 backdrop-blur-md border border-white/10 text-[11px]">
+            <span id="stage-status-text" class="font-semibold text-slate-200 truncate">Ready to cast! Press Space or click Fish</span>
+            <span id="stage-luck-badge" class="font-mono font-bold text-cyan-300 shrink-0">Luck: 1.0x</span>
+          </div>
+        </div>
+
+        <!-- Equipped Gear & Bait Strip -->
+        <div class="p-3.5 sm:p-4 space-y-3">
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <div class="bg-discord-850 border border-slate-800 rounded-xl p-2.5">
+              <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Equipped Rod</div>
+              <div id="hud-rod-name" class="font-extrabold text-slate-100 truncate mt-0.5">Twig &amp; String</div>
+              <div id="hud-rod-stat" class="text-[10px] text-cyan-300 font-semibold mt-0.5">Power 1.0x</div>
+            </div>
+            <div class="bg-discord-850 border border-slate-800 rounded-xl p-2.5">
+              <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Vessel</div>
+              <div id="hud-vessel-name" class="font-extrabold text-slate-100 truncate mt-0.5">None (Shore)</div>
+              <div id="hud-vessel-stat" class="text-[10px] text-indigo-300 font-semibold mt-0.5">+0% Capacity</div>
+            </div>
+            <button id="btn-cycle-bait" class="bg-discord-850 hover:bg-discord-800 border border-slate-800 hover:border-emerald-500/40 rounded-xl p-2.5 text-left transition active:scale-95">
+              <div class="text-[10px] uppercase tracking-wider text-emerald-400 font-bold flex items-center justify-between">
+                <span>Bait</span>
+                <span class="text-[9px] text-slate-400">Tap ↻</span>
+              </div>
+              <div id="hud-bait-name" class="font-extrabold text-slate-100 truncate mt-0.5">None</div>
+              <div id="hud-bait-qty" class="text-[10px] text-emerald-300 font-semibold mt-0.5">0 left</div>
+            </button>
+          </div>
+
+          <!-- Cooldown Progress Bar -->
+          <div>
+            <div class="flex justify-between items-center text-[11px] font-bold mb-1">
+              <span class="text-slate-400">Line Cooldown</span>
+              <span id="cooldown-timer-text" class="font-mono text-cyan-300">Ready (2.50s)</span>
+            </div>
+            <div class="w-full h-2.5 bg-discord-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+              <div id="cooldown-bar-fill" class="h-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-500 rounded-full transition-all duration-75" style="width: 100%;"></div>
+            </div>
+          </div>
+
+          <!-- Primary Action Buttons -->
+          <div class="grid grid-cols-12 gap-2.5 pt-0.5">
+            <button id="btn-cast-line" class="col-span-7 min-h-[50px] py-3 px-4 rounded-xl font-black text-sm sm:text-base tracking-wide text-white bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-600 hover:from-cyan-400 hover:to-fuchsia-500 active:scale-[0.98] transition shadow-lg shadow-indigo-500/25 border border-white/15 disabled:opacity-55 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              <span class="text-lg">🎣</span>
+              <span>FISH / CAST</span>
+            </button>
+            <button id="btn-quick-sell" class="col-span-5 min-h-[50px] py-2.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 font-extrabold text-xs sm:text-sm flex flex-col items-center justify-center leading-tight active:scale-95 transition">
+              <span>💰 Sell All</span>
+              <span class="text-[11px] font-mono text-amber-200">+<span id="quick-sell-value">0</span></span>
+            </button>
+          </div>
+
+          <!-- Secondary Quick Row: Treasure Chests + Auto-Fisher Status -->
+          <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80 text-xs">
+            <button id="btn-open-chests" class="min-h-[40px] px-3 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/35 text-purple-200 font-extrabold flex items-center gap-1.5 transition active:scale-95">
+              <span>🧰</span>
+              <span>Open Chests (<span id="quick-chest-count" class="tabular-nums">0</span>)</span>
+            </button>
+            <div id="autofish-pill" class="px-3 py-1.5 rounded-xl bg-discord-850 border border-slate-800 text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+              <span>🤖</span>
+              <span id="autofish-status">Crew: Lv.0 (Idle)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Catch Feed -->
+      <div class="bg-discord-900/95 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
+        <div class="px-4 py-2.5 bg-discord-850/80 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-sm">📜</span>
+            <h3 class="font-extrabold text-xs sm:text-sm text-slate-200">Live Catch Log</h3>
+          </div>
+          <button id="btn-clear-log" class="text-[11px] font-bold text-slate-400 hover:text-slate-200 px-2 py-1 rounded-lg hover:bg-slate-800 transition">
+            Clear
+          </button>
+        </div>
+        <div id="catch-feed-list" class="p-3 space-y-2 max-h-[290px] overflow-y-auto text-xs">
+          <div class="text-center py-6 text-slate-500">
+            Cast your line to begin exploring rivers, oceans, galaxies, and the multiverse!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: TABBED COMMAND CENTER -->
+    <section id="right-command-col" class="lg:col-span-7 xl:col-span-7 bg-discord-900/95 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col min-h-[600px] lg:min-h-[660px]">
+      <!-- Main Navigation Tabs -->
+      <div class="scroll-fade-wrap bg-discord-850/90 border-b border-slate-800">
+        <nav id="main-tabs" class="flex items-center gap-1 p-2 overflow-x-auto no-scrollbar pr-8">
+          <button data-tab="inventory" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition">
+            🎒 Inventory
+          </button>
+          <button data-tab="shop" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition">
+            🛒 Mega Shop
+          </button>
+          <button data-tab="biomes" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition">
+            🌌 Biomes (10)
+          </button>
+          <button data-tab="quests" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition relative">
+            🎯 Quests
+            <span id="quest-ready-dot" class="hidden w-2 h-2 rounded-full bg-emerald-400"></span>
+          </button>
+          <button data-tab="fishdex" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition">
+            📖 Fishdex (80)
+          </button>
+          <button data-tab="leaderboard" class="tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition">
+            🏆 Leaderboard
+          </button>
+        </nav>
+      </div>
+
+      <!-- Dynamic Tab Content -->
+      <div id="tab-content-area" class="p-3.5 sm:p-5 flex-1 overflow-y-auto max-h-[840px]"></div>
+    </section>
+  </main>
+
+  <!-- ==================== STICKY MOBILE PORTRAIT CAST DOCK ==================== -->
+  <div id="mobile-cast-dock" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-discord-900/95 backdrop-blur-xl border-t border-slate-700/80 px-3 pt-2 shadow-[0_-10px_30px_rgba(0,0,0,0.65)]">
+    <div class="flex items-center justify-between gap-2 mb-1.5 text-[11px]">
+      <div class="flex items-center gap-1.5 min-w-0">
+        <span id="dock-biome-label" class="font-bold text-slate-200 truncate">🏞️ Quiet River</span>
+        <span class="text-slate-600">•</span>
+        <button id="dock-cycle-bait" class="font-bold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full truncate active:scale-95 transition">
+          Bait: <span id="dock-bait-label">None</span>
+        </button>
+      </div>
+      <span id="dock-cooldown-text" class="font-mono font-bold text-cyan-300 shrink-0">Ready</span>
+    </div>
+    <div class="w-full h-1.5 bg-discord-950 rounded-full overflow-hidden border border-slate-800 mb-2">
+      <div id="dock-cooldown-bar" class="h-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 rounded-full transition-all duration-75" style="width: 100%;"></div>
+    </div>
+    <div class="grid grid-cols-12 gap-2">
+      <button id="dock-cast-btn" class="col-span-8 min-h-[48px] py-2.5 px-4 rounded-2xl font-black text-base tracking-wide text-white bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 active:scale-[0.97] transition shadow-lg shadow-indigo-500/30 border border-white/20 disabled:opacity-60 flex items-center justify-center gap-2">
+        <span>🎣</span>
+        <span>CAST LINE</span>
+      </button>
+      <button id="dock-sell-btn" class="col-span-4 min-h-[48px] py-2 px-2 rounded-2xl bg-amber-500/20 active:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-extrabold text-xs flex flex-col items-center justify-center leading-tight active:scale-95 transition">
+        <span>💰 Sell All</span>
+        <span id="dock-sell-val" class="text-[11px] font-mono text-amber-200">0</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION STACK ==================== -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-[92vw] sm:max-w-sm pointer-events-none"></div>
+
+  <!-- ==================== WELCOME / AUTH MODAL ==================== -->
+  <div id="welcome-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-discord-900 border border-slate-700/80 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 relative">
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-cyan-500 via-indigo-500 to-fuchsia-600 flex items-center justify-center text-3xl shadow-xl shadow-indigo-500/30">
+          🌌
+        </div>
+        <h2 class="text-xl sm:text-2xl font-black text-white">Virtual Fisher: Multiverse</h2>
+        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          Fish across 10 realms—from Quiet Rivers to Godzilla Trenches, Kunpeng Skies, Galaxies, and the Multiverse. 100% captcha-free!
+        </p>
+      </div>
+
+      <div id="welcome-auth-error" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-rose-200 text-xs font-medium"></div>
+
+      <div class="space-y-2.5">
+        <button id="btn-welcome-google" class="w-full min-h-[48px] py-3 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-sm flex items-center justify-center gap-2.5 shadow-lg transition active:scale-[0.98]">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
+            <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
+          </svg>
+          <span>Sign in with Google</span>
+        </button>
+
+        <button id="btn-welcome-guest" class="w-full min-h-[48px] py-3 px-4 rounded-xl bg-discord-800 hover:bg-discord-700 border border-slate-700 text-slate-100 font-extrabold text-sm flex items-center justify-center gap-2 transition active:scale-[0.98]">
+          <span>👤</span>
+          <span>Play Instantly as Guest</span>
+        </button>
+      </div>
+
+      <p class="text-[11px] text-center text-slate-400">
+        Guest progress is automatically saved to the cloud and can be bound to your Google Account anytime in the Account menu.
+      </p>
+    </div>
+  </div>
+
+  <!-- ==================== ACCOUNT & CLOUD SYNC MODAL ==================== -->
+  <div id="account-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-discord-900 border border-slate-700/80 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🛡️</span>
+          <h3 class="font-black text-base sm:text-lg text-white">Account &amp; Cloud Save</h3>
+        </div>
+        <button data-close-modal="account-modal" class="w-9 h-9 rounded-xl bg-discord-850 hover:bg-discord-800 text-slate-300 font-bold flex items-center justify-center">✕</button>
+      </div>
+
+      <div id="account-auth-error" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-rose-200 text-xs font-medium"></div>
+
+      <!-- Current Account Status Card -->
+      <div class="bg-discord-850 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs">
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400 font-semibold">Account Status</span>
+          <span id="modal-account-type" class="font-extrabold text-cyan-300">Guest Angler</span>
+        </div>
+        <div class="space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 font-semibold">Player UID</span>
+            <button id="btn-copy-uid" class="text-[11px] font-bold text-indigo-300 hover:text-indigo-200 underline">Copy UID</button>
+          </div>
+          <div id="modal-user-id" class="font-mono text-[11px] bg-discord-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 break-all select-all">
+            connecting...
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaderboard Display Name -->
+      <div class="space-y-1.5">
+        <label for="input-display-name" class="block text-xs font-bold text-slate-300">Leaderboard Display Name</label>
+        <div class="flex gap-2">
+          <input id="input-display-name" type="text" maxlength="22" placeholder="Enter Angler Name..." class="flex-1 min-h-[44px] bg-discord-950 border border-slate-700 rounded-xl px-3 text-sm text-white focus:outline-none focus:border-cyan-400" />
+          <button id="btn-save-name" class="min-h-[44px] px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs transition active:scale-95">
+            Update
+          </button>
+        </div>
+      </div>
+
+      <!-- Link / Sign In with Google -->
+      <button id="btn-modal-google" class="w-full min-h-[46px] py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-sm flex items-center justify-center gap-2 shadow transition active:scale-[0.98]">
+        <span>🔗</span>
+        <span>Bind / Sign in with Google Account</span>
+      </button>
+
+      <!-- Manual Cloud Save -->
+      <button id="btn-force-save" class="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-extrabold text-sm flex items-center justify-center gap-2 transition active:scale-[0.98]">
+        <span>☁️</span>
+        <span>Save Progress Now</span>
+      </button>
+
+      <!-- Sign Out to Guest -->
+      <button id="btn-modal-signout" class="hidden w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold text-sm transition active:scale-[0.98]">
+        Sign Out to Guest
+      </button>
+
+      <!-- Backup: Export / Import JSON Save -->
+      <div class="pt-3 border-t border-slate-800 space-y-2">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Manual Save Backup (JSON)</div>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-export-save" class="min-h-[42px] py-2 px-3 rounded-xl bg-discord-850 hover:bg-discord-700 border border-slate-700 text-slate-200 font-bold text-xs transition active:scale-95">
+            📤 Export Save
+          </button>
+          <button id="btn-import-save-toggle" class="min-h-[42px] py-2 px-3 rounded-xl bg-discord-850 hover:bg-discord-700 border border-slate-700 text-slate-200 font-bold text-xs transition active:scale-95">
+            📥 Import Save
+          </button>
+        </div>
+        <input id="input-import-file" type="file" accept=".json,application/json" class="hidden" />
+        <div id="import-json-panel" class="hidden space-y-2 bg-discord-950 p-3 rounded-xl border border-slate-800">
+          <textarea id="input-import-json" rows="3" placeholder="Paste exported save JSON here, or choose a .json file..." class="w-full bg-discord-900 border border-slate-700 rounded-lg p-2 text-[11px] font-mono text-slate-200 focus:outline-none focus:border-cyan-400"></textarea>
+          <div class="flex gap-2">
+            <button id="btn-import-file-pick" class="flex-1 min-h-[38px] py-1.5 rounded-lg bg-discord-800 hover:bg-discord-700 text-slate-200 font-bold text-xs transition">Choose .json File</button>
+            <button id="btn-import-json-apply" class="flex-1 min-h-[38px] py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">Load JSON</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DAILY REWARD MODAL ==================== -->
+  <div id="daily-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-discord-900 border border-slate-700/80 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-3xl">
+        🎁
+      </div>
+      <div>
+        <h3 class="text-xl font-black text-white">Daily Cosmic Supply</h3>
+        <p class="text-xs text-slate-400 mt-1">Streak: <span id="daily-streak-label" class="font-bold text-emerald-300">0 Days</span></p>
+      </div>
+      <div id="daily-reward-preview" class="bg-discord-850 border border-slate-800 rounded-2xl p-4 space-y-1.5 text-xs font-bold text-slate-200"></div>
+      <div class="flex gap-2">
+        <button data-close-modal="daily-modal" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-discord-800 hover:bg-discord-700 text-slate-300 font-bold text-xs transition">Close</button>
+        <button id="btn-claim-daily" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-xs transition">Claim Reward</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PRESTIGE CONFIRMATION MODAL ==================== -->
+  <div id="prestige-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-discord-900 border border-fuchsia-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-fuchsia-500/20 border border-fuchsia-400/40 flex items-center justify-center text-2xl">🌀</div>
+        <div>
+          <h3 class="text-lg font-black text-white">Cosmic Ascension (Prestige)</h3>
+          <p class="text-xs text-fuchsia-300 font-semibold">Transcend reality for permanent power</p>
+        </div>
+      </div>
+      <div class="bg-discord-850 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs text-slate-300">
+        <p><strong class="text-emerald-300">You Keep:</strong> Fishdex discoveries, Exotic Fish &amp; Cosmic Orbs, Exotic Relics, Companion Pets, Prestige Rank, and Leaderboard stats.</p>
+        <p><strong class="text-rose-300">Resets:</strong> Coins, Level (back to 1), Caught Fish Inventory, Standard Rods, Vessels, Baits, Upgrades, and Unlocked Biomes.</p>
+        <p><strong class="text-cyan-300">Ascension Reward:</strong> +1 Prestige Rank (<span id="prestige-next-bonus">+50%</span> permanent Coin Value &amp; <span id="prestige-next-xp">+25%</span> XP) + <span id="prestige-orb-reward" class="text-fuchsia-300 font-bold">+5 Cosmic Orbs</span>.</p>
+      </div>
+      <div class="flex gap-2">
+        <button data-close-modal="prestige-modal" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-discord-800 hover:bg-discord-700 text-slate-300 font-bold text-xs">Cancel</button>
+        <button id="btn-confirm-prestige" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 hover:from-fuchsia-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg">Ascend Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GAME & FIREBASE MODULE ==================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+    import {
+      getAuth,
+      signInAnonymously,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult,
+      linkWithPopup,
+      linkWithRedirect,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      collection,
+      query,
+      orderBy,
+      limit,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+
+    // =========================================================================
+    // 0. ACTIVE FIREBASE CONFIGURATION
+    // =========================================================================
+    const CUSTOM_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDgxl7OC7N3ycTiKwK2fEcXXM2Tl8skZ0Y",
+      authDomain: "virtual-fishing-cosmic.firebaseapp.com",
+      projectId: "virtual-fishing-cosmic",
+      storageBucket: "virtual-fishing-cosmic.firebasestorage.app",
+      messagingSenderId: "720230893474",
+      appId: "1:720230893474:web:945c6347285343c47694fb",
+      measurementId: "G-K8KZC2687R"
+    };
+
+    const LOCAL_SAVE_KEY = "virtual_fisher_cosmic_save_v2";
+
+    // =========================================================================
+    // 1. NUMBER FORMATTER
+    // =========================================================================
+    const NUM_SUFFIXES = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd"];
+    function fmt(n) {
+      if (n === null || n === undefined || isNaN(n)) return "0";
+      if (!isFinite(n)) return "∞";
+      const abs = Math.abs(n);
+      if (abs < 1000) return Math.floor(n).toLocaleString();
+      const tier = Math.floor(Math.log10(abs) / 3);
+      if (tier < NUM_SUFFIXES.length) {
+        const scaled = n / Math.pow(10, tier * 3);
+        const decimals = scaled >= 100 ? 1 : scaled >= 10 ? 2 : 2;
+        return scaled.toFixed(decimals).replace(/\.00$/, "") + NUM_SUFFIXES[tier];
+      }
+      return n.toExponential(2);
+    }
+
+    // =========================================================================
+    // 2. GAME DATA: 10 RARITIES, 10 BIOMES, 80 SPECIES, 6-TAB MEGA SHOP
+    // =========================================================================
+    const RARITIES = {
+      junk:        { id: "junk",        name: "Junk",        weight: 14, mult: 0.4,   xp: 4,    color: "#94a3b8", badge: "bg-slate-500/20 text-slate-300 border-slate-500/40" },
+      common:      { id: "common",      name: "Common",      weight: 34, mult: 1.0,   xp: 12,   color: "#34d399", badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
+      uncommon:    { id: "uncommon",    name: "Uncommon",    weight: 22, mult: 1.75,  xp: 22,   color: "#38bdf8", badge: "bg-sky-500/20 text-sky-300 border-sky-500/40" },
+      rare:        { id: "rare",        name: "Rare",        weight: 13, mult: 3.2,   xp: 42,   color: "#818cf8", badge: "bg-indigo-500/20 text-indigo-300 border-indigo-500/40" },
+      epic:        { id: "epic",        name: "Epic",        weight: 8,  mult: 6.5,   xp: 80,   color: "#c084fc", badge: "bg-purple-500/20 text-purple-300 border-purple-500/40" },
+      legendary:   { id: "legendary",   name: "Legendary",   weight: 4.5,mult: 14.0,  xp: 165,  color: "#fbbf24", badge: "bg-amber-500/20 text-amber-300 border-amber-500/40" },
+      mythical:    { id: "mythical",    name: "Mythical",    weight: 2.3,mult: 32.0,  xp: 350,  color: "#fb7185", badge: "bg-rose-500/20 text-rose-300 border-rose-500/40" },
+      celestial:   { id: "celestial",   name: "Celestial",   weight: 1.2,mult: 75.0,  xp: 750,  color: "#22d3ee", badge: "bg-cyan-500/20 text-cyan-200 border-cyan-400/50" },
+      cosmic:      { id: "cosmic",      name: "Cosmic",      weight: 0.65,mult: 180.0,xp: 1600, color: "#e879f9", badge: "bg-fuchsia-500/25 text-fuchsia-200 border-fuchsia-400/50" },
+      multiversal: { id: "multiversal", name: "Multiversal", weight: 0.35,mult: 500.0,xp: 4000, color: "#f472b6", badge: "prismatic-badge text-white border-white/50 shadow" }
+    };
+
+    const BIOMES = [
+      {
+        id: "river",
+        tier: 1,
+        name: "Quiet River",
+        icon: "🏞️",
+        desc: "Crystal freshwater currents teeming with river life.",
+        unlockCost: 0,
+        unlockLevel: 1,
+        baseValue: 18,
+        xpMult: 1.0,
+        accent: "#38bdf8",
+        bg: "linear-gradient(180deg, #0c2d48 0%, #145374 55%, #0a192f 100%)",
+        fx: "ripples"
+      },
+      {
+        id: "ocean",
+        tier: 2,
+        name: "Deep Ocean",
+        icon: "🌊",
+        desc: "Open blue waters patrol-ground for sharks and giant rays.",
+        unlockCost: 2500,
+        unlockLevel: 4,
+        baseValue: 110,
+        xpMult: 2.2,
+        accent: "#3b82f6",
+        bg: "linear-gradient(180deg, #091e3a 0%, #103766 55%, #050f24 100%)",
+        fx: "ripples"
+      },
+      {
+        id: "volcano",
+        tier: 3,
+        name: "Volcanic Caldera",
+        icon: "🌋",
+        desc: "Molten magma lakes where obsidian-scaled beasts swim.",
+        unlockCost: 25000,
+        unlockLevel: 8,
+        baseValue: 680,
+        xpMult: 4.8,
+        accent: "#f97316",
+        bg: "linear-gradient(180deg, #2b0909 0%, #7c1d0c 55%, #1c0505 100%)",
+        fx: "embers"
+      },
+      {
+        id: "abyss",
+        tier: 4,
+        name: "Abyssal Trench",
+        icon: "🦑",
+        desc: "Crushing midnight depths where the atomic Godzilla Fish awakens.",
+        unlockCost: 250000,
+        unlockLevel: 13,
+        baseValue: 4200,
+        xpMult: 10.5,
+        accent: "#10b981",
+        bg: "linear-gradient(180deg, #020813 0%, #052e2b 55%, #010409 100%)",
+        fx: "bio"
+      },
+      {
+        id: "celestial",
+        tier: 5,
+        name: "Celestial Sky",
+        icon: "☁️",
+        desc: "High above the clouds where the mythical Kunpeng (鲲鹏) soars.",
+        unlockCost: 3000000,
+        unlockLevel: 19,
+        baseValue: 28000,
+        xpMult: 24.0,
+        accent: "#22d3ee",
+        bg: "linear-gradient(180deg, #0f294a 0%, #1d5b8c 50%, #38bdf8 100%)",
+        fx: "clouds"
+      },
+      {
+        id: "solar",
+        tier: 6,
+        name: "Solar System",
+        icon: "🪐",
+        desc: "Cast magnetic tethers across Saturn's rings and solar flares.",
+        unlockCost: 40000000,
+        unlockLevel: 26,
+        baseValue: 190000,
+        xpMult: 55.0,
+        accent: "#f59e0b",
+        bg: "linear-gradient(180deg, #090617 0%, #2a173b 55%, #451a03 100%)",
+        fx: "orbits"
+      },
+      {
+        id: "galaxy",
+        tier: 7,
+        name: "Milky Way Galaxy",
+        icon: "🌌",
+        desc: "Spiral arms of stardust harboring nebula whales and star-serpents.",
+        unlockCost: 600000000,
+        unlockLevel: 34,
+        baseValue: 1350000,
+        xpMult: 130.0,
+        accent: "#a855f7",
+        bg: "linear-gradient(135deg, #090418 0%, #2e1065 50%, #1e1b4b 100%)",
+        fx: "stars"
+      },
+      {
+        id: "horizon",
+        tier: 8,
+        name: "Event Horizon",
+        icon: "🕳️",
+        desc: "The accretion disk of a supermassive black hole bending time itself.",
+        unlockCost: 10000000000,
+        unlockLevel: 42,
+        baseValue: 9800000,
+        xpMult: 310.0,
+        accent: "#fb7185",
+        bg: "radial-gradient(circle at center, #000000 18%, #4c0519 48%, #09090b 100%)",
+        fx: "vortex"
+      },
+      {
+        id: "universe",
+        tier: 9,
+        name: "Cosmic Universe",
+        icon: "🌠",
+        desc: "The fabric of spacetime where superclusters birth celestial deities.",
+        unlockCost: 250000000000,
+        unlockLevel: 52,
+        baseValue: 75000000,
+        xpMult: 750.0,
+        accent: "#e879f9",
+        bg: "linear-gradient(135deg, #050214 0%, #3b0764 45%, #0f172a 100%)",
+        fx: "stars"
+      },
+      {
+        id: "multiverse",
+        tier: 10,
+        name: "Multiverse Nexus",
+        icon: "♾️",
+        desc: "Infinite parallel timelines colliding—home of Multiversal Apex Godzilla & Omniscient Kunpeng.",
+        unlockCost: 10000000000000,
+        unlockLevel: 65,
+        baseValue: 650000000,
+        xpMult: 1900.0,
+        accent: "#f472b6",
+        bg: "linear-gradient(135deg, #1e1b4b 0%, #581c87 35%, #831843 70%, #0f172a 100%)",
+        fx: "fracture"
+      }
+    ];
+
+    // 80 Distinct Fishdex Species (8 per biome across all 10 biomes)
+    const FISH_SPECIES = [
+      // 1. Quiet River (8)
+      { id: "riv_boot",    biomeId: "river", rarity: "junk",      icon: "👢", name: "Soggy River Boot",       lore: "Lost by a careless hiker upstream." },
+      { id: "riv_minnow",  biomeId: "river", rarity: "common",    icon: "🐟", name: "Silver Minnow",          lore: "Darts in shimmering schools through shallow riffles." },
+      { id: "riv_carp",    biomeId: "river", rarity: "common",    icon: "🐠", name: "Golden River Carp",      lore: "Hardy bottom-feeder prized by riverside anglers." },
+      { id: "riv_trout",   biomeId: "river", rarity: "uncommon",  icon: "🐡", name: "Rainbow Brook Trout",    lore: "Iridescent scales flash beneath sunlit rapids." },
+      { id: "riv_catfish", biomeId: "river", rarity: "rare",      icon: "🐋", name: "Whiskered Mud Catfish",  lore: "Lurks beneath sunken logs with long sensory barbels." },
+      { id: "riv_pike",    biomeId: "river", rarity: "epic",      icon: "🐊", name: "Emerald River Pike",     lore: "Ambush predator capable of lightning-fast strikes." },
+      { id: "riv_koi",     biomeId: "river", rarity: "legendary", icon: "🎏", name: "Spirit Waterfall Koi",   lore: "Legend says leaping the falls turns it into a dragon." },
+      { id: "riv_turtle",  biomeId: "river", rarity: "mythical",  icon: "🐢", name: "Ancient Jade Turtle",    lore: "Carries moss-covered runes on its centuries-old shell." },
+
+      // 2. Deep Ocean (8)
+      { id: "ocn_can",     biomeId: "ocean", rarity: "junk",      icon: "🥫", name: "Barnacle Tin Can",       lore: "Encrusted with tiny oceanic crustaceans." },
+      { id: "ocn_tuna",    biomeId: "ocean", rarity: "common",    icon: "🐟", name: "Bluefin Tuna",           lore: "Streamlined powerhouse built for transoceanic sprints." },
+      { id: "ocn_clown",   biomeId: "ocean", rarity: "common",    icon: "🐠", name: "Coral Reef Anemonefish", lore: "Brightly striped guardian of swaying sea anemones." },
+      { id: "ocn_ray",     biomeId: "ocean", rarity: "uncommon",  icon: "🛸", name: "Gliding Manta Ray",      lore: "Soars effortlessly through pelagic currents like a wing." },
+      { id: "ocn_sword",   biomeId: "ocean", rarity: "rare",      icon: "🗡️", name: "Cobalt Swordfish",       lore: "Slices through waves with a razor-sharp rostrum." },
+      { id: "ocn_shark",   biomeId: "ocean", rarity: "epic",      icon: "🦈", name: "Great White Apex",       lore: "Fearsome sovereign of the sunlit coastal shelf." },
+      { id: "ocn_whale",   biomeId: "ocean", rarity: "legendary", icon: "🐳", name: "Colossal Blue Whale",    lore: "Its deep song resonates across entire ocean basins." },
+      { id: "ocn_poseidon",biomeId: "ocean", rarity: "mythical",  icon: "🔱", name: "Trident Sea Serpent",    lore: "Coils around sunken marble temples guarding pearl vaults." },
+
+      // 3. Volcanic Caldera (8)
+      { id: "vol_slag",    biomeId: "volcano", rarity: "junk",      icon: "🪨", name: "Pumice Cinder Chunk",  lore: "Porous volcanic rock light enough to float on magma." },
+      { id: "vol_guppy",   biomeId: "volcano", rarity: "common",    icon: "🔥", name: "Ember-Fin Guppy",      lore: "Thrives in boiling thermal vents without a scratch." },
+      { id: "vol_eel",     biomeId: "volcano", rarity: "common",    icon: "🐍", name: "Basalt Moray Eel",       lore: "Slithers between cooling lava tubes hunting cinder shrimp." },
+      { id: "vol_crab",    biomeId: "volcano", rarity: "uncommon",  icon: "🦀", name: "Obsidian Magma Crab",    lore: "Pincers glow bright orange with trapped geothermal heat." },
+      { id: "vol_marlin",  biomeId: "volcano", rarity: "rare",      icon: "🌋", name: "Pyroclastic Marlin",     lore: "Leaves a trail of superheated steam bubbles behind it." },
+      { id: "vol_drake",   biomeId: "volcano", rarity: "epic",      icon: "🐉", name: "Magma Salamander Wyrm",  lore: "Breathes plumes of ash whenever it breaches the surface." },
+      { id: "vol_phoenix", biomeId: "volcano", rarity: "legendary", icon: "🦅", name: "Solar Cinder Stingray",  lore: "Reborn from volcanic glass whenever its scales shatter." },
+      { id: "vol_ifrit",   biomeId: "volcano", rarity: "mythical",  icon: "👹", name: "Core-Forged Leviathan",  lore: "Heart beats like a tectonic hammer deep inside the mantle." },
+
+      // 4. Abyssal Trench (8) — Includes Godzilla Fish!
+      { id: "aby_anchor",  biomeId: "abyss", rarity: "junk",      icon: "⚓", name: "Rusted Galleon Anchor",  lore: "Dragged down by a kraken centuries ago." },
+      { id: "aby_lantern", biomeId: "abyss", rarity: "common",    icon: "🏮", name: "Biolume Lanternfish",    lore: "Blinks coded neon patterns in total darkness." },
+      { id: "aby_viper",   biomeId: "abyss", rarity: "common",    icon: "🦷", name: "Fangtooth Viperfish",    lore: "Translucent jaws hinge wide enough to swallow giants." },
+      { id: "aby_jelly",   biomeId: "abyss", rarity: "uncommon",  icon: "🪼", name: "Phantom Crown Jelly",    lore: "Pulses with eerie cyan bioluminescence." },
+      { id: "aby_angler",  biomeId: "abyss", rarity: "rare",      icon: "💡", name: "Dread Abyssal Angler",    lore: "Lures unsuspecting vessels with a hypnotic starlight bulb." },
+      { id: "aby_oar",     biomeId: "abyss", rarity: "epic",      icon: "🎗️", name: "Doomsday Ribbon Oarfish",lore: "Silver sea-serpent stretching over fifty feet long." },
+      { id: "aby_kraken",  biomeId: "abyss", rarity: "legendary", icon: "🐙", name: "Abyssal Elder Kraken",   lore: "Eight colossal tentacles capable of crushing battlecruisers." },
+      { id: "aby_godzilla",biomeId: "abyss", rarity: "mythical",  icon: "🦎", name: "Godzilla Fish",          lore: "Dorsal fins crackle with atomic blue Cherenkov radiation as it rises from the trench!" },
+
+      // 5. Celestial Sky (8) — Includes Kunpeng (鲲鹏)!
+      { id: "cel_feather", biomeId: "celestial", rarity: "junk",      icon: "🪶", name: "Drifting Cloud Fluff", lore: "Condensed mist tangled around your celestial hook." },
+      { id: "cel_swallow", biomeId: "celestial", rarity: "common",    icon: "🕊️", name: "Zephyr Cloud Minnow",  lore: "Swims effortlessly through thin stratospheric vapor." },
+      { id: "cel_koi",     biomeId: "celestial", rarity: "common",    icon: "🎏", name: "Sky-Lantern Koi",      lore: "Floats above temple peaks during twilight festivals." },
+      { id: "cel_manta",   biomeId: "celestial", rarity: "uncommon",  icon: "🪁", name: "Stratosphere Cloud Ray", lore: "Rides jet-streams across continents on translucent wings." },
+      { id: "cel_pegasus", biomeId: "celestial", rarity: "rare",      icon: "🦄", name: "Aether Seahorse",        lore: "Gallops across rainbow bridges after celestial storms." },
+      { id: "cel_dragon",  biomeId: "celestial", rarity: "epic",      icon: "🐲", name: "Azure Tempest Dragon",   lore: "Summons thunderheads with every flick of its whiskers." },
+      { id: "cel_roc",     biomeId: "celestial", rarity: "legendary", icon: "🌟", name: "Golden Sunbird Marlin",  lore: "Feathers shimmer like noon sunlight over a sea of clouds." },
+      { id: "cel_kunpeng", biomeId: "celestial", rarity: "celestial", icon: "🦅", name: "Kunpeng (鲲鹏)",         lore: "Mythical leviathan-bird of ancient legend: a colossal Kun fish in the abyss that transforms into the sky-blotting Peng bird!" },
+
+      // 6. Solar System (8)
+      { id: "sol_bolt",    biomeId: "solar", rarity: "junk",      icon: "🛰️", name: "Decommissioned Satellite",lore: "Vintage probe still pinging faint telemetry." },
+      { id: "sol_comet",   biomeId: "solar", rarity: "common",    icon: "☄️", name: "Ice-Tail Comet Trout",   lore: "Leaves a sparkling trail of sublimating ice crystals." },
+      { id: "sol_lunar",   biomeId: "solar", rarity: "common",    icon: "🌙", name: "Crescent Moonfish",      lore: "Reflects pale silver sunlight across crater basins." },
+      { id: "sol_mars",    biomeId: "solar", rarity: "uncommon",  icon: "🔴", name: "Red-Dust Sand Shark",    lore: "Patrols the iron-oxide canyons of Olympus Mons." },
+      { id: "sol_saturn",  biomeId: "solar", rarity: "rare",      icon: "🪐", name: "Ring-Runner Sturgeon",   lore: "Weaves at supersonic speed through Saturn's icy boulders." },
+      { id: "sol_jupiter", biomeId: "solar", rarity: "epic",      icon: "🌪️", name: "Great Red Spot Leviathan",lore: "Feeds on lightning bolts inside perpetual jovian storms." },
+      { id: "sol_corona",  biomeId: "solar", rarity: "legendary", icon: "☀️", name: "Solar Flare Phoenix Fish",lore: "Swims directly through million-degree coronal loops." },
+      { id: "sol_helios",  biomeId: "solar", rarity: "celestial", icon: "🌞", name: "Helios Dyson Serpent",   lore: "Coils around the Sun to drink pure fusion plasma." },
+
+      // 7. Milky Way Galaxy (8)
+      { id: "gal_dust",    biomeId: "galaxy", rarity: "junk",      icon: "🪨", name: "Carbonaceous Asteroid",  lore: "Unremarkable space pebble drifting between star systems." },
+      { id: "gal_star",    biomeId: "galaxy", rarity: "common",    icon: "⭐", name: "Proton Starfish",        lore: "Five-armed organism glowing with hydrogen fusion." },
+      { id: "gal_nebula",  biomeId: "galaxy", rarity: "uncommon",  icon: "🌫️", name: "Orion Nebula Jellyfish", lore: "Drifts across light-years ofionized pink and violet gas." },
+      { id: "gal_pulsar",  biomeId: "galaxy", rarity: "rare",      icon: "📡", name: "Millisecond Pulsar Ray", lore: "Emits twin lighthouse beams of radio waves as it spins." },
+      { id: "gal_whale",   biomeId: "galaxy", rarity: "epic",      icon: "🐋", name: "Starlight Void Whale",   lore: "Migrates along spiral galactic arms every ten millennia." },
+      { id: "gal_nova",    biomeId: "galaxy", rarity: "legendary", icon: "💥", name: "Supernova Dragonfish",   lore: "Scales forged in the final collapse of a blue supergiant." },
+      { id: "gal_sag",     biomeId: "galaxy", rarity: "celestial", icon: "🌀", name: "Galactic Core Chimera",  lore: "Orbits the dense star clusters of Sagittarius A*." },
+      { id: "gal_astral",  biomeId: "galaxy", rarity: "cosmic",    icon: "🌌", name: "Andromeda Astral Leviathan",lore: "Spans entire star nurseries with wings of woven galaxies." },
+
+      // 8. Event Horizon (8)
+      { id: "hor_clock",   biomeId: "horizon", rarity: "junk",      icon: "⏳", name: "Warped Relativity Clock",lore: "Hands tick backward due to extreme gravitational dilation." },
+      { id: "hor_photon",  biomeId: "horizon", rarity: "common",    icon: "✨", name: "Trapped Photon Eel",     lore: "Circles forever inside the black hole's photon sphere." },
+      { id: "hor_hawking", biomeId: "horizon", rarity: "uncommon",  icon: "⚛️", name: "Hawking Radiation Koi",  lore: "Quantum-tunnels right off the brink of oblivion." },
+      { id: "hor_quasar",  biomeId: "horizon", rarity: "rare",      icon: "🔦", name: "Relativistic Jet Marlin",lore: "Rides plasma beams blasted at 99.9% the speed of light." },
+      { id: "hor_void",    biomeId: "horizon", rarity: "epic",      icon: "🖤", name: "Abyssal Singularity Shark",lore: "Jaws bend incoming starlight into an Einstein ring." },
+      { id: "hor_chrono",  biomeId: "horizon", rarity: "legendary", icon: "🕰️", name: "Time-Dilated Coelacanth",lore: "One second for this fish equals a century outside." },
+      { id: "hor_voidwyrm",biomeId: "horizon", rarity: "celestial", icon: "🐉", name: "Graviton Void Wyrm",     lore: "Consumes rogue stars that wander too close to the disk." },
+      { id: "hor_singul",  biomeId: "horizon", rarity: "cosmic",    icon: "🕳️", name: "Singularity Devourer",   lore: "An infinite-density apex predator wearing a crown of bent light." },
+
+      // 9. Cosmic Universe (8)
+      { id: "uni_string",  biomeId: "universe", rarity: "junk",      icon: "🧶", name: "Tangled Cosmic String",  lore: "One-dimensional topological defect left over from inflation." },
+      { id: "uni_dark",    biomeId: "universe", rarity: "common",    icon: "🌑", name: "Dark Matter Halofish",   lore: "Invisible to telescopes, detected only by its gravity." },
+      { id: "uni_filament",biomeId: "universe", rarity: "uncommon",  icon: "🕸️", name: "Cosmic Web Nautilus",    lore: "Shell spirals in exact harmony with galaxy superclusters." },
+      { id: "uni_cmb",     biomeId: "universe", rarity: "rare",      icon: "📻", name: "Primordial Echo Manta",  lore: "Carries the microwave afterglow of the universe's birth." },
+      { id: "uni_titan",   biomeId: "universe", rarity: "epic",      icon: "🗿", name: "Celestial Star-Titan",   lore: "Juggles neutron stars like glowing pearls." },
+      { id: "uni_seraph",  biomeId: "universe", rarity: "legendary", icon: "👼", name: "Six-Winged Aether Seraph",lore: "Every wingbeat ignites a new generation of main-sequence stars." },
+      { id: "uni_genesis", biomeId: "universe", rarity: "cosmic",    icon: "🎆", name: "Big Bang Genesis Phoenix",lore: "Hatched at t = 0 seconds when spacetime first expanded." },
+      { id: "uni_architect",biomeId:"universe", rarity: "multiversal",icon:"🏛️", name: "Spacetime Weaver Leviathan",lore: "Knits physical constants together across the observable cosmos." },
+
+      // 10. Multiverse Nexus (8) — Extravagant Apex Entities!
+      { id: "mul_shard",   biomeId: "multiverse", rarity: "junk",       icon: "🪞", name: "Broken Timeline Mirror",  lore: "Reflects a version of you who never started fishing." },
+      { id: "mul_echo",    biomeId: "multiverse", rarity: "uncommon",   icon: "👥", name: "Quantum Doppelgänger Koi",lore: "Exists in a superposition of caught and uncaught until observed." },
+      { id: "mul_rift",    biomeId: "multiverse", rarity: "rare",       icon: "⚡", name: "Dimensional Rift Shark",  lore: "Tears open wormholes with every flick of its tail fin." },
+      { id: "mul_paradox", biomeId: "multiverse", rarity: "epic",       icon: "🎭", name: "Schrödinger's Leviathan", lore: "Simultaneously swims in ten billion parallel oceans." },
+      { id: "mul_chronos", biomeId: "multiverse", rarity: "legendary",  icon: "⌛", name: "Chrono-Sovereign Dragon", lore: "Commands past, present, and future across every branch of time." },
+      { id: "mul_godzilla",biomeId: "multiverse", rarity: "cosmic",     icon: "🦖", name: "Multiversal Apex Godzilla",lore: "Unleashes a hyper-dimensional atomic breath that pierces parallel realities!" },
+      { id: "mul_kunpeng", biomeId: "multiverse", rarity: "multiversal",icon: "🦅", name: "Omniscient Kunpeng (无上鲲鹏)",lore: "A single flap of its celestial wings spans three thousand universes at once!" },
+      { id: "mul_ouroboros",biomeId:"multiverse", rarity: "multiversal",icon: "♾️", name: "Infinity Ouroboros",       lore: "The eternal cosmic serpent devouring its own tail at the center of all creation." }
+    ];
+
+    // 16 Progressive Rods
+    const RODS = [
+      { id: "rod_1",  name: "Twig & String Rod",          icon: "🪵", cost: 0,                    power: 1.0,  luck: 0.00, desc: "Humble starter stick tied with twine." },
+      { id: "rod_2",  name: "Bamboo River Rod",           icon: "🎋", cost: 150,                  power: 1.35, luck: 0.05, desc: "Flexible river cane for smoother casts." },
+      { id: "rod_3",  name: "Fiberglass Angler Rod",      icon: "🎣", cost: 1200,                 power: 1.9,  luck: 0.12, desc: "Lightweight composite frame with steel eyelets." },
+      { id: "rod_4",  name: "Carbon Fiber Pro Rod",       icon: "⚡", cost: 8500,                 power: 2.8,  luck: 0.22, desc: "High-tension tournament graphite shaft." },
+      { id: "rod_5",  name: "Deep-Sea Titanium Rod",      icon: "🔩", cost: 55000,                power: 4.2,  luck: 0.35, desc: "Built to haul heavy pelagic sharks and rays." },
+      { id: "rod_6",  name: "Magma-Forged Obsidian Rod",  icon: "🌋", cost: 350000,               power: 6.5,  luck: 0.50, desc: "Quenched in volcanic lava; immune to extreme heat." },
+      { id: "rod_7",  name: "Abyssal Leviathan Harpoon",  icon: "🔱", cost: 2200000,              power: 10.5, luck: 0.70, desc: "Reinforced to wrestle Godzilla Fish from the trench." },
+      { id: "rod_8",  name: "Kunpeng Feather Rod",        icon: "🪶", cost: 18000000,             power: 17.5, luck: 0.95, desc: "Woven from a single fallen plume of the mythical Kunpeng." },
+      { id: "rod_9",  name: "Solar Flare Plasma Rod",     icon: "☀️", cost: 150000000,            power: 29.0, luck: 1.25, desc: "Channels magnetic solar loops as an unbreakable line." },
+      { id: "rod_10", name: "Nebula Starlight Rod",       icon: "✨", cost: 1400000000,           power: 48.0, luck: 1.60, desc: "Casts shimmering filaments spun from newborn stars." },
+      { id: "rod_11", name: "Singularity Gravity Rod",    icon: "🕳️", cost: 15000000000,          power: 82.0, luck: 2.05, desc: "Bends spacetime around the hook to pull cosmic titans." },
+      { id: "rod_12", name: "Quasar Horizon Rod",         icon: "🔦", cost: 180000000000,         power: 145.0,luck: 2.55, desc: "Powered by twin relativistic beams of a supermassive core." },
+      { id: "rod_13", name: "Big Bang Genesis Rod",       icon: "💥", cost: 2500000000000,        power: 260.0,luck: 3.15, desc: "Ignites miniature creation sparks on every cast." },
+      { id: "rod_14", name: "Infinity Rod",               icon: "♾️", cost: 40000000000000,       power: 480.0,luck: 3.90, desc: "Infinite line length reaching across boundless dimensions." },
+      { id: "rod_15", name: "Chrono-Paradox Scepter",     icon: "⏳", cost: 750000000000000,      power: 900.0,luck: 4.80, desc: "Reels in catches before you even cast the line." },
+      { id: "rod_16", name: "Multiverse Architect Rod",   icon: "🌌", cost: 15000000000000000,    power: 1800.0,luck:6.00, desc: "The supreme artifact capable of hooking Infinity Ouroboros." }
+    ];
+
+    // 14 Progressive Vessels
+    const VESSELS = [
+      { id: "ves_1",  name: "Wooden Rowboat",                 icon: "🚣", cost: 500,                  valueBonus: 0.10, luck: 0.03, desc: "Paddles you out to deeper river pools." },
+      { id: "ves_2",  name: "Inflatable Dinghy",              icon: "🛟", cost: 3500,                 valueBonus: 0.22, luck: 0.07, desc: "Agile motorized raft for coastal reefs." },
+      { id: "ves_3",  name: "Outboard Skiff",                 icon: "🚤", cost: 22000,                valueBonus: 0.38, luck: 0.12, desc: "Fast twin-engine hull with sonar fishfinder." },
+      { id: "ves_4",  name: "Deep-Sea Trawler",               icon: "🚢", cost: 140000,               valueBonus: 0.60, luck: 0.18, desc: "Heavy steel hull with refrigerated mega-holds." },
+      { id: "ves_5",  name: "Magma-Plated Ironclad",          icon: "🌋", cost: 950000,               valueBonus: 0.90, luck: 0.26, desc: "Obsidian-tiled cruiser built to sail across lava lakes." },
+      { id: "ves_6",  name: "Bathysphere Submarine",          icon: "🤿", cost: 7500000,              valueBonus: 1.30, luck: 0.36, desc: "Titanium pressure sphere rated for the Abyssal Trench." },
+      { id: "ves_7",  name: "Sky-Sailor Cloud Galleon",       icon: "⛵", cost: 65000000,             valueBonus: 1.85, luck: 0.48, desc: "Aether-balloon galleon drifting through celestial clouds." },
+      { id: "ves_8",  name: "Kunpeng Winged Cruiser",         icon: "🦅", cost: 550000000,            valueBonus: 2.55, luck: 0.62, desc: "Glides effortlessly on stratospheric solar winds." },
+      { id: "ves_9",  name: "Solar Wind Yacht",               icon: "🛸", cost: 5000000000,           valueBonus: 3.50, luck: 0.80, desc: "Golden reflective sails ride radiation pressure across planets." },
+      { id: "ves_10", name: "Warp-Drive Starfighter",         icon: "🚀", cost: 55000000000,          valueBonus: 4.80, luck: 1.00, desc: "Alcubierre warp rings jump between spiral galaxy arms." },
+      { id: "ves_11", name: "Event Horizon Ark",              icon: "🛰️", cost: 650000000000,         valueBonus: 6.50, luck: 1.25, desc: "Stabilized against tidal forces at the edge of black holes." },
+      { id: "ves_12", name: "Cosmic Citadel",                 icon: "🏰", cost: 8500000000000,        valueBonus: 9.00, luck: 1.55, desc: "Moon-sized mobile observatory harvesting entire clusters." },
+      { id: "ves_13", name: "Dimensional Rift Leviathan",     icon: "🐉", cost: 120000000000000,      valueBonus: 12.5, luck: 1.90, desc: "Living starship swimming seamlessly between timelines." },
+      { id: "ves_14", name: "Multiverse Reality Dreadnought", icon: "🌌", cost: 2000000000000000,     valueBonus: 18.0, luck: 2.40, desc: "Flagship of the Nexus commanding infinite realities." }
+    ];
+
+    // 12 Consumable Baits
+    const BAITS = [
+      { id: "bait_1",  name: "Earthworms",               icon: "🪱", cost: 8,            luck: 0.15, valueMult: 1.05, desc: "Classic wriggling bait for river & ocean fish." },
+      { id: "bait_2",  name: "Juicy Leeches",            icon: "🐛", cost: 45,           luck: 0.30, valueMult: 1.12, desc: "Attracts larger river predators and deep-sea sharks." },
+      { id: "bait_3",  name: "Glowing Minnows",          icon: "🐟", cost: 240,          luck: 0.50, valueMult: 1.22, desc: "Shimmers underwater to tempt Rare and Epic species." },
+      { id: "bait_4",  name: "Magma Krill",              icon: "🦐", cost: 1400,         luck: 0.75, valueMult: 1.35, desc: "Heat-infused crustaceans irresistible to volcanic beasts." },
+      { id: "bait_5",  name: "Abyssal Biolume Squid",    icon: "🦑", cost: 8500,         luck: 1.05, valueMult: 1.50, desc: "Pulses with atomic blue light to lure Godzilla Fish." },
+      { id: "bait_6",  name: "Cloud Ambrosia",           icon: "🍯", cost: 55000,        luck: 1.40, valueMult: 1.70, desc: "Heavenly nectar favored by Kunpeng (鲲鹏)." },
+      { id: "bait_7",  name: "Solar Stardust",           icon: "✨", cost: 380000,       luck: 1.85, valueMult: 1.95, desc: "Compressed fusion sparklers for planetary angling." },
+      { id: "bait_8",  name: "Dark Matter Chum",         icon: "🌑", cost: 2800000,      luck: 2.35, valueMult: 2.25, desc: "Gravitational lure felt across light-years." },
+      { id: "bait_9",  name: "Singularity Lure",         icon: "🕳️", cost: 22000000,     luck: 2.95, valueMult: 2.65, desc: "Micro-black-hole bait that pulls cosmic apexes." },
+      { id: "bait_10", name: "Supernova Essence",        icon: "💥", cost: 180000000,    luck: 3.65, valueMult: 3.15, desc: "Radiates blinding stellar energy across the universe." },
+      { id: "bait_11", name: "Infinity Thread",          icon: "♾️", cost: 1600000000,   luck: 4.50, valueMult: 3.80, desc: "Woven from endless timelines to hook Multiversal beasts." },
+      { id: "bait_12", name: "Omniversal Reality Shard", icon: "💠", cost: 15000000000,  luck: 5.75, valueMult: 4.75, desc: "The ultimate bait—guarantees staggering luck & value." }
+    ];
+
+    // 12 Multi-Level Upgrades
+    const UPGRADES = [
+      { id: "cooldown",   name: "Quick Reel",            icon: "⚡", baseCost: 120,   mult: 1.85, max: 25, desc: "-0.07s cast cooldown per level (min 0.45s)." },
+      { id: "autofish",   name: "Auto-Fisher Crew",      icon: "🤖", baseCost: 350,   mult: 1.95, max: 25, desc: "Hires automated drones that catch fish while you watch." },
+      { id: "multicatch", name: "Twin-Hook Rig",         icon: "🪝", baseCost: 500,   mult: 2.10, max: 20, desc: "+6% chance per level to haul bonus fish per cast." },
+      { id: "luck",       name: "Lucky Bobber",          icon: "🍀", baseCost: 250,   mult: 1.80, max: 30, desc: "+0.12x Rarity Luck per level for rarer tiers." },
+      { id: "treasure",   name: "Treasure Hunter",       icon: "🧰", baseCost: 600,   mult: 2.00, max: 20, desc: "+1.2% chance per level to reel up Treasure Chests." },
+      { id: "xpboost",    name: "Master Angler Wisdom",  icon: "📘", baseCost: 400,   mult: 1.85, max: 25, desc: "+15% Angler XP gained per level." },
+      { id: "haggler",    name: "Fish Market Haggler",   icon: "💰", baseCost: 300,   mult: 1.90, max: 30, desc: "+12% Coin value on all sold fish per level." },
+      { id: "exoticmag",  name: "Exotic Magnet",         icon: "🧲", baseCost: 1500,  mult: 2.20, max: 20, desc: "+12% drop chance for Gold, Emerald, Diamond Fish & Orbs." },
+      { id: "workermot",  name: "Crew Overdrive",        icon: "⚙️", baseCost: 1200,  mult: 2.15, max: 20, desc: "Makes your Auto-Fisher Crew reel in catches faster." },
+      { id: "baitsave",   name: "Bait Conservation",     icon: "♻️", baseCost: 900,   mult: 2.05, max: 15, desc: "+4% chance per level not to consume equipped bait." },
+      { id: "chestmaster",name: "Chest Lockpick Mastery",icon: "🗝️", baseCost: 2200,  mult: 2.25, max: 15, desc: "+20% better coins, baits & exotic drops from Chests." },
+      { id: "cosmicres",  name: "Cosmic Resonance",      icon: "🌀", baseCost: 25000, mult: 2.60, max: 15, desc: "+10% global multiplier per level (scales with Prestige!)." }
+    ];
+
+    // Exotic Timed Boosts & Permanent Relics (purchased with Gold/Emerald/Diamond Fish & Cosmic Orbs)
+    const EXOTIC_BOOSTS = [
+      { id: "frenzy",    name: "Golden Value Frenzy",   icon: "🌟", durationSec: 300, currency: "goldFish",    cost: 3, desc: "2.5x Coin Value on all fish for 5 minutes!" },
+      { id: "lucksurge", name: "Prismatic Luck Surge",  icon: "🌈", durationSec: 300, currency: "emeraldFish", cost: 3, desc: "+3.0x Rarity Luck for 5 minutes!" },
+      { id: "overclock", name: "Temporal Crew Overclock",icon:"⏱️", durationSec: 300, currency: "diamondFish", cost: 2, desc: "3x Auto-Fisher Crew speed & +1.5x XP for 5 minutes!" },
+      { id: "omnicast",  name: "Omniversal Double Haul",icon: "♾️", durationSec: 300, currency: "cosmicOrbs",  cost: 2, desc: "+100% Double Catch chance & +50% Exotic drop rate for 5m!" }
+    ];
+
+    const EXOTIC_RELICS = [
+      { id: "rel_godzilla", name: "Godzilla Atomic Dorsal Scale", icon: "🦎", currency: "goldFish",    cost: 15, desc: "Permanent +35% Coin Value & +0.5x Luck." },
+      { id: "rel_kunpeng",  name: "Kunpeng Celestial Plume",      icon: "🦅", currency: "emeraldFish", cost: 12, desc: "Permanent +40% XP Gain & +0.8x Luck." },
+      { id: "rel_diamond",  name: "Singularity Prism Core",       icon: "💎", currency: "diamondFish", cost: 10, desc: "Permanent +15% Multi-Catch & +25% Chest Loot." },
+      { id: "rel_infinity", name: "Infinity Ouroboros Crown",     icon: "👑", currency: "cosmicOrbs",  cost: 8,  desc: "Permanent 2.0x Global Multiplier across all realms!" }
+    ];
+
+    // Companion Pets
+    const PETS = [
+      { id: "pet_otter",    name: "River Otter",          icon: "🦦", currency: "coins",      cost: 5000,          bonusText: "+15% Coin Value",        valBonus: 0.15, luckBonus: 0.0, xpBonus: 0.0 },
+      { id: "pet_salamander",name:"Magma Salamander",     icon: "🦎", currency: "coins",      cost: 250000,        bonusText: "+0.35x Rarity Luck",     valBonus: 0.0,  luckBonus: 0.35,xpBonus: 0.0 },
+      { id: "pet_godzilla", name: "Baby Godzilla",        icon: "🦖", currency: "goldFish",   cost: 10,            bonusText: "+40% Value & +0.5x Luck",valBonus: 0.40, luckBonus: 0.50,xpBonus: 0.0 },
+      { id: "pet_kunpeng",  name: "Miniature Kunpeng",    icon: "🦅", currency: "emeraldFish",cost: 8,             bonusText: "+50% XP & +0.75x Luck",  valBonus: 0.0,  luckBonus: 0.75,xpBonus: 0.50 },
+      { id: "pet_starfox",  name: "Starlight Nebula Fox", icon: "🦊", currency: "diamondFish",cost: 6,             bonusText: "+75% Value & +1.0x Luck",valBonus: 0.75, luckBonus: 1.00,xpBonus: 0.25 },
+      { id: "pet_pixie",    name: "Multiverse Ouroboros", icon: "♾️", currency: "cosmicOrbs", cost: 6,             bonusText: "+150% Value, +2x Luck, +100% XP", valBonus: 1.50, luckBonus: 2.00, xpBonus: 1.00 }
+    ];
+
+    // =========================================================================
+    // 3. DEFAULT PLAYER STATE & SAVE MANAGEMENT
+    // =========================================================================
+    function createDefaultState() {
+      return {
+        displayName: "Guest Angler",
+        coins: 0,
+        xp: 0,
+        level: 1,
+        prestige: 0,
+        chests: 1,
+        goldFish: 0,
+        emeraldFish: 0,
+        diamondFish: 0,
+        cosmicOrbs: 0,
+        currentBiome: "river",
+        unlockedBiomes: ["river"],
+        equippedRod: "rod_1",
+        ownedRods: ["rod_1"],
+        equippedVessel: "none",
+        ownedVessels: [],
+        activeBait: "none",
+        baits: { bait_1: 10 },
+        upgrades: {},
+        activeBoosts: {},
+        ownedRelics: [],
+        ownedPets: [],
+        equippedPet: "none",
+        inventory: {},
+        fishdex: {},
+        quests: [],
+        daily: {
+          lastClaimDay: "",
+          streak: 0
+        },
+        stats: {
+          totalCaught: 0,
+          totalSoldValue: 0,
+          chestsOpened: 0,
+          playtimeSec: 0
+        }
+      };
+    }
+
+    let state = createDefaultState();
+    let app = null;
+    let auth = null;
+    let db = null;
+    let currentUser = null;
+    let isCloudReady = false;
+    let isDirty = false;
+    let leaderboardEntries = [];
+    let leaderboardSort = "netWorth";
+    let unsubscribeLeaderboard = null;
+
+    // UI Navigation State
+    let activeTab = "inventory";
+    let shopSubTab = "rods";
+    let fishdexSearch = "";
+    let fishdexBiomeFilter = "all";
+    let fishdexRarityFilter = "all";
+
+    // Cooldown & Loop State
+    let castCooldownEnd = 0;
+    let castCooldownTotalMs = 2500;
+    let autoFishAccumulator = 0;
+
+    // =========================================================================
+    // 4. GAMEPLAY MATH & MULTIPLIERS
+    // =========================================================================
+    function getXpForLevel(lv) {
+      return Math.floor(100 * Math.pow(lv, 1.48));
+    }
+
+    function getCurrentBiome() {
+      return BIOMES.find(b => b.id === state.currentBiome) || BIOMES[0];
+    }
+
+    function getCurrentRod() {
+      return RODS.find(r => r.id === state.equippedRod) || RODS[0];
+    }
+
+    function getCurrentVessel() {
+      return VESSELS.find(v => v.id === state.equippedVessel) || null;
+    }
+
+    function getCurrentPet() {
+      return PETS.find(p => p.id === state.equippedPet) || null;
+    }
+
+    function isBoostActive(boostId) {
+      return (state.activeBoosts[boostId] || 0) > Date.now();
+    }
+
+    function getCooldownSeconds() {
+      const quickLv = state.upgrades.cooldown || 0;
+      const base = 2.5 - quickLv * 0.07;
+      return Math.max(0.45, base);
+    }
+
+    function getTotalLuck() {
+      const rod = getCurrentRod();
+      const vessel = getCurrentVessel();
+      const pet = getCurrentPet();
+      const bait = BAITS.find(b => b.id === state.activeBait);
+      const hasBait = bait && (state.baits[bait.id] || 0) > 0;
+
+      let luck = 1.0;
+      luck += rod.luck;
+      if (vessel) luck += vessel.luck;
+      if (pet) luck += pet.luckBonus;
+      if (hasBait) luck += bait.luck;
+      luck += (state.upgrades.luck || 0) * 0.12;
+      if (state.ownedRelics.includes("rel_godzilla")) luck += 0.5;
+      if (state.ownedRelics.includes("rel_kunpeng")) luck += 0.8;
+      if (isBoostActive("lucksurge")) luck += 3.0;
+      return luck;
+    }
+
+    function getGlobalValueMultiplier() {
+      const rod = getCurrentRod();
+      const vessel = getCurrentVessel();
+      const pet = getCurrentPet();
+      const bait = BAITS.find(b => b.id === state.activeBait);
+      const hasBait = bait && (state.baits[bait.id] || 0) > 0;
+
+      let mult = rod.power;
+      if (vessel) mult *= (1 + vessel.valueBonus);
+      if (pet) mult *= (1 + pet.valBonus);
+      if (hasBait) mult *= bait.valueMult;
+      mult *= (1 + (state.upgrades.haggler || 0) * 0.12);
+      mult *= (1 + (state.prestige || 0) * 0.50);
+
+      const resLv = state.upgrades.cosmicres || 0;
+      if (resLv > 0) mult *= (1 + resLv * 0.10 * (1 + (state.prestige || 0) * 0.25));
+
+      if (state.ownedRelics.includes("rel_godzilla")) mult *= 1.35;
+      if (state.ownedRelics.includes("rel_infinity")) mult *= 2.0;
+      if (isBoostActive("frenzy")) mult *= 2.5;
+      return mult;
+    }
+
+    function getXpMultiplier() {
+      const pet = getCurrentPet();
+      let mult = 1 + (state.upgrades.xpboost || 0) * 0.15;
+      mult *= (1 + (state.prestige || 0) * 0.25);
+      if (pet) mult *= (1 + pet.xpBonus);
+      if (state.ownedRelics.includes("rel_kunpeng")) mult *= 1.40;
+      if (state.ownedRelics.includes("rel_infinity")) mult *= 2.0;
+      if (isBoostActive("overclock")) mult *= 1.5;
+      return mult;
+    }
+
+    function getFishSellValue(fishId) {
+      const sp = FISH_SPECIES.find(f => f.id === fishId);
+      if (!sp) return 1;
+      const biome = BIOMES.find(b => b.id === sp.biomeId) || BIOMES[0];
+      const rar = RARITIES[sp.rarity] || RARITIES.common;
+      return Math.max(1, Math.round(biome.baseValue * rar.mult * getGlobalValueMultiplier()));
+    }
+
+    function getInventoryCount() {
+      return Object.values(state.inventory).reduce((a, b) => a + (b || 0), 0);
+    }
+
+    function getInventoryValue() {
+      let sum = 0;
+      for (const [fishId, qty] of Object.entries(state.inventory)) {
+        if (qty > 0) sum += getFishSellValue(fishId) * qty;
+      }
+      return sum;
+    }
+
+    function getNetWorth() {
+      return Math.floor((state.coins || 0) + getInventoryValue() + (state.stats.totalSoldValue || 0) * 0.25);
+    }
+
+    // =========================================================================
+    // 5. QUESTS SYSTEM
+    // =========================================================================
+    function generateQuest() {
+      const templates = [
+        { type: "catch", target: 15 + state.level * 2, label: "Catch {n} fish or cosmic entities", rewardCoins: 250 * Math.pow(1.22, state.level), rewardChests: 1 },
+        { type: "rare",  target: 3 + Math.floor(state.level / 4), label: "Catch {n} Rare or higher entities", rewardCoins: 600 * Math.pow(1.22, state.level), rewardOrbs: 1 },
+        { type: "sell",  target: Math.max(500, Math.round(getCurrentBiome().baseValue * 25)), label: "Earn {n} Coins from selling catches", rewardCoins: 450 * Math.pow(1.22, state.level), rewardChests: 1 },
+        { type: "chest", target: 1 + Math.floor(state.level / 12), label: "Open {n} Treasure Chest(s)", rewardCoins: 500 * Math.pow(1.22, state.level), rewardGold: 2 }
+      ];
+      const tpl = templates[Math.floor(Math.random() * templates.length)];
+      const target = Math.max(1, Math.round(tpl.target));
+      return {
+        id: "q_" + Math.random().toString(36).slice(2, 9),
+        type: tpl.type,
+        target,
+        progress: 0,
+        label: tpl.label.replace("{n}", fmt(target)),
+        rewardCoins: Math.round(tpl.rewardCoins),
+        rewardChests: tpl.rewardChests || 0,
+        rewardOrbs: tpl.rewardOrbs || 0,
+        rewardGold: tpl.rewardGold || 0
+      };
+    }
+
+    function ensureQuests() {
+      if (!Array.isArray(state.quests)) state.quests = [];
+      while (state.quests.length < 3) {
+        state.quests.push(generateQuest());
+      }
+    }
+
+    function advanceQuests(type, amount = 1) {
+      ensureQuests();
+      let anyReady = false;
+      for (const q of state.quests) {
+        if (q.type === type && q.progress < q.target) {
+          q.progress = Math.min(q.target, q.progress + amount);
+        }
+        if (q.progress >= q.target) anyReady = true;
+      }
+      const dot = document.getElementById("quest-ready-dot");
+      if (dot) dot.classList.toggle("hidden", !anyReady);
+    }
+
+    // =========================================================================
+    // 6. CORE FISHING LOOP & CATCH ROLLER
+    // =========================================================================
+    function rollSpeciesForBiome(biomeId, luck) {
+      const pool = FISH_SPECIES.filter(f => f.biomeId === biomeId);
+      const weighted = pool.map(sp => {
+        const r = RARITIES[sp.rarity];
+        // Higher luck boosts rarer tiers exponentially while reducing junk
+        let w = r.weight;
+        if (sp.rarity === "junk") {
+          w = Math.max(1.5, w / Math.pow(luck, 0.55));
+        } else if (sp.rarity !== "common") {
+          const tierBoost = { uncommon: 1.15, rare: 1.35, epic: 1.6, legendary: 1.9, mythical: 2.25, celestial: 2.6, cosmic: 3.0, multiversal: 3.5 }[sp.rarity] || 1.2;
+          w = w * Math.pow(luck, Math.log2(tierBoost) + 0.45);
+        }
+        return { sp, w };
+      });
+      const totalW = weighted.reduce((acc, x) => acc + x.w, 0);
+      let roll = Math.random() * totalW;
+      for (const item of weighted) {
+        roll -= item.w;
+        if (roll <= 0) return item.sp;
+      }
+      return pool[0];
+    }
+
+    function executeCatch(isAuto = false) {
+      const biome = getCurrentBiome();
+      const luck = getTotalLuck();
+
+      // Multi-catch count
+      let catchesCount = 1;
+      const multiChance = (state.upgrades.multicatch || 0) * 0.06;
+      if (Math.random() < multiChance) catchesCount += 1;
+      if (multiChance > 1 && Math.random() < (multiChance - 1)) catchesCount += 1;
+      if (isBoostActive("omnicast")) catchesCount *= 2;
+
+      // Consume 1 equipped bait (unless conserved)
+      if (!isAuto && state.activeBait !== "none" && (state.baits[state.activeBait] || 0) > 0) {
+        const saveChance = (state.upgrades.baitsave || 0) * 0.04;
+        if (Math.random() >= saveChance) {
+          state.baits[state.activeBait] = Math.max(0, state.baits[state.activeBait] - 1);
+          if (state.baits[state.activeBait] === 0) state.activeBait = "none";
+        }
+      }
+
+      const caughtSummary = [];
+      let totalXpGained = 0;
+      let rareOrHigherCount = 0;
+
+      for (let i = 0; i < catchesCount; i++) {
+        const sp = rollSpeciesForBiome(biome.id, luck);
+        state.inventory[sp.id] = (state.inventory[sp.id] || 0) + 1;
+        const isNew = !state.fishdex[sp.id];
+        state.fishdex[sp.id] = (state.fishdex[sp.id] || 0) + 1;
+        state.stats.totalCaught = (state.stats.totalCaught || 0) + 1;
+
+        const rar = RARITIES[sp.rarity];
+        if (["rare", "epic", "legendary", "mythical", "celestial", "cosmic", "multiversal"].includes(sp.rarity)) {
+          rareOrHigherCount++;
+        }
+
+        const xpGain = Math.max(1, Math.round(rar.xp * biome.xpMult * getXpMultiplier()));
+        totalXpGained += xpGain;
+        caughtSummary.push({ sp, isNew, val: getFishSellValue(sp.id) });
+      }
+
+      // Bonus Treasure Chest Drop
+      const chestChance = 0.03 + (state.upgrades.treasure || 0) * 0.012;
+      let foundChest = false;
+      if (Math.random() < chestChance) {
+        state.chests = (state.chests || 0) + 1;
+        foundChest = true;
+      }
+
+      // Rare Exotic Drops (Gold Fish, Emerald Fish, Diamond Fish, Cosmic Orbs)
+      const magMult = (1 + (state.upgrades.exoticmag || 0) * 0.12) * (isBoostActive("omnicast") ? 1.5 : 1);
+      const exoticDrops = [];
+      if (Math.random() < 0.035 * magMult) { state.goldFish += 1; exoticDrops.push("🐠 +1 Gold Fish"); }
+      if (Math.random() < 0.018 * magMult) { state.emeraldFish += 1; exoticDrops.push("🐟 +1 Emerald Fish"); }
+      if (Math.random() < 0.009 * magMult) { state.diamondFish += 1; exoticDrops.push("💎 +1 Diamond Fish"); }
+      if (biome.tier >= 5 && Math.random() < 0.012 * magMult) { state.cosmicOrbs += 1; exoticDrops.push("🔮 +1 Cosmic Orb"); }
+
+      // Add XP & Handle Level-Ups
+      addXp(totalXpGained);
+      advanceQuests("catch", catchesCount);
+      if (rareOrHigherCount > 0) advanceQuests("rare", rareOrHigherCount);
+
+      // Log to Live Catch Feed
+      appendCatchFeed(caughtSummary, totalXpGained, foundChest, exoticDrops, isAuto);
+
+      isDirty = true;
+      updateHUD();
+      if (activeTab === "inventory" || activeTab === "quests" || activeTab === "fishdex") {
+        renderActiveTab();
+      }
+    }
+
+    function addXp(amount) {
+      state.xp += amount;
+      let leveled = false;
+      while (state.xp >= getXpForLevel(state.level)) {
+        state.xp -= getXpForLevel(state.level);
+        state.level += 1;
+        leveled = true;
+      }
+      if (leveled) {
+        showToast(`🎉 Level Up! You reached Angler Level ${state.level}!`, "cyan");
+      }
+    }
+
+    function attemptManualCast() {
+      const now = Date.now();
+      if (now < castCooldownEnd) return;
+
+      const cdSec = getCooldownSeconds();
+      castCooldownTotalMs = Math.round(cdSec * 1000);
+      castCooldownEnd = now + castCooldownTotalMs;
+
+      // Animate bobber dip
+      const sprite = document.getElementById("bobber-sprite");
+      if (sprite) {
+        sprite.classList.remove("animate-cast-dip");
+        void sprite.offsetWidth;
+        sprite.classList.add("animate-cast-dip");
+      }
+
+      executeCatch(false);
+    }
+
+    function sellAllFish() {
+      const totalVal = getInventoryValue();
+      const totalCount = getInventoryCount();
+      if (totalCount === 0 || totalVal <= 0) {
+        showToast("Your catch bag is empty!", "amber");
+        return;
+      }
+      state.coins += totalVal;
+      state.stats.totalSoldValue = (state.stats.totalSoldValue || 0) + totalVal;
+      state.inventory = {};
+      advanceQuests("sell", totalVal);
+      isDirty = true;
+      updateHUD();
+      renderActiveTab();
+      showToast(`💰 Sold ${fmt(totalCount)} catches for +${fmt(totalVal)} Coins!`, "emerald");
+    }
+
+    function openTreasureChests() {
+      const count = state.chests || 0;
+      if (count <= 0) {
+        showToast("No Treasure Chests to open yet. Keep fishing!", "amber");
+        return;
+      }
+      const openQty = Math.min(count, 10);
+      state.chests -= openQty;
+      state.stats.chestsOpened = (state.stats.chestsOpened || 0) + openQty;
+
+      const lockMult = 1 + (state.upgrades.chestmaster || 0) * 0.20;
+      const biome = getCurrentBiome();
+      const coinLoot = Math.round(biome.baseValue * 45 * openQty * lockMult * (1 + (state.prestige || 0) * 0.4));
+      state.coins += coinLoot;
+
+      // Grant random appropriate bait + exotic fish
+      const baitIdx = Math.min(BAITS.length - 1, Math.max(0, biome.tier - 1));
+      const bait = BAITS[baitIdx];
+      const baitQty = Math.max(2, Math.round(3 * openQty * lockMult));
+      state.baits[bait.id] = (state.baits[bait.id] || 0) + baitQty;
+
+      let exoticText = "";
+      if (Math.random() < 0.55) {
+        const g = Math.max(1, Math.floor(openQty * 0.5));
+        state.goldFish += g;
+        exoticText += `, +${g} 🐠`;
+      }
+      if (Math.random() < 0.30) {
+        const e = Math.max(1, Math.floor(openQty * 0.3));
+        state.emeraldFish += e;
+        exoticText += `, +${e} 🐟`;
+      }
+      if (biome.tier >= 5 && Math.random() < 0.25) {
+        state.cosmicOrbs += 1;
+        exoticText += `, +1 🔮`;
+      }
+
+      advanceQuests("chest", openQty);
+      isDirty = true;
+      updateHUD();
+      renderActiveTab();
+      showToast(`🧰 Opened ${openQty} Chest(s): +${fmt(coinLoot)} Coins, +${baitQty} ${bait.name}${exoticText}!`, "purple");
+    }
+
+    // =========================================================================
+    // 7. UI RENDERING: CATCH LOG, STAGE FX, HUD & 6 TABS
+    // =========================================================================
+    function appendCatchFeed(catches, xpGained, foundChest, exoticDrops, isAuto) {
+      const feed = document.getElementById("catch-feed-list");
+      if (!feed) return;
+      if (feed.children.length === 1 && feed.firstElementChild.classList.contains("text-center")) {
+        feed.innerHTML = "";
+      }
+
+      const primary = catches[0];
+      const rar = RARITIES[primary.sp.rarity];
+      const card = document.createElement("div");
+      card.className = "p-2.5 rounded-xl bg-discord-850/90 border border-slate-800 flex items-start justify-between gap-2 animate-[fadeIn_0.2s_ease]";
+      card.style.borderLeftWidth = "3px";
+      card.style.borderLeftColor = rar.color;
+
+      const extraCount = catches.length > 1 ? ` <span class="text-[10px] font-black px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">+${catches.length - 1} bonus</span>` : "";
+      const newTag = catches.some(c => c.isNew) ? ` <span class="text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-200">NEW!</span>` : "";
+      const autoTag = isAuto ? `<span class="text-[10px] font-bold text-slate-400">[Crew] </span>` : "";
+
+      const extras = [];
+      if (foundChest) extras.push("🧰 +1 Chest");
+      if (exoticDrops.length) extras.push(...exoticDrops);
+
+      card.innerHTML = `
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-base">${primary.sp.icon}</span>
+            <span class="font-extrabold text-slate-100 truncate">${autoTag}${primary.sp.name}</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${rar.badge}">${rar.name}</span>
+            ${newTag}${extraCount}
+          </div>
+          ${extras.length ? `<div class="text-[11px] font-bold text-fuchsia-300 mt-1">${extras.join(" • ")}</div>` : ""}
+        </div>
+        <div class="text-right shrink-0">
+          <div class="font-mono font-bold text-amber-300">+${fmt(catches.reduce((a, c) => a + c.val, 0))}</div>
+          <div class="text-[10px] text-cyan-300 font-semibold">+${fmt(xpGained)} XP</div>
+        </div>
+      `;
+
+      feed.prepend(card);
+      while (feed.children.length > 35) {
+        feed.lastElementChild.remove();
+      }
+    }
+
+    function renderStageVisuals(biome) {
+      const stage = document.getElementById("biome-stage");
+      const fxLayer = document.getElementById("stage-fx-layer");
+      const consoleCard = document.getElementById("fishing-console-card");
+      if (!stage || !fxLayer) return;
+
+      stage.style.background = biome.bg;
+      if (consoleCard) consoleCard.style.borderColor = biome.accent;
+
+      let fxHtml = "";
+      if (biome.fx === "ripples" || biome.fx === "bio") {
+        const dotColor = biome.fx === "bio" ? "bg-emerald-400/50" : "bg-cyan-300/35";
+        for (let i = 0; i < 8; i++) {
+          fxHtml += `<span class="absolute w-2 h-2 rounded-full ${dotColor}" style="left:${10 + i * 11}%; top:${25 + (i % 3) * 22}%; animation: particleDrift ${2.5 + (i % 3)}s ease-in-out infinite ${i * 0.3}s;"></span>`;
+        }
+      } else if (biome.fx === "embers") {
+        for (let i = 0; i < 10; i++) {
+          fxHtml += `<span class="absolute w-1.5 h-1.5 rounded-full bg-orange-400/75" style="left:${8 + i * 9}%; bottom:${10 + (i % 4) * 15}%; animation: particleDrift ${2 + (i % 2)}s linear infinite ${i * 0.25}s;"></span>`;
+        }
+      } else if (biome.fx === "clouds") {
+        fxHtml += `<div class="absolute top-4 left-6 text-3xl opacity-35 animate-pulse">☁️</div>`;
+        fxHtml += `<div class="absolute bottom-8 right-8 text-4xl opacity-30 animate-pulse">☁️</div>`;
+      } else if (biome.fx === "orbits" || biome.fx === "vortex" || biome.fx === "fracture") {
+        fxHtml += `<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div class="w-36 h-36 rounded-full border border-dashed border-white/20 orbit-ring"></div>
+          <div class="absolute w-52 h-52 rounded-full border border-fuchsia-400/20 orbit-ring" style="animation-direction: reverse; animation-duration: 22s;"></div>
+        </div>`;
+      } else if (biome.fx === "stars") {
+        for (let i = 0; i < 14; i++) {
+          fxHtml += `<span class="absolute w-1 h-1 rounded-full bg-white/80 animate-pulse" style="left:${5 + i * 7}%; top:${12 + (i * 19) % 72}%; animation-delay:${i * 0.2}s;"></span>`;
+        }
+      }
+      fxLayer.innerHTML = fxHtml;
+
+      const bobber = document.getElementById("bobber-sprite");
+      if (bobber) {
+        const spriteMap = {
+          river: "🎣", ocean: "⚓", volcano: "🔥", abyss: "🔦", celestial: "🪶",
+          solar: "🛰️", galaxy: "✨", horizon: "🕳️", universe: "🌠", multiverse: "♾️"
+        };
+        bobber.textContent = spriteMap[biome.id] || "🎣";
+      }
+    }
+
+    function updateHUD() {
+      const biome = getCurrentBiome();
+      const rod = getCurrentRod();
+      const vessel = getCurrentVessel();
+      const pet = getCurrentPet();
+
+      document.getElementById("hud-coins").textContent = fmt(state.coins);
+      document.getElementById("hud-goldfish").textContent = fmt(state.goldFish || 0);
+      document.getElementById("hud-emeraldfish").textContent = fmt(state.emeraldFish || 0);
+      document.getElementById("hud-diamondfish").textContent = fmt(state.diamondFish || 0);
+      document.getElementById("hud-orbs").textContent = fmt(state.cosmicOrbs || 0);
+
+      document.getElementById("hud-goldfish-m").textContent = fmt(state.goldFish || 0);
+      document.getElementById("hud-emeraldfish-m").textContent = fmt(state.emeraldFish || 0);
+      document.getElementById("hud-diamondfish-m").textContent = fmt(state.diamondFish || 0);
+      document.getElementById("hud-orbs-m").textContent = fmt(state.cosmicOrbs || 0);
+
+      // Level & XP
+      const reqXp = getXpForLevel(state.level);
+      const pct = Math.min(100, Math.round((state.xp / reqXp) * 100));
+      document.getElementById("hud-level").textContent = state.level;
+      document.getElementById("hud-xp-text").textContent = `${fmt(state.xp)} / ${fmt(reqXp)}`;
+      document.getElementById("hud-xp-bar").style.width = `${pct}%`;
+
+      document.getElementById("stat-level-mobile").textContent = state.level;
+      document.getElementById("stat-xp-text-mobile").textContent = `${fmt(state.xp)}/${fmt(reqXp)}`;
+      document.getElementById("stat-xp-bar-mobile").style.width = `${pct}%`;
+
+      // Prestige Badge
+      const pBadge = document.getElementById("header-prestige-badge");
+      if (state.prestige > 0) {
+        pBadge.textContent = `P${state.prestige}`;
+        pBadge.classList.remove("hidden");
+      } else {
+        pBadge.classList.add("hidden");
+      }
+
+      // Console Biome & Gear
+      document.getElementById("console-biome-icon").textContent = biome.icon;
+      document.getElementById("console-biome-name").textContent = biome.name;
+      document.getElementById("console-biome-tier").textContent = `Realm ${biome.tier}/10`;
+      document.getElementById("console-biome-desc").textContent = biome.desc;
+      document.getElementById("stage-luck-badge").textContent = `Luck: ${getTotalLuck().toFixed(2)}x`;
+
+      document.getElementById("hud-rod-name").textContent = rod.name;
+      document.getElementById("hud-rod-stat").textContent = `Power ${rod.power}x • +${rod.luck} Luck`;
+      document.getElementById("hud-vessel-name").textContent = vessel ? vessel.name : "None (Shore)";
+      document.getElementById("hud-vessel-stat").textContent = vessel ? `+${Math.round(vessel.valueBonus * 100)}% Value` : "+0% Value";
+
+      // Bait
+      const activeBaitObj = BAITS.find(b => b.id === state.activeBait);
+      const baitQty = activeBaitObj ? (state.baits[activeBaitObj.id] || 0) : 0;
+      document.getElementById("hud-bait-name").textContent = activeBaitObj && baitQty > 0 ? activeBaitObj.name : "None";
+      document.getElementById("hud-bait-qty").textContent = activeBaitObj && baitQty > 0 ? `${fmt(baitQty)} left` : "0 left";
+
+      // Pet & Active Boost Badge
+      const petBadge = document.getElementById("stage-pet-badge");
+      if (pet) {
+        petBadge.classList.remove("hidden");
+        document.getElementById("stage-pet-icon").textContent = pet.icon;
+        document.getElementById("stage-pet-name").textContent = pet.name;
+      } else {
+        petBadge.classList.add("hidden");
+      }
+
+      const activeBoosts = EXOTIC_BOOSTS.filter(b => isBoostActive(b.id));
+      const boostBadge = document.getElementById("stage-boost-badge");
+      if (activeBoosts.length > 0) {
+        const remSec = Math.ceil((state.activeBoosts[activeBoosts[0].id] - Date.now()) / 1000);
+        boostBadge.classList.remove("hidden");
+        document.getElementById("stage-boost-text").textContent = `${activeBoosts[0].name} (${remSec}s)`;
+      } else {
+        boostBadge.classList.add("hidden");
+      }
+
+      // Quick Sell & Chests & Crew
+      document.getElementById("quick-sell-value").textContent = fmt(getInventoryValue());
+      document.getElementById("quick-chest-count").textContent = fmt(state.chests || 0);
+      const crewLv = state.upgrades.autofish || 0;
+      document.getElementById("autofish-status").textContent = crewLv > 0 ? `Crew: Lv.${crewLv} (Active)` : "Crew: Lv.0 (Idle)";
+
+      // Mobile Cast Dock
+      const dockBiome = document.getElementById("dock-biome-label");
+      const dockBait = document.getElementById("dock-bait-label");
+      const dockSell = document.getElementById("dock-sell-val");
+      if (dockBiome) dockBiome.textContent = `${biome.icon} ${biome.name}`;
+      if (dockBait) dockBait.textContent = activeBaitObj && baitQty > 0 ? `${activeBaitObj.icon} ${fmt(baitQty)}` : "None";
+      if (dockSell) dockSell.textContent = fmt(getInventoryValue());
+
+      // Daily Dot
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const canClaimDaily = state.daily?.lastClaimDay !== todayKey;
+      document.getElementById("daily-ready-dot").classList.toggle("hidden", !canClaimDaily);
+
+      // Tab Active Styles
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        const isCurrent = btn.dataset.tab === activeTab;
+        btn.className = `tab-btn flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition ${
+          isCurrent
+            ? "bg-gradient-to-r from-cyan-500/25 to-indigo-500/25 text-white border border-cyan-400/40 shadow"
+            : "text-slate-400 hover:text-slate-100 hover:bg-discord-800/70"
+        }`;
+      });
+    }
+
+    function renderActiveTab() {
+      const container = document.getElementById("tab-content-area");
+      if (!container) return;
+
+      if (activeTab === "inventory") renderInventoryTab(container);
+      else if (activeTab === "shop") renderShopTab(container);
+      else if (activeTab === "biomes") renderBiomesTab(container);
+      else if (activeTab === "quests") renderQuestsTab(container);
+      else if (activeTab === "fishdex") renderFishdexTab(container);
+      else if (activeTab === "leaderboard") renderLeaderboardTab(container);
+    }
+
+    function renderInventoryTab(container) {
+      const entries = Object.entries(state.inventory)
+        .filter(([, qty]) => qty > 0)
+        .map(([id, qty]) => ({ sp: FISH_SPECIES.find(f => f.id === id), qty }))
+        .filter(x => x.sp)
+        .sort((a, b) => getFishSellValue(b.sp.id) - getFishSellValue(a.sp.id));
+
+      const totalVal = getInventoryValue();
+      const totalCount = getInventoryCount();
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-discord-850 border border-slate-800 rounded-2xl p-3.5">
+            <div>
+              <h3 class="font-black text-sm sm:text-base text-white">Catch Hold (${fmt(totalCount)} items)</h3>
+              <p class="text-xs text-slate-400">Global Value Multiplier: <span class="text-amber-300 font-bold">${getGlobalValueMultiplier().toFixed(2)}x</span></p>
+            </div>
+            <button id="inv-sell-all-btn" class="min-h-[44px] px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black text-xs sm:text-sm transition active:scale-95" ${totalCount === 0 ? "disabled" : ""}>
+              💰 Sell All (+${fmt(totalVal)})
+            </button>
+          </div>
+
+          ${entries.length === 0 ? `
+            <div class="text-center py-14 bg-discord-850/40 rounded-2xl border border-dashed border-slate-800 space-y-2">
+              <div class="text-4xl">🪣</div>
+              <div class="font-bold text-slate-300 text-sm">Your catch hold is empty</div>
+              <p class="text-xs text-slate-500">Cast your line to haul in river fish, cosmic leviathans, and multiversal titans!</p>
+            </div>
+          ` : `
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              ${entries.map(({ sp, qty }) => {
+                const rar = RARITIES[sp.rarity];
+                const unitVal = getFishSellValue(sp.id);
+                const stackVal = unitVal * qty;
+                return `
+                  <div class="bg-discord-850 border border-slate-800 rounded-2xl p-3 flex items-center justify-between gap-2" style="border-left: 3px solid ${rar.color};">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <span class="text-2xl shrink-0">${sp.icon}</span>
+                      <div class="min-w-0">
+                        <div class="font-extrabold text-xs sm:text-sm text-white truncate">${sp.name} <span class="text-cyan-300 font-mono">x${fmt(qty)}</span></div>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${rar.badge}">${rar.name}</span>
+                          <span class="text-[11px] text-amber-300 font-mono">${fmt(unitVal)} ea</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button data-sell-species="${sp.id}" class="min-h-[40px] px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 font-extrabold text-xs shrink-0 transition active:scale-95">
+                      Sell +${fmt(stackVal)}
+                    </button>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          `}
+        </div>
+      `;
+
+      document.getElementById("inv-sell-all-btn")?.addEventListener("click", sellAllFish);
+      container.querySelectorAll("[data-sell-species]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.dataset.sellSpecies;
+          const qty = state.inventory[id] || 0;
+          if (qty <= 0) return;
+          const gain = getFishSellValue(id) * qty;
+          delete state.inventory[id];
+          state.coins += gain;
+          state.stats.totalSoldValue = (state.stats.totalSoldValue || 0) + gain;
+          advanceQuests("sell", gain);
+          isDirty = true;
+          updateHUD();
+          renderActiveTab();
+          showToast(`💰 Sold stack for +${fmt(gain)} Coins!`, "emerald");
+        });
+      });
+    }
+
+    function renderShopTab(container) {
+      const subTabs = [
+        { id: "rods", label: "🎣 Rods (16)" },
+        { id: "vessels", label: "🚢 Vessels (14)" },
+        { id: "baits", label: "🪱 Baits (12)" },
+        { id: "upgrades", label: "⚙️ Upgrades (12)" },
+        { id: "exotic", label: "💎 Exotic Boosts" },
+        { id: "pets", label: "🐾 Pets & Prestige" }
+      ];
+
+      let body = "";
+      if (shopSubTab === "rods") {
+        body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          ${RODS.map(r => {
+            const owned = state.ownedRods.includes(r.id);
+            const equipped = state.equippedRod === r.id;
+            const canBuy = state.coins >= r.cost;
+            return `
+              <div class="bg-discord-850 border ${equipped ? "border-cyan-400/60" : "border-slate-800"} rounded-2xl p-3.5 flex flex-col justify-between gap-2.5">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-extrabold text-xs sm:text-sm text-white">${r.icon} ${r.name}</span>
+                    ${equipped ? `<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Equipped</span>` : ""}
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">${r.desc}</p>
+                  <div class="text-[11px] font-bold text-cyan-300 mt-1.5">Power: ${r.power}x • Luck: +${r.luck}x</div>
+                </div>
+                ${equipped
+                  ? `<button disabled class="min-h-[40px] w-full py-2 rounded-xl bg-cyan-500/15 text-cyan-300 font-bold text-xs">Active Rod</button>`
+                  : owned
+                    ? `<button data-equip-rod="${r.id}" class="min-h-[40px] w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition active:scale-95">Equip Rod</button>`
+                    : `<button data-buy-rod="${r.id}" class="min-h-[40px] w-full py-2 rounded-xl ${canBuy ? "bg-amber-500 hover:bg-amber-400 text-slate-950" : "bg-slate-800 text-slate-500 cursor-not-allowed"} font-black text-xs transition active:scale-95" ${!canBuy ? "disabled" : ""}>🪙 Buy (${fmt(r.cost)})</button>`
+                }
+              </div>
+            `;
+          }).join("")}
+        </div>`;
+      } else if (shopSubTab === "vessels") {
+        body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          ${VESSELS.map(v => {
+            const owned = state.ownedVessels.includes(v.id);
+            const equipped = state.equippedVessel === v.id;
+            const canBuy = state.coins >= v.cost;
+            return `
+              <div class="bg-discord-850 border ${equipped ? "border-indigo-400/60" : "border-slate-800"} rounded-2xl p-3.5 flex flex-col justify-between gap-2.5">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-extrabold text-xs sm:text-sm text-white">${v.icon} ${v.name}</span>
+                    ${equipped ? `<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">Boarded</span>` : ""}
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">${v.desc}</p>
+                  <div class="text-[11px] font-bold text-indigo-300 mt-1.5">+${Math.round(v.valueBonus * 100)}% Value • +${v.luck}x Luck</div>
+                </div>
+                ${equipped
+                  ? `<button disabled class="min-h-[40px] w-full py-2 rounded-xl bg-indigo-500/15 text-indigo-300 font-bold text-xs">Active Vessel</button>`
+                  : owned
+                    ? `<button data-equip-vessel="${v.id}" class="min-h-[40px] w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition active:scale-95">Board Vessel</button>`
+                    : `<button data-buy-vessel="${v.id}" class="min-h-[40px] w-full py-2 rounded-xl ${canBuy ? "bg-amber-500 hover:bg-amber-400 text-slate-950" : "bg-slate-800 text-slate-500 cursor-not-allowed"} font-black text-xs transition active:scale-95" ${!canBuy ? "disabled" : ""}>🪙 Buy (${fmt(v.cost)})</button>`
+                }
+              </div>
+            `;
+          }).join("")}
+        </div>`;
+      } else if (shopSubTab === "baits") {
+        body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          ${BAITS.map(b => {
+            const qty = state.baits[b.id] || 0;
+            const equipped = state.activeBait === b.id && qty > 0;
+            return `
+              <div class="bg-discord-850 border ${equipped ? "border-emerald-400/60" : "border-slate-800"} rounded-2xl p-3.5 space-y-2.5">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <div class="font-extrabold text-xs sm:text-sm text-white">${b.icon} ${b.name} <span class="text-emerald-300 font-mono">(${fmt(qty)})</span></div>
+                    <p class="text-[11px] text-slate-400 mt-0.5">${b.desc}</p>
+                    <div class="text-[11px] font-bold text-emerald-300 mt-1">+${b.luck}x Luck • ${b.valueMult}x Value • 🪙 ${fmt(b.cost)} ea</div>
+                  </div>
+                  ${qty > 0 ? `
+                    <button data-equip-bait="${b.id}" class="min-h-[36px] px-2.5 py-1 rounded-xl text-[11px] font-extrabold ${equipped ? "bg-emerald-500 text-slate-950" : "bg-discord-800 text-emerald-300 border border-emerald-500/30"}">
+                      ${equipped ? "Equipped" : "Equip"}
+                    </button>
+                  ` : ""}
+                </div>
+                <div class="grid grid-cols-4 gap-1.5">
+                  ${[1, 10, 50, 250].map(amt => {
+                    const totalCost = b.cost * amt;
+                    const ok = state.coins >= totalCost;
+                    return `<button data-buy-bait="${b.id}" data-qty="${amt}" class="min-h-[38px] py-1.5 rounded-lg text-[11px] font-extrabold ${ok ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/30" : "bg-discord-950 text-slate-600 border border-slate-800 cursor-not-allowed"} transition active:scale-95" ${!ok ? "disabled" : ""}>+${amt}</button>`;
+                  }).join("")}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>`;
+      } else if (shopSubTab === "upgrades") {
+        body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          ${UPGRADES.map(u => {
+            const lv = state.upgrades[u.id] || 0;
+            const maxed = lv >= u.max;
+            const cost = Math.round(u.baseCost * Math.pow(u.mult, lv));
+            const canBuy = !maxed && state.coins >= cost;
+            return `
+              <div class="bg-discord-850 border border-slate-800 rounded-2xl p-3.5 flex flex-col justify-between gap-2.5">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-extrabold text-xs sm:text-sm text-white">${u.icon} ${u.name}</span>
+                    <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">Lv. ${lv}/${u.max}</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">${u.desc}</p>
+                </div>
+                <button data-buy-upgrade="${u.id}" class="min-h-[40px] w-full py-2 rounded-xl font-black text-xs transition active:scale-95 ${
+                  maxed ? "bg-emerald-500/20 text-emerald-300 cursor-default" : canBuy ? "bg-cyan-500 hover:bg-cyan-400 text-slate-950" : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                }" ${!canBuy ? "disabled" : ""}>
+                  ${maxed ? "MAX LEVEL" : `Upgrade • 🪙 ${fmt(cost)}`}
+                </button>
+              </div>
+            `;
+          }).join("")}
+        </div>`;
+      } else if (shopSubTab === "exotic") {
+        const curIcons = { goldFish: "🐠 Gold Fish", emeraldFish: "🐟 Emerald Fish", diamondFish: "💎 Diamond Fish", cosmicOrbs: "🔮 Cosmic Orbs" };
+        body = `
+          <div class="space-y-4">
+            <div class="bg-discord-850 border border-slate-800 rounded-2xl p-3 text-xs text-slate-300">
+              Rare exotic specimens drop randomly while fishing and opening chests. Spend them here on powerful timed surges and permanent relics!
+            </div>
+            <h4 class="font-black text-xs uppercase tracking-wider text-fuchsia-300">⚡ 5-Minute Cosmic Surges</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              ${EXOTIC_BOOSTS.map(b => {
+                const active = isBoostActive(b.id);
+                const rem = active ? Math.ceil((state.activeBoosts[b.id] - Date.now()) / 1000) : 0;
+                const canBuy = (state[b.currency] || 0) >= b.cost;
+                return `
+                  <div class="bg-discord-850 border ${active ? "border-fuchsia-400/60" : "border-slate-800"} rounded-2xl p-3.5 flex flex-col justify-between gap-2.5">
+                    <div>
+                      <div class="font-extrabold text-xs sm:text-sm text-white">${b.icon} ${b.name}</div>
+                      <p class="text-[11px] text-slate-400 mt-1">${b.desc}</p>
+                    </div>
+                    <button data-buy-boost="${b.id}" class="min-h-[40px] w-full py-2 rounded-xl font-black text-xs transition active:scale-95 ${
+                      active ? "bg-fuchsia-500/25 text-fuchsia-200 border border-fuchsia-400/40" : canBuy ? "bg-fuchsia-600 hover:bg-fuchsia-500 text-white" : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                    }" ${!canBuy && !active ? "disabled" : ""}>
+                      ${active ? `Active (${rem}s left) • Extend` : `Activate (${b.cost} ${curIcons[b.currency]})`}
+                    </button>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+
+            <h4 class="font-black text-xs uppercase tracking-wider text-amber-300 pt-1">👑 Permanent Exotic Relics</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              ${EXOTIC_RELICS.map(r => {
+                const owned = state.ownedRelics.includes(r.id);
+                const canBuy = !owned && (state[r.currency] || 0) >= r.cost;
+                return `
+                  <div class="bg-discord-850 border ${owned ? "border-amber-400/60" : "border-slate-800"} rounded-2xl p-3.5 flex flex-col justify-between gap-2.5">
+                    <div>
+                      <div class="font-extrabold text-xs sm:text-sm text-white">${r.icon} ${r.name}</div>
+                      <p class="text-[11px] text-slate-400 mt-1">${r.desc}</p>
+                    </div>
+                    <button data-buy-relic="${r.id}" class="min-h-[40px] w-full py-2 rounded-xl font-black text-xs transition active:scale-95 ${
+                      owned ? "bg-amber-500/20 text-amber-300 cursor-default" : canBuy ? "bg-amber-500 hover:bg-amber-400 text-slate-950" : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                    }" ${!canBuy ? "disabled" : ""}>
+                      ${owned ? "Relic Unlocked" : `Forge (${r.cost} ${curIcons[r.currency]})`}
+                    </button>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        `;
+      } else if (shopSubTab === "pets") {
+        const curLabels = { coins: "🪙", goldFish: "🐠", emeraldFish: "🐟", diamondFish: "💎", cosmicOrbs: "🔮" };
+        const canPrestige = state.level >= 50;
+        body = `
+          <div class="space-y-5">
+            <!-- Prestige Banner -->
+            <div class="bg-gradient-to-r from-fuchsia-950/90 via-indigo-950/90 to-slate-900 border border-fuchsia-500/40 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-xl">🌀</span>
+                  <h4 class="font-black text-sm sm:text-base text-white">Cosmic Ascension (Prestige ${state.prestige || 0})</h4>
+                </div>
+                <p class="text-xs text-slate-300">Current Prestige Bonus: <strong class="text-amber-300">+${(state.prestige || 0) * 50}% Value</strong> &amp; <strong class="text-cyan-300">+${(state.prestige || 0) * 25}% XP</strong>. Requires Level 50.</p>
+              </div>
+              <button id="btn-open-prestige" class="min-h-[44px] px-4 py-2 rounded-xl font-black text-xs shrink-0 transition active:scale-95 ${
+                canPrestige ? "bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white shadow-lg" : "bg-slate-800 text-slate-500 cursor-not-allowed"
+              }" ${!canPrestige ? "disabled" : ""}>
+                ${canPrestige ? "🌀 Ascend Now" : `Reach Lv. 50 (${state.level}/50)`}
+              </button>
+            </div>
+
+            <!-- Companion Pets -->
+            <div>
+              <h4 class="font-black text-xs uppercase tracking-wider text-cyan-300 mb-2.5">🐾 Companion Pets (Equip 1 Active Buddy)</h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ${PETS.map(p => {
+                  const owned = state.ownedPets.includes(p.id);
+                  const equipped = state.equippedPet === p.id;
+                  const canBuy = (state[p.currency] || 0) >= p.cost;
+                  return `
+                    <div class="bg-discord-850 border ${equipped ? "border-cyan-400/60" : "border-slate-800"} rounded-2xl p-3.5 flex flex-col justify-between gap-2.5">
+                      <div>
+                        <div class="flex items-center justify-between">
+                          <span class="font-extrabold text-xs sm:text-sm text-white">${p.icon} ${p.name}</span>
+                          ${equipped ? `<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Following</span>` : ""}
+                        </div>
+                        <div class="text-[11px] font-bold text-emerald-300 mt-1">${p.bonusText}</div>
+                      </div>
+                      ${equipped
+                        ? `<button disabled class="min-h-[40px] w-full py-2 rounded-xl bg-cyan-500/15 text-cyan-300 font-bold text-xs">Active Companion</button>`
+                        : owned
+                          ? `<button data-equip-pet="${p.id}" class="min-h-[40px] w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition">Summon Pet</button>`
+                          : `<button data-buy-pet="${p.id}" class="min-h-[40px] w-full py-2 rounded-xl font-black text-xs transition ${canBuy ? "bg-amber-500 hover:bg-amber-400 text-slate-950" : "bg-slate-800 text-slate-500 cursor-not-allowed"}" ${!canBuy ? "disabled" : ""}>Adopt (${curLabels[p.currency]} ${fmt(p.cost)})</button>`
+                      }
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="scroll-fade-wrap bg-discord-950/80 p-1.5 rounded-xl border border-slate-800">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pr-6">
+              ${subTabs.map(t => `
+                <button data-sub="${t.id}" class="shop-sub-btn shrink-0 py-2 px-3 rounded-lg text-[11px] sm:text-xs font-extrabold whitespace-nowrap transition ${
+                  shopSubTab === t.id ? "bg-indigo-500/25 text-cyan-200 border border-indigo-400/40" : "text-slate-400 hover:text-white"
+                }">${t.label}</button>
+              `).join("")}
+            </div>
+          </div>
+          ${body}
+        </div>
+      `;
+
+      // Bind Shop Events
+      container.querySelectorAll("[data-sub]").forEach(b => b.addEventListener("click", () => { shopSubTab = b.dataset.sub; renderActiveTab(); }));
+      container.querySelectorAll("[data-buy-rod]").forEach(b => b.addEventListener("click", () => {
+        const rod = RODS.find(r => r.id === b.dataset.buyRod);
+        if (!rod || state.coins < rod.cost) return;
+        state.coins -= rod.cost;
+        state.ownedRods.push(rod.id);
+        state.equippedRod = rod.id;
+        isDirty = true; updateHUD(); renderActiveTab();
+        showToast(`🎣 Purchased & equipped ${rod.name}!`, "cyan");
+      }));
+      container.querySelectorAll("[data-equip-rod]").forEach(b => b.addEventListener("click", () => {
+        state.equippedRod = b.dataset.equipRod;
+        isDirty = true; updateHUD(); renderActiveTab();
+      }));
+      container.querySelectorAll("[data-buy-vessel]").forEach(b => b.addEventListener("click", () => {
+        const ves = VESSELS.find(v => v.id === b.dataset.buyVessel);
+        if (!ves || state.coins < ves.cost) return;
+        state.coins -= ves.cost;
+        state.ownedVessels.push(ves.id);
+        state.equippedVessel = ves.id;
+        isDirty = true; updateHUD(); renderActiveTab();
+        showToast(`🚢 Boarded ${ves.name}!`, "indigo");
+      }));
+      container.querySelectorAll("[data-equip-vessel]").forEach(b => b.addEventListener("click", () => {
+        state.equippedVessel = b.dataset.equipVessel;
+        isDirty = true; updateHUD(); renderActiveTab();
+      }));
+      container.querySelectorAll("[data-buy-bait]").forEach(b => b.addEventListener("click", () => {
+        const bait = BAITS.find(x => x.id === b.dataset.buyBait);
+        const qty = parseInt(b.dataset.qty, 10) || 1;
+        if (!bait || state.coins < bait.cost * qty) return;
+        state.coins -= bait.cost * qty;
+        state.baits[bait.id] = (state.baits[bait.id] || 0) + qty;
+        if (state.activeBait === "none") state.activeBait = bait.id;
+        isDirty = true; updateHUD(); renderActiveTab();
+        showToast(`🪱 Bought +${qty} ${bait.name}!`, "emerald");
+      }));
+      container.querySelectorAll("[data-equip-bait]").forEach(b => b.addEventListener("click", () => {
+        state.activeBait = b.dataset.equipBait;
+        isDirty = true; updateHUD(); renderActiveTab();
+      }));
+      container.querySelectorAll("[data-buy-upgrade]").forEach(b => b.addEventListener("click", () => {
+        const up = UPGRADES.find(u => u.id === b.dataset.buyUpgrade);
+        const lv = state.upgrades[up.id] || 0;
+        const cost = Math.round(up.baseCost * Math.pow(up.mult, lv));
+        if (!up || lv >= up.max || state.coins < cost) return;
+        state.coins -= cost;
+        state.upgrades[up.id] = lv + 1;
+        isDirty = true; updateHUD(); renderActiveTab();
+        showToast(`⚙️ Upgraded ${up.name} to Lv.${lv + 1}!`, "cyan");
+      }));
+      container.querySelectorAll("[data-buy-boost]").forEach(b => b.addEventListener("click", () => {
+        const boost = EXOTIC_BOOSTS.find(x => x.id === b.dataset.buyBoost);
+        if (!boost || (state[boost.currency] || 0) < boost.cost) return;
+        state[boost.currency] -= boost.cost;
+        const baseTime = Math.max(Date.now(), state.activeBoosts[boost.id] || 0);
+        state.activeBoosts[boost.id] = baseTime + boost.durationSec * 1000;
+        isDirty = true; updateHUD(); renderActiveTab();
+        showToast(`⚡ Activated ${boost.name}!`, "purple");
+      }));
+      container.querySelectorAll("[data-buy-relic]").forEach(b => b.addEventListener("click", () => {
+        const rel = EXOTIC_RELICS.find(x => x.id === b.dataset.buyRelic);
+        if (!rel || state.ownedRelics.includes(rel.id) || (state[rel.currency] || 0) < rel.cost) return;
+        state[rel.currency] -= rel.cost;
+        state.ownedRelics.push(rel.id);
+        isDirty = true; updateHUD(); renderActiveTab();
+        showToast(`👑 Forged ${rel.name}!`, "amber");
+      }));
+      container.querySelectorAll("[data-buy-pet]").forEach(b => b.addEventListener("click", () => {
+        const pet = PETS.find(x => x.id === b.dataset.buyPet);
+        if (!pet || state.ownedPets.includes(pet.id) || (state[pet.currency] || 0) < pet.cost) return;
+        state[pet.currency] -= pet.cost;
+        state.ownedPets.push(pet.id);
+        state.equippedPet = pet.id;
+        isDirty = true; updateHUD(); renderActiveTab();
+        showToast(`🐾 Adopted ${pet.name}!`, "cyan");
+      }));
+      container.querySelectorAll("[data-equip-pet]").forEach(b => b.addEventListener("click", () => {
+        state.equippedPet = b.dataset.equipPet;
+        isDirty = true; updateHUD(); renderActiveTab();
+      }));
+      document.getElementById("btn-open-prestige")?.addEventListener("click", () => {
+        const nextP = (state.prestige || 0) + 1;
+        document.getElementById("prestige-next-bonus").textContent = `+${nextP * 50}%`;
+        document.getElementById("prestige-next-xp").textContent = `+${nextP * 25}%`;
+        document.getElementById("prestige-orb-reward").textContent = `+${5 + nextP * 2} Cosmic Orbs`;
+        openModal("prestige-modal");
+      });
+    }
+
+    function renderBiomesTab(container) {
+      container.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          ${BIOMES.map(b => {
+            const unlocked = state.unlockedBiomes.includes(b.id);
+            const active = state.currentBiome === b.id;
+            const meetsLv = state.level >= b.unlockLevel;
+            const canUnlock = !unlocked && meetsLv && state.coins >= b.unlockCost;
+            const biomeFish = FISH_SPECIES.filter(f => f.biomeId === b.id);
+            const discovered = biomeFish.filter(f => (state.fishdex[f.id] || 0) > 0).length;
+
+            return `
+              <div class="bg-discord-850 border ${active ? "border-cyan-400/70" : "border-slate-800"} rounded-2xl p-4 flex flex-col justify-between gap-3">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="text-2xl">${b.icon}</span>
+                      <div>
+                        <h4 class="font-black text-sm text-white">${b.tier}. ${b.name}</h4>
+                        <span class="text-[11px] font-bold text-slate-400">Fishdex: ${discovered}/${biomeFish.length} • Base 🪙 ${fmt(b.baseValue)}</span>
+                      </div>
+                    </div>
+                    ${active ? `<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Current</span>` : ""}
+                  </div>
+                  <p class="text-xs text-slate-400 mt-2">${b.desc}</p>
+                </div>
+
+                ${active
+                  ? `<button disabled class="min-h-[42px] w-full py-2 rounded-xl bg-cyan-500/15 text-cyan-300 font-bold text-xs">Currently Fishing Here</button>`
+                  : unlocked
+                    ? `<button data-travel-biome="${b.id}" class="min-h-[42px] w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition active:scale-95">Travel Here</button>`
+                    : `<button data-unlock-biome="${b.id}" class="min-h-[42px] w-full py-2 rounded-xl font-black text-xs transition active:scale-95 ${
+                        canUnlock ? "bg-amber-500 hover:bg-amber-400 text-slate-950" : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                      }" ${!canUnlock ? "disabled" : ""}>
+                        ${!meetsLv ? `Requires Lv.${b.unlockLevel}` : `Unlock • 🪙 ${fmt(b.unlockCost)}`}
+                      </button>`
+                }
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+
+      container.querySelectorAll("[data-travel-biome]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.currentBiome = btn.dataset.travelBiome;
+          renderStageVisuals(getCurrentBiome());
+          isDirty = true; updateHUD(); renderActiveTab();
+          showToast(`🌌 Traveled to ${getCurrentBiome().name}!`, "cyan");
+        });
+      });
+
+      container.querySelectorAll("[data-unlock-biome]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const b = BIOMES.find(x => x.id === btn.dataset.unlockBiome);
+          if (!b || state.coins < b.unlockCost || state.level < b.unlockLevel) return;
+          state.coins -= b.unlockCost;
+          state.unlockedBiomes.push(b.id);
+          state.currentBiome = b.id;
+          renderStageVisuals(b);
+          isDirty = true; updateHUD(); renderActiveTab();
+          showToast(`🚀 Unlocked ${b.name}!`, "emerald");
+        });
+      });
+    }
+
+    function renderQuestsTab(container) {
+      ensureQuests();
+      container.innerHTML = `
+        <div class="space-y-3">
+          <div class="bg-discord-850 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between">
+            <div>
+              <h3 class="font-black text-sm sm:text-base text-white">Cosmic Bounties &amp; Mini-Quests</h3>
+              <p class="text-xs text-slate-400">Complete tasks for bonus Coins, Treasure Chests, Gold Fish, and Cosmic Orbs.</p>
+            </div>
+          </div>
+
+          ${state.quests.map((q, idx) => {
+            const done = q.progress >= q.target;
+            const pct = Math.min(100, Math.round((q.progress / q.target) * 100));
+            const rewards = [`🪙 ${fmt(q.rewardCoins)}`];
+            if (q.rewardChests) rewards.push(`🧰 +${q.rewardChests} Chest`);
+            if (q.rewardOrbs) rewards.push(`🔮 +${q.rewardOrbs} Orb`);
+            if (q.rewardGold) rewards.push(`🐠 +${q.rewardGold} Gold Fish`);
+
+            return `
+              <div class="bg-discord-850 border ${done ? "border-emerald-400/60" : "border-slate-800"} rounded-2xl p-4 space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div class="font-extrabold text-xs sm:text-sm text-white">${q.label}</div>
+                    <div class="text-[11px] font-bold text-amber-300 mt-0.5">Rewards: ${rewards.join(" • ")}</div>
+                  </div>
+                  <button data-claim-quest="${idx}" class="min-h-[40px] px-4 py-1.5 rounded-xl font-black text-xs transition active:scale-95 ${
+                    done ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow" : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                  }" ${!done ? "disabled" : ""}>
+                    ${done ? "Claim Reward" : `${fmt(q.progress)} / ${fmt(q.target)}`}
+                  </button>
+                </div>
+                <div class="w-full h-2 bg-discord-950 rounded-full overflow-hidden">
+                  <div class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full transition-all" style="width:${pct}%"></div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+
+      container.querySelectorAll("[data-claim-quest]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const idx = parseInt(btn.dataset.claimQuest, 10);
+          const q = state.quests[idx];
+          if (!q || q.progress < q.target) return;
+          state.coins += q.rewardCoins;
+          state.chests = (state.chests || 0) + (q.rewardChests || 0);
+          state.cosmicOrbs = (state.cosmicOrbs || 0) + (q.rewardOrbs || 0);
+          state.goldFish = (state.goldFish || 0) + (q.rewardGold || 0);
+          state.quests[idx] = generateQuest();
+          advanceQuests("none", 0);
+          isDirty = true; updateHUD(); renderActiveTab();
+          showToast("🎯 Quest reward claimed!", "emerald");
+        });
+      });
+    }
+
+    function renderFishdexTab(container) {
+      const discoveredTotal = FISH_SPECIES.filter(f => (state.fishdex[f.id] || 0) > 0).length;
+      const filtered = FISH_SPECIES.filter(sp => {
+        if (fishdexBiomeFilter !== "all" && sp.biomeId !== fishdexBiomeFilter) return false;
+        if (fishdexRarityFilter !== "all" && sp.rarity !== fishdexRarityFilter) return false;
+        if (fishdexSearch.trim()) {
+          const q = fishdexSearch.trim().toLowerCase();
+          const isFound = (state.fishdex[sp.id] || 0) > 0;
+          const nameToMatch = isFound ? sp.name.toLowerCase() : "undiscovered";
+          if (!nameToMatch.includes(q) && !sp.rarity.includes(q)) return false;
+        }
+        return true;
+      });
+
+      container.innerHTML = `
+        <div class="space-y-3.5">
+          <div class="bg-discord-850 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="font-black text-sm sm:text-base text-white">Cosmic Fishdex (${discoveredTotal} / ${FISH_SPECIES.length} Discovered)</h3>
+              <span class="text-xs font-bold text-cyan-300">${Math.round((discoveredTotal / FISH_SPECIES.length) * 100)}% Complete</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <input id="fishdex-search-input" type="text" value="${fishdexSearch}" placeholder="Search species..." class="min-h-[40px] bg-discord-950 border border-slate-700 rounded-xl px-3 text-xs text-white focus:outline-none focus:border-cyan-400" />
+              <select id="fishdex-biome-select" class="min-h-[40px] bg-discord-950 border border-slate-700 rounded-xl px-2.5 text-xs text-slate-200">
+                <option value="all">All 10 Biomes</option>
+                ${BIOMES.map(b => `<option value="${b.id}" ${fishdexBiomeFilter === b.id ? "selected" : ""}>${b.tier}. ${b.name}</option>`).join("")}
+              </select>
+              <select id="fishdex-rarity-select" class="min-h-[40px] bg-discord-950 border border-slate-700 rounded-xl px-2.5 text-xs text-slate-200">
+                <option value="all">All 10 Rarities</option>
+                ${Object.values(RARITIES).map(r => `<option value="${r.id}" ${fishdexRarityFilter === r.id ? "selected" : ""}>${r.name}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            ${filtered.map(sp => {
+              const caughtCount = state.fishdex[sp.id] || 0;
+              const found = caughtCount > 0;
+              const rar = RARITIES[sp.rarity];
+              const biome = BIOMES.find(b => b.id === sp.biomeId);
+              return `
+                <div class="bg-discord-850 border border-slate-800 rounded-2xl p-3 flex items-start gap-3 ${found ? "" : "opacity-65"}" style="border-left: 3px solid ${found ? rar.color : "#334155"};">
+                  <div class="w-11 h-11 rounded-xl bg-discord-950 border border-slate-800 flex items-center justify-center text-2xl shrink-0">
+                    ${found ? sp.icon : "❓"}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-1.5">
+                      <span class="font-extrabold text-xs sm:text-sm text-white truncate">${found ? sp.name : "???"}</span>
+                      <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${rar.badge}">${rar.name}</span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">${biome.icon} ${biome.name} • Caught: <strong class="text-slate-200">${fmt(caughtCount)}</strong></div>
+                    <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">${found ? sp.lore : "Explore this realm to uncover this mysterious entity."}</p>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+
+      document.getElementById("fishdex-search-input")?.addEventListener("input", e => {
+        fishdexSearch = e.target.value;
+        renderActiveTab();
+      });
+      document.getElementById("fishdex-biome-select")?.addEventListener("change", e => {
+        fishdexBiomeFilter = e.target.value;
+        renderActiveTab();
+      });
+      document.getElementById("fishdex-rarity-select")?.addEventListener("change", e => {
+        fishdexRarityFilter = e.target.value;
+        renderActiveTab();
+      });
+    }
+
+    function renderLeaderboardTab(container) {
+      const sorted = [...leaderboardEntries].sort((a, b) => {
+        if (leaderboardSort === "prestige") return (b.prestige || 0) - (a.prestige || 0) || (b.level || 1) - (a.level || 1);
+        if (leaderboardSort === "level") return (b.level || 1) - (a.level || 1) || (b.netWorth || 0) - (a.netWorth || 0);
+        return (b.netWorth || 0) - (a.netWorth || 0);
+      });
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <!-- Angler Career Summary -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <div class="bg-discord-850 border border-slate-800 rounded-xl p-2.5">
+              <div class="text-[10px] text-slate-400 font-bold uppercase">Net Worth</div>
+              <div class="font-black text-amber-300 text-sm mt-0.5">🪙 ${fmt(getNetWorth())}</div>
+            </div>
+            <div class="bg-discord-850 border border-slate-800 rounded-xl p-2.5">
+              <div class="text-[10px] text-slate-400 font-bold uppercase">Total Caught</div>
+              <div class="font-black text-cyan-300 text-sm mt-0.5">🐟 ${fmt(state.stats.totalCaught || 0)}</div>
+            </div>
+            <div class="bg-discord-850 border border-slate-800 rounded-xl p-2.5">
+              <div class="text-[10px] text-slate-400 font-bold uppercase">Chests Opened</div>
+              <div class="font-black text-purple-300 text-sm mt-0.5">🧰 ${fmt(state.stats.chestsOpened || 0)}</div>
+            </div>
+            <div class="bg-discord-850 border border-slate-800 rounded-xl p-2.5">
+              <div class="text-[10px] text-slate-400 font-bold uppercase">Prestige</div>
+              <div class="font-black text-fuchsia-300 text-sm mt-0.5">🌀 Rank ${state.prestige || 0}</div>
+            </div>
+          </div>
+
+          <!-- Leaderboard Sort Controls -->
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-discord-850 border border-slate-800 rounded-2xl p-3">
+            <h3 class="font-black text-sm text-white">🏆 Global Multiverse Rankings</h3>
+            <div class="flex gap-1.5">
+              ${[
+                { id: "netWorth", label: "Net Worth" },
+                { id: "prestige", label: "Prestige" },
+                { id: "level", label: "Level" }
+              ].map(s => `
+                <button data-lb-sort="${s.id}" class="min-h-[36px] px-3 py-1 rounded-xl text-xs font-extrabold transition ${
+                  leaderboardSort === s.id ? "bg-cyan-500 text-slate-950" : "bg-discord-950 text-slate-400 hover:text-white"
+                }">${s.label}</button>
+              `).join("")}
+            </div>
+          </div>
+
+          <!-- Leaderboard Table -->
+          <div class="space-y-2">
+            ${sorted.length === 0 ? `
+              <div class="text-center py-10 text-xs text-slate-400 bg-discord-850/50 rounded-2xl border border-slate-800">
+                Waiting for cloud leaderboard sync... Cast a fish or click Account → Save Progress Now!
+              </div>
+            ` : sorted.map((entry, idx) => {
+              const isMe = currentUser && entry.uid === currentUser.uid;
+              const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+              return `
+                <div class="bg-discord-850 border ${isMe ? "border-cyan-400/70 bg-cyan-950/20" : "border-slate-800"} rounded-2xl p-3 flex items-center justify-between gap-2 text-xs">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-7 text-center font-black text-sm shrink-0">${medal}</span>
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-1.5">
+                        <span class="font-extrabold text-white truncate">${escapeHtml(entry.name || "Angler")}</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">${entry.isGuest ? "Guest" : "Google"}</span>
+                        ${isMe ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/25 text-cyan-200 font-black">YOU</span>` : ""}
+                      </div>
+                      <div class="text-[11px] text-slate-400 truncate mt-0.5">
+                        Lv.${entry.level || 1} • P${entry.prestige || 0} • ${escapeHtml(entry.biomeName || "Quiet River")}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <div class="font-mono font-black text-amber-300">🪙 ${fmt(entry.netWorth || 0)}</div>
+                    <div class="text-[10px] text-slate-400">Caught: ${fmt(entry.totalCaught || 0)}</div>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+
+      container.querySelectorAll("[data-lb-sort]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          leaderboardSort = btn.dataset.lbSort;
+          renderActiveTab();
+        });
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[m]));
+    }
+
+    // =========================================================================
+    // 8. TOASTS & MODALS
+    // =========================================================================
+    function showToast(msg, tone = "cyan") {
+      const container = document.getElementById("toast-container");
+      if (!container) return;
+      const tones = {
+        cyan: "border-cyan-400/50 bg-discord-900/95 text-cyan-100",
+        emerald: "border-emerald-400/50 bg-discord-900/95 text-emerald-100",
+        amber: "border-amber-400/50 bg-discord-900/95 text-amber-100",
+        purple: "border-fuchsia-400/50 bg-discord-900/95 text-fuchsia-100",
+        rose: "border-rose-400/50 bg-discord-900/95 text-rose-100"
+      };
+      const el = document.createElement("div");
+      el.className = `pointer-events-auto px-3.5 py-2.5 rounded-2xl border shadow-2xl text-xs font-bold backdrop-blur-xl transition-all duration-300 ${tones[tone] || tones.cyan}`;
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(8px)";
+        setTimeout(() => el.remove(), 300);
+      }, 3200);
+    }
+
+    function openModal(id) {
+      document.getElementById(id)?.classList.remove("hidden");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id)?.classList.add("hidden");
+    }
+
+    // =========================================================================
+    // 9. FIREBASE AUTH, TOP-LEVEL FIRESTORE SYNC & LEADERBOARD
+    // =========================================================================
+    function setSyncBadge(text, dotClass) {
+      const t = document.getElementById("sync-text");
+      const d = document.getElementById("sync-dot");
+      if (t) t.textContent = text;
+      if (d) d.className = `w-2 h-2 rounded-full shrink-0 ${dotClass}`;
+    }
+
+    function sanitizeForFirestore(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function mergeLoadedState(loaded) {
+      const fresh = createDefaultState();
+      state = {
+        ...fresh,
+        ...loaded,
+        baits: { ...fresh.baits, ...(loaded.baits || {}) },
+        upgrades: { ...(loaded.upgrades || {}) },
+        activeBoosts: { ...(loaded.activeBoosts || {}) },
+        inventory: { ...(loaded.inventory || {}) },
+        fishdex: { ...(loaded.fishdex || {}) },
+        daily: { ...fresh.daily, ...(loaded.daily || {}) },
+        stats: { ...fresh.stats, ...(loaded.stats || {}) }
+      };
+      if (!Array.isArray(state.unlockedBiomes) || state.unlockedBiomes.length === 0) state.unlockedBiomes = ["river"];
+      if (!Array.isArray(state.ownedRods) || state.ownedRods.length === 0) state.ownedRods = ["rod_1"];
+      if (!Array.isArray(state.ownedVessels)) state.ownedVessels = [];
+      if (!Array.isArray(state.ownedRelics)) state.ownedRelics = [];
+      if (!Array.isArray(state.ownedPets)) state.ownedPets = [];
+      ensureQuests();
+    }
+
+    function saveLocalBackup() {
+      try {
+        localStorage.setItem(LOCAL_SAVE_KEY, JSON.stringify({ ...state, updatedAt: Date.now() }));
+      } catch (_) {}
+    }
+
+    function loadLocalBackup() {
+      try {
+        const raw = localStorage.getItem(LOCAL_SAVE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object") {
+            mergeLoadedState(parsed);
+            return true;
+          }
+        }
+      } catch (_) {}
+      return false;
+    }
+
+    function updateAccountUI() {
+      const isGoogle = currentUser && !currentUser.isAnonymous;
+      const label = state.displayName || (isGoogle && currentUser.displayName ? currentUser.displayName : "Guest Angler");
+      document.getElementById("account-label").textContent = label;
+      document.getElementById("account-avatar").textContent = isGoogle ? "⭐" : "👤";
+      document.getElementById("modal-account-type").textContent = isGoogle
+        ? `Google (${currentUser.email || "Linked"})`
+        : (isCloudReady ? "Guest Angler (Cloud)" : "Guest Angler (Local)");
+      document.getElementById("modal-user-id").textContent = currentUser ? currentUser.uid : "offline-guest";
+      document.getElementById("input-display-name").value = state.displayName || "";
+
+      document.getElementById("btn-modal-google").classList.toggle("hidden", !!isGoogle);
+      document.getElementById("btn-modal-signout").classList.toggle("hidden", !isGoogle);
+    }
+
+    async function loadUserProgress() {
+      if (!db || !currentUser) return;
+      try {
+        setSyncBadge("Loading...", "bg-cyan-400 animate-pulse");
+        // Clean top-level Firestore user document: doc(db, "users", user.uid)
+        const userRef = doc(db, "users", currentUser.uid);
+        const snap = await getDoc(userRef);
+
+        if (snap.exists()) {
+          mergeLoadedState(snap.data());
+        } else {
+          // Check if local backup has progress to migrate up to cloud
+          loadLocalBackup();
+          if (!currentUser.isAnonymous && currentUser.displayName && state.displayName === "Guest Angler") {
+            state.displayName = currentUser.displayName.slice(0, 22);
+          }
+          ensureQuests();
+          await saveProgress(false);
+        }
+
+        renderStageVisuals(getCurrentBiome());
+        updateAccountUI();
+        updateHUD();
+        renderActiveTab();
+        setSyncBadge("Cloud Synced", "bg-emerald-400");
+      } catch (err) {
+        console.warn("Firestore load fallback to local cache:", err);
+        loadLocalBackup();
+        ensureQuests();
+        renderStageVisuals(getCurrentBiome());
+        updateAccountUI();
+        updateHUD();
+        renderActiveTab();
+        setSyncBadge("Local Save Mode", "bg-amber-400");
+      }
+    }
+
+    async function saveProgress(showFeedback = false) {
+      saveLocalBackup();
+      if (!db || !currentUser) {
+        isDirty = false;
+        setSyncBadge("Local Save Mode", "bg-amber-400");
+        if (showFeedback) showToast("💾 Progress saved locally!", "emerald");
+        return;
+      }
+
+      try {
+        setSyncBadge("Saving...", "bg-cyan-400 animate-pulse");
+        const isGuest = !!currentUser.isAnonymous;
+        const biome = getCurrentBiome();
+        const rod = getCurrentRod();
+
+        // 1. Save private user profile to top-level users/{uid}
+        const userRef = doc(db, "users", currentUser.uid);
+        await setDoc(userRef, sanitizeForFirestore({
+          ...state,
+          updatedAt: Date.now()
+        }));
+
+        // 2. Save public leaderboard entry to top-level leaderboard/{uid}
+        const lbRef = doc(db, "leaderboard", currentUser.uid);
+        await setDoc(lbRef, sanitizeForFirestore({
+          uid: currentUser.uid,
+          name: state.displayName || (isGuest ? "Guest Angler" : "Google Angler"),
+          isGuest,
+          netWorth: getNetWorth(),
+          totalCaught: state.stats.totalCaught || 0,
+          level: state.level,
+          prestige: state.prestige || 0,
+          biomeName: biome.name,
+          rodName: rod.name,
+          updatedAt: Date.now()
+        }));
+
+        isDirty = false;
+        setSyncBadge("Cloud Synced", "bg-emerald-400");
+        if (showFeedback) showToast("☁️ Progress & Leaderboard synced!", "emerald");
+      } catch (err) {
+        console.warn("Firestore save error:", err);
+        setSyncBadge("Local Save Mode", "bg-amber-400");
+        if (showFeedback) showToast("Saved locally (check Firestore Rules if cloud sync is blocked).", "amber");
+      }
+    }
+
+    function subscribeLeaderboard() {
+      if (!db || !currentUser) return;
+      if (unsubscribeLeaderboard) unsubscribeLeaderboard();
+      try {
+        const q = query(collection(db, "leaderboard"), orderBy("netWorth", "desc"), limit(50));
+        unsubscribeLeaderboard = onSnapshot(q, (snapshot) => {
+          leaderboardEntries = snapshot.docs.map(d => d.data());
+          if (activeTab === "leaderboard") renderActiveTab();
+        }, (err) => {
+          console.warn("Leaderboard snapshot warning:", err);
+        });
+      } catch (err) {
+        console.warn("Leaderboard query setup warning:", err);
+      }
+    }
+
+    async function handleGoogleAuth(errorTargetId) {
+      const errBox = document.getElementById(errorTargetId);
+      if (errBox) errBox.classList.add("hidden");
+      if (!auth) return;
+
+      const provider = new GoogleAuthProvider();
+      try {
+        if (currentUser && currentUser.isAnonymous) {
+          try {
+            const res = await linkWithPopup(currentUser, provider);
+            currentUser = res.user;
+            if (currentUser.displayName && state.displayName === "Guest Angler") {
+              state.displayName = currentUser.displayName.slice(0, 22);
+            }
+            await saveProgress(false);
+            showToast("🔗 Guest progress bound to your Google Account!", "emerald");
+          } catch (linkErr) {
+            if (linkErr.code === "auth/credential-already-in-use") {
+              const res = await signInWithPopup(auth, provider);
+              currentUser = res.user;
+              await loadUserProgress();
+              showToast("✅ Signed into your existing Google Account!", "emerald");
+            } else {
+              throw linkErr;
+            }
+          }
+        } else {
+          const res = await signInWithPopup(auth, provider);
+          currentUser = res.user;
+          await loadUserProgress();
+          showToast("✅ Signed in with Google!", "emerald");
+        }
+
+        closeModal("welcome-modal");
+        closeModal("account-modal");
+        updateAccountUI();
+      } catch (err) {
+        // Automatic fallback to redirect on mobile/popup-blocked browsers
+        if (err.code === "auth/popup-blocked" || err.code === "auth/cancelled-popup-request") {
+          try {
+            showToast("Redirecting to Google Sign-In...", "cyan");
+            if (currentUser && currentUser.isAnonymous) {
+              await linkWithRedirect(currentUser, provider);
+            } else {
+              await signInWithRedirect(auth, provider);
+            }
+            return;
+          } catch (_) {}
+        }
+        let msg = "Google Sign-In was closed or blocked. Your Guest progress is still saved!";
+        if (err.code === "auth/unauthorized-domain" || err.code === "auth/operation-not-allowed") {
+          msg = "Add this domain under Firebase Auth → Settings → Authorized domains to enable Google Sign-In.";
+        }
+        if (errBox) {
+          errBox.textContent = msg;
+          errBox.classList.remove("hidden");
+        } else {
+          showToast(msg, "amber");
+        }
+      }
+    }
+
+    async function initFirebase() {
+      try {
+        app = initializeApp(CUSTOM_FIREBASE_CONFIG);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        // Handle returning from mobile redirect auth
+        try {
+          const redirectRes = await getRedirectResult(auth);
+          if (redirectRes && redirectRes.user) {
+            currentUser = redirectRes.user;
+            showToast("✅ Signed in with Google!", "emerald");
+          }
+        } catch (_) {}
+
+        const hadLocalSave = loadLocalBackup();
+
+        if (!auth.currentUser) {
+          await signInAnonymously(auth);
+          if (!hadLocalSave) {
+            openModal("welcome-modal");
+          }
+        }
+
+        currentUser = auth.currentUser;
+        isCloudReady = true;
+
+        onAuthStateChanged(auth, async (user) => {
+          currentUser = user;
+          if (user) {
+            await loadUserProgress();
+            subscribeLeaderboard();
+          }
+        });
+
+        await loadUserProgress();
+        subscribeLeaderboard();
+      } catch (err) {
+        console.warn("Firebase init fallback:", err);
+        loadLocalBackup();
+        ensureQuests();
+        setSyncBadge("Local Save Mode", "bg-amber-400");
+        renderStageVisuals(getCurrentBiome());
+        updateAccountUI();
+        updateHUD();
+        renderActiveTab();
+      }
+    }
+
+    // =========================================================================
+    // 10. EXPORT / IMPORT JSON & EVENT BINDINGS
+    // =========================================================================
+    function exportSaveJson() {
+      const payload = JSON.stringify({ ...state, exportedAt: Date.now() }, null, 2);
+      try {
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `virtual_fisher_save_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (_) {}
+
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = payload;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      } catch (_) {}
+
+      showToast("📤 Save exported as .json & copied to clipboard!", "emerald");
+    }
+
+    function applyImportedJson(rawText) {
+      try {
+        const parsed = JSON.parse(rawText.trim());
+        if (!parsed || typeof parsed !== "object" || typeof parsed.coins !== "number") {
+          return showToast("Invalid save JSON format.", "rose");
+        }
+        mergeLoadedState(parsed);
+        isDirty = true;
+        renderStageVisuals(getCurrentBiome());
+        updateAccountUI();
+        updateHUD();
+        renderActiveTab();
+        saveProgress(true);
+        document.getElementById("import-json-panel").classList.add("hidden");
+        document.getElementById("input-import-json").value = "";
+        showToast("📥 Save imported successfully!", "emerald");
+      } catch (_) {
+        showToast("Could not parse JSON.", "rose");
+      }
+    }
+
+    function bindEvents() {
+      // Cast Triggers
+      document.getElementById("btn-cast-line").addEventListener("click", attemptManualCast);
+      document.getElementById("bobber-sprite").addEventListener("click", attemptManualCast);
+      document.getElementById("dock-cast-btn")?.addEventListener("click", attemptManualCast);
+
+      // Spacebar shortcut (when not typing in an input)
+      window.addEventListener("keydown", (e) => {
+        if (e.code === "Space" && !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) {
+          e.preventDefault();
+          attemptManualCast();
+        }
+      });
+
+      // Quick Actions
+      document.getElementById("btn-quick-sell").addEventListener("click", sellAllFish);
+      document.getElementById("dock-sell-btn")?.addEventListener("click", sellAllFish);
+      document.getElementById("btn-open-chests").addEventListener("click", openTreasureChests);
+      document.getElementById("btn-quick-biome").addEventListener("click", () => {
+        activeTab = "biomes";
+        updateHUD();
+        renderActiveTab();
+      });
+
+      // Cycle Equipped Bait
+      const cycleBait = () => {
+        const owned = ["none", ...BAITS.filter(b => (state.baits[b.id] || 0) > 0).map(b => b.id)];
+        state.activeBait = owned[(owned.indexOf(state.activeBait) + 1) % owned.length];
+        updateHUD();
+        if (activeTab === "shop" && shopSubTab === "baits") renderActiveTab();
+      };
+      document.getElementById("btn-cycle-bait").addEventListener("click", cycleBait);
+      document.getElementById("dock-cycle-bait")?.addEventListener("click", cycleBait);
+
+      // Clear Catch Log
+      document.getElementById("btn-clear-log").addEventListener("click", () => {
+        document.getElementById("catch-feed-list").innerHTML = `<div class="text-center py-6 text-slate-500">Catch log cleared.</div>`;
+      });
+
+      // Main Navigation Tabs
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activeTab = btn.dataset.tab;
+          updateHUD();
+          renderActiveTab();
+        });
+      });
+
+      // Modals Open/Close
+      document.querySelectorAll("[data-close-modal]").forEach(btn => {
+        btn.addEventListener("click", () => closeModal(btn.dataset.closeModal));
+      });
+      document.getElementById("btn-open-account").addEventListener("click", () => {
+        updateAccountUI();
+        openModal("account-modal");
+      });
+
+      // Welcome & Account Auth Buttons
+      document.getElementById("btn-welcome-google").addEventListener("click", () => handleGoogleAuth("welcome-auth-error"));
+      document.getElementById("btn-welcome-guest").addEventListener("click", () => {
+        closeModal("welcome-modal");
+        showToast("👤 Playing as Guest — progress auto-saves!", "cyan");
+      });
+      document.getElementById("btn-modal-google").addEventListener("click", () => handleGoogleAuth("account-auth-error"));
+      document.getElementById("btn-force-save").addEventListener("click", () => saveProgress(true));
+
+      document.getElementById("btn-save-name").addEventListener("click", () => {
+        const val = document.getElementById("input-display-name").value.trim();
+        if (!val) return showToast("Please enter a valid name.", "amber");
+        state.displayName = val.slice(0, 22);
+        updateAccountUI();
+        saveProgress(true);
+      });
+
+      document.getElementById("btn-copy-uid").addEventListener("click", () => {
+        const uid = document.getElementById("modal-user-id").textContent;
+        const ta = document.createElement("textarea");
+        ta.value = uid;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        showToast("📋 Player UID copied!", "cyan");
+      });
+
+      document.getElementById("btn-modal-signout").addEventListener("click", async () => {
+        if (!auth) return;
+        try {
+          await signOut(auth);
+          state = createDefaultState();
+          await signInAnonymously(auth);
+          currentUser = auth.currentUser;
+          await loadUserProgress();
+          closeModal("account-modal");
+          showToast("Signed out to a fresh Guest profile.", "amber");
+        } catch (err) {
+          showToast("Sign out failed.", "rose");
+        }
+      });
+
+      // Daily Reward Modal
+      document.getElementById("btn-open-daily").addEventListener("click", () => {
+        const todayKey = new Date().toISOString().slice(0, 10);
+        const claimedToday = state.daily?.lastClaimDay === todayKey;
+        const nextStreak = claimedToday ? (state.daily?.streak || 1) : (state.daily?.streak || 0) + 1;
+        const coinReward = Math.round((500 + state.level * 350) * (1 + nextStreak * 0.15) * (1 + (state.prestige || 0) * 0.5));
+        const chestReward = 1 + Math.floor(nextStreak / 5);
+
+        document.getElementById("daily-streak-label").textContent = `${state.daily?.streak || 0} Day(s)`;
+        document.getElementById("daily-reward-preview").innerHTML = `
+          <div>🪙 +${fmt(coinReward)} Coins</div>
+          <div>🧰 +${chestReward} Treasure Chest(s)</div>
+          <div>🐠 +2 Gold Fish</div>
+        `;
+        const claimBtn = document.getElementById("btn-claim-daily");
+        claimBtn.disabled = claimedToday;
+        claimBtn.textContent = claimedToday ? "Claimed Today ✓" : "Claim Reward";
+        openModal("daily-modal");
+      });
+
+      document.getElementById("btn-claim-daily").addEventListener("click", () => {
+        const todayKey = new Date().toISOString().slice(0, 10);
+        if (state.daily?.lastClaimDay === todayKey) return;
+        const nextStreak = (state.daily?.streak || 0) + 1;
+        const coinReward = Math.round((500 + state.level * 350) * (1 + nextStreak * 0.15) * (1 + (state.prestige || 0) * 0.5));
+        const chestReward = 1 + Math.floor(nextStreak / 5);
+
+        state.daily = { lastClaimDay: todayKey, streak: nextStreak };
+        state.coins += coinReward;
+        state.chests = (state.chests || 0) + chestReward;
+        state.goldFish = (state.goldFish || 0) + 2;
+
+        isDirty = true;
+        updateHUD();
+        saveProgress(false);
+        closeModal("daily-modal");
+        showToast(`🎁 Daily Supply Claimed! +${fmt(coinReward)} Coins, +${chestReward} Chest(s), +2 Gold Fish!`, "emerald");
+      });
+
+      // Prestige Execution
+      document.getElementById("btn-confirm-prestige").addEventListener("click", () => {
+        if (state.level < 50) return;
+        const nextP = (state.prestige || 0) + 1;
+        const orbReward = 5 + nextP * 2;
+
+        state.prestige = nextP;
+        state.cosmicOrbs = (state.cosmicOrbs || 0) + orbReward;
+        state.coins = 0;
+        state.xp = 0;
+        state.level = 1;
+        state.inventory = {};
+        state.currentBiome = "river";
+        state.unlockedBiomes = ["river"];
+        state.equippedRod = "rod_1";
+        state.ownedRods = ["rod_1"];
+        state.equippedVessel = "none";
+        state.ownedVessels = [];
+        state.activeBait = "none";
+        state.baits = { bait_1: 15 };
+        state.upgrades = {};
+
+        closeModal("prestige-modal");
+        renderStageVisuals(getCurrentBiome());
+        isDirty = true;
+        updateHUD();
+        renderActiveTab();
+        saveProgress(true);
+        showToast(`🌀 Ascended to Prestige Rank ${nextP}! +${orbReward} Cosmic Orbs!`, "purple");
+      });
+
+      // JSON Save Export / Import
+      document.getElementById("btn-export-save").addEventListener("click", exportSaveJson);
+      document.getElementById("btn-import-save-toggle").addEventListener("click", () => {
+        document.getElementById("import-json-panel").classList.toggle("hidden");
+      });
+      document.getElementById("btn-import-file-pick").addEventListener("click", () => {
+        document.getElementById("input-import-file").click();
+      });
+      document.getElementById("input-import-file").addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => applyImportedJson(String(reader.result || ""));
+        reader.readAsText(file);
+        e.target.value = "";
+      });
+      document.getElementById("btn-import-json-apply").addEventListener("click", () => {
+        applyImportedJson(document.getElementById("input-import-json").value);
+      });
+    }
+
+    function startLoops() {
+      // Smooth 50ms Cooldown Bar Loop
+      setInterval(() => {
+        const now = Date.now();
+        const btn = document.getElementById("btn-cast-line");
+        const fill = document.getElementById("cooldown-bar-fill");
+        const label = document.getElementById("cooldown-timer-text");
+        const stageText = document.getElementById("stage-status-text");
+        const dockBtn = document.getElementById("dock-cast-btn");
+        const dockFill = document.getElementById("dock-cooldown-bar");
+        const dockLabel = document.getElementById("dock-cooldown-text");
+
+        if (now < castCooldownEnd) {
+          const rem = castCooldownEnd - now;
+          const pct = Math.max(0, Math.min(100, ((castCooldownTotalMs - rem) / castCooldownTotalMs) * 100));
+          const secStr = `${(rem / 1000).toFixed(2)}s`;
+          fill.style.width = `${pct}%`;
+          label.textContent = secStr;
+          btn.disabled = true;
+          stageText.textContent = "Reeling in the cosmos...";
+          if (dockFill) dockFill.style.width = `${pct}%`;
+          if (dockLabel) dockLabel.textContent = secStr;
+          if (dockBtn) dockBtn.disabled = true;
+        } else {
+          fill.style.width = "100%";
+          label.textContent = `Ready (${getCooldownSeconds().toFixed(2)}s)`;
+          btn.disabled = false;
+          stageText.textContent = "Ready to cast! Press Space or tap Fish";
+          if (dockFill) dockFill.style.width = "100%";
+          if (dockLabel) dockLabel.textContent = "Ready";
+          if (dockBtn) dockBtn.disabled = false;
+        }
+      }, 50);
+
+      // 1-Second Tick: Playtime, Boosts, Auto-Fisher Crew
+      setInterval(() => {
+        state.stats.playtimeSec = (state.stats.playtimeSec || 0) + 1;
+        if (EXOTIC_BOOSTS.some(b => isBoostActive(b.id))) updateHUD();
+
+        const crewLv = state.upgrades.autofish || 0;
+        if (crewLv > 0) {
+          autoFishAccumulator += isBoostActive("overclock") ? 3 : 1;
+          const intervalSec = Math.max(2, 11 - Math.floor(crewLv * 0.45) - Math.floor((state.upgrades.workermot || 0) * 0.2));
+          if (autoFishAccumulator >= intervalSec) {
+            autoFishAccumulator = 0;
+            executeCatch(true);
+          }
+        }
+      }, 1000);
+
+      // 15-Second Cloud Auto-Save
+      setInterval(() => {
+        if (isDirty) saveProgress(false);
+      }, 15000);
+    }
+
+    // Boot Application
+    window.addEventListener("DOMContentLoaded", () => {
+      ensureQuests();
+      bindEvents();
+      renderStageVisuals(getCurrentBiome());
+      updateHUD();
+      renderActiveTab();
+      startLoops();
+      initFirebase();
+    });
+  </script>
+</body>
+</html>
