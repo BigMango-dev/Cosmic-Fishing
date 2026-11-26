@@ -1,0 +1,121 @@
+body {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(56, 189, 248, 0.11), transparent 36%),
+    radial-gradient(circle at 88% 15%, rgba(168, 85, 247, 0.13), transparent 40%),
+    radial-gradient(circle at 50% 95%, rgba(99, 102, 241, 0.11), transparent 45%),
+    #0b0e17;
+  font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+button, a, input, select, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Horizontal scroll fade cue for mobile tabs */
+.scroll-fade-wrap { position: relative; }
+.scroll-fade-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 28px;
+  pointer-events: none;
+  background: linear-gradient(to left, rgba(24, 29, 47, 0.96), transparent);
+}
+
+/* GPU-composited cooldown & XP bars */
+.cd-gpu-bar {
+  transform-origin: left center;
+  will-change: transform;
+}
+
+/* Static CSS for high-frequency Catch Feed & Buff Pills */
+#catch-feed-list {
+  contain: layout style;
+}
+.feed-row {
+  border-left: 4px solid #6366f1;
+  background: rgba(24, 29, 47, 0.92);
+  border-radius: 0 0.75rem 0.75rem 0;
+  padding: 0.45rem 0.75rem;
+  color: #e2e8f0;
+  line-height: 1.35;
+  font-size: 0.75rem;
+}
+.feed-crate   { border-left-color: #fbbf24; background: rgba(245, 158, 11, 0.12); }
+.feed-exotic  { border-left-color: #34d399; background: rgba(16, 185, 129, 0.12); }
+.feed-pet     { border-left-color: #e879f9; background: rgba(217, 70, 239, 0.15); }
+.feed-levelup { border-left-color: #22d3ee; background: rgba(6, 182, 212, 0.15); }
+.feed-strong  { color: #ffffff; font-weight: 700; }
+.feed-amber   { color: #fcd34d; font-weight: 800; }
+.feed-emerald { color: #6ee7b7; font-weight: 800; }
+.feed-fuchsia { color: #f0abfc; font-weight: 800; }
+.feed-muted   { color: #94a3b8; }
+
+.buff-chip {
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  color: #fde68a;
+}
+
+@keyframes bobFloat {
+  0%, 100% { transform: translateY(0px) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(2deg); }
+}
+.bobber-idle {
+  animation: bobFloat 2.8s ease-in-out infinite;
+  will-change: transform;
+}
+.bobber-cast {
+  transform: scale(1.22) translateY(-6px);
+  transition: transform 0.12s ease-out;
+}
+
+/* Mobile Portrait Optimizations (<= 768px) */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: calc(118px + env(safe-area-inset-bottom));
+  }
+  .tab-btn, .shop-sub-btn {
+    min-height: 42px;
+  }
+  #toast-container {
+    bottom: calc(122px + env(safe-area-inset-bottom));
+  }
+}
+
+#mobile-cast-dock {
+  padding-bottom: calc(0.6rem + env(safe-area-inset-bottom));
+}
+
+/* Mobile Landscape Split-Screen Mode */
+@media (max-height: 540px) and (orientation: landscape) {
+  body { padding-bottom: 0 !important; overflow: hidden; }
+  #mobile-cast-dock { display: none !important; }
+  #top-header-bar { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+  #level-hero-strip { padding-top: 0.2rem; padding-bottom: 0.25rem; }
+  #main-workspace {
+    display: grid !important;
+    grid-template-columns: 42% 58% !important;
+    gap: 0.65rem !important;
+    padding-top: 0.45rem !important;
+    padding-bottom: 0.45rem !important;
+    height: calc(100vh - 86px);
+    overflow: hidden;
+    align-items: stretch !important;
+  }
+  #left-console-col { height: 100%; overflow-y: auto; gap: 0.5rem !important; }
+  #biome-stage { height: 5.5rem !important; }
+  #bobber-sprite { font-size: 2.25rem !important; }
+  #right-command-col { height: 100%; min-height: 0 !important; }
+  #tab-content-area { max-height: none !important; height: 100%; padding: 0.65rem !important; }
+  #catch-feed-list { max-height: 150px !important; }
+  #toast-container { bottom: 0.75rem; }
+}
